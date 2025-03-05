@@ -5,7 +5,7 @@ import BrandSelector from './BrandSelector';
 import MeasurementInput from './MeasurementInput';
 import SizeResult from './SizeResult';
 import sizeData from '../utils/sizeData';
-import { Info } from 'lucide-react';
+import { Info, ArrowRight } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 const SizeConverter: React.FC = () => {
@@ -13,6 +13,7 @@ const SizeConverter: React.FC = () => {
   const [bust, setBust] = useState('');
   const [units, setUnits] = useState('inches');
   const [result, setResult] = useState<{ usSize: string; ukSize: string; euSize: string } | null>(null);
+  const [step, setStep] = useState(1); // 1 = brand selection, 2 = measurement input
   const { toast } = useToast();
   
   // Calculate size whenever inputs change
@@ -23,6 +24,13 @@ const SizeConverter: React.FC = () => {
       setResult(null);
     }
   }, [brand, bust, units]);
+  
+  // When brand changes, move to step 2
+  React.useEffect(() => {
+    if (brand) {
+      setStep(2);
+    }
+  }, [brand]);
   
   const calculateSize = () => {
     if (!brand || !bust || isNaN(parseFloat(bust)) || parseFloat(bust) <= 0) {
@@ -80,33 +88,96 @@ const SizeConverter: React.FC = () => {
     }
   };
   
+  const resetForm = () => {
+    setBrand('');
+    setBust('');
+    setResult(null);
+    setStep(1);
+  };
+  
   return (
     <div className="w-full max-w-2xl mx-auto">
       <div className="glass-card p-8">
-        <BrandSelector 
-          selectedBrand={brand} 
-          onBrandChange={setBrand} 
-        />
-        
-        <MeasurementInput 
-          bustValue={bust}
-          onBustChange={setBust}
-          units={units}
-          onUnitsChange={setUnits}
-        />
-        
-        <div className="flex items-center mt-4 p-3 rounded-lg bg-amber-50 border border-amber-100">
-          <Info className="h-5 w-5 text-amber-500 mr-2 flex-shrink-0" />
-          <p className="text-sm text-amber-700">
-            Enter your measurements and we'll automatically find your size. No button needed!
-          </p>
+        {/* Progress indicator */}
+        <div className="flex items-center justify-center mb-6">
+          <div className={`h-2 w-2 rounded-full ${step >= 1 ? 'bg-primary' : 'bg-gray-200'}`}></div>
+          <div className={`h-0.5 w-8 ${step >= 2 ? 'bg-primary' : 'bg-gray-200'}`}></div>
+          <div className={`h-2 w-2 rounded-full ${step >= 2 ? 'bg-primary' : 'bg-gray-200'}`}></div>
+          <div className={`h-0.5 w-8 ${result ? 'bg-primary' : 'bg-gray-200'}`}></div>
+          <div className={`h-2 w-2 rounded-full ${result ? 'bg-primary' : 'bg-gray-200'}`}></div>
         </div>
         
+        {/* Step 1: Brand Selection */}
+        <motion.div
+          animate={{ opacity: step === 1 ? 1 : 0.3, height: step === 1 ? 'auto' : 'auto' }}
+          transition={{ duration: 0.3 }}
+        >
+          <BrandSelector 
+            selectedBrand={brand} 
+            onBrandChange={setBrand} 
+          />
+          
+          {step === 1 && (
+            <motion.div 
+              className="flex justify-center mt-4"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+            >
+              <p className="text-sm text-muted-foreground flex items-center">
+                <Info className="h-4 w-4 mr-1 text-amber-500" />
+                Select a brand to continue
+              </p>
+            </motion.div>
+          )}
+        </motion.div>
+        
+        {/* Step 2: Measurement Input */}
+        {brand && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: step === 2 ? 1 : 0.8, y: 0 }}
+            transition={{ duration: 0.4 }}
+          >
+            <MeasurementInput 
+              bustValue={bust}
+              onBustChange={setBust}
+              units={units}
+              onUnitsChange={setUnits}
+            />
+            
+            <div className="flex items-center mt-4 p-3 rounded-lg bg-amber-50 border border-amber-100">
+              <Info className="h-5 w-5 text-amber-500 mr-2 flex-shrink-0" />
+              <p className="text-sm text-amber-700">
+                Enter your measurements and we'll automatically find your size. No button needed!
+              </p>
+            </div>
+          </motion.div>
+        )}
+        
+        {/* Step 3: Results */}
         <SizeResult 
           result={result} 
           brandName={brand}
           onShare={shareResults} 
         />
+        
+        {/* Reset button (only visible when there's a result) */}
+        {result && (
+          <motion.div 
+            className="mt-4 flex justify-center"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.2 }}
+          >
+            <button
+              onClick={resetForm}
+              className="text-sm text-muted-foreground hover:text-primary transition-colors"
+            >
+              Try another brand or measurement
+            </button>
+          </motion.div>
+        )}
         
         {/* Ad Space */}
         {result && (
