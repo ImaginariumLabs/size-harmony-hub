@@ -2,6 +2,8 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import SizeConverter from '../components/SizeConverter';
+import UserGuide from '../components/UserGuide';
+import Footer from '../components/Footer';
 import { Sparkles, InfoIcon, GithubIcon, BookOpenIcon } from 'lucide-react';
 
 const Index = () => {
@@ -19,11 +21,11 @@ const Index = () => {
           </div>
           
           <div className="flex space-x-4">
-            <a href="#" className="text-sm flex items-center text-muted-foreground hover:text-primary transition-colors">
+            <a href="#guide" className="text-sm flex items-center text-muted-foreground hover:text-primary transition-colors">
               <InfoIcon className="h-4 w-4 mr-1" />
               <span className="hidden sm:inline">About</span>
             </a>
-            <a href="#" className="text-sm flex items-center text-muted-foreground hover:text-primary transition-colors">
+            <a href="#guide" className="text-sm flex items-center text-muted-foreground hover:text-primary transition-colors">
               <BookOpenIcon className="h-4 w-4 mr-1" />
               <span className="hidden sm:inline">Guide</span>
             </a>
@@ -53,20 +55,22 @@ const Index = () => {
           </motion.div>
           <h1 className="text-3xl md:text-4xl font-display mb-2">Find Your Perfect Fit</h1>
           <p className="text-muted-foreground max-w-lg mx-auto">
-            Enter your bust measurement and discover your size across different brands.
+            Select your clothing type and measurements to discover your perfect size across different brands.
           </p>
         </motion.div>
         
         <SizeConverter />
         
-        <motion.footer
+        <div id="guide">
+          <UserGuide />
+        </div>
+        
+        <motion.div
           className="text-center text-sm text-muted-foreground mt-12"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.8 }}
         >
-          <p>Designed with precision. Built for clarity.</p>
-          
           {/* Ad Space */}
           <div className="mt-8 p-4 bg-white/50 rounded-lg border border-gray-200 shadow-sm">
             <p className="text-xs text-muted-foreground mb-1">ADVERTISEMENT</p>
@@ -74,7 +78,9 @@ const Index = () => {
               <p className="text-sm text-gray-400">Ad Space (728x90)</p>
             </div>
           </div>
-        </motion.footer>
+        </motion.div>
+        
+        <Footer />
       </div>
     </div>
   );

@@ -10,14 +10,32 @@ interface SizeResultProps {
     euSize: string;
   } | null;
   brandName: string;
+  clothingType?: string;
+  measurementType?: string;
   onShare: () => void;
 }
 
-const SizeResult: React.FC<SizeResultProps> = ({ result, brandName, onShare }) => {
+const SizeResult: React.FC<SizeResultProps> = ({ 
+  result, 
+  brandName, 
+  clothingType = '',
+  measurementType = '',
+  onShare 
+}) => {
   if (!result) return null;
 
   // Helper to determine if a size is a match or not
   const isSizeMatch = (size: string) => !size.includes('No exact match') && !size.includes('Not available');
+  
+  // Get clothing type display name
+  const getClothingTypeDisplay = () => {
+    switch(clothingType) {
+      case 'tops': return 'Top';
+      case 'bottoms': return 'Bottom';
+      case 'dresses': return 'Dress';
+      default: return '';
+    }
+  };
 
   return (
     <AnimatePresence>
@@ -30,7 +48,10 @@ const SizeResult: React.FC<SizeResultProps> = ({ result, brandName, onShare }) =
       >
         <div className="glass-card overflow-hidden">
           <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
-            <h3 className="text-lg font-semibold">Your Size at {brandName}</h3>
+            <h3 className="text-lg font-semibold">
+              Your {getClothingTypeDisplay()} Size at {brandName}
+              {measurementType && <span className="text-sm text-muted-foreground ml-2">({measurementType})</span>}
+            </h3>
             <button 
               onClick={onShare}
               className="p-2 rounded-full hover:bg-gray-100 transition-colors"
