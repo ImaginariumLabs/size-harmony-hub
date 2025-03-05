@@ -82,6 +82,15 @@ const SizeConverter: React.FC = () => {
           onUnitsChange={setUnits}
         />
         
+        <motion.button
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+          className="w-full mt-4 bg-primary text-white py-3 rounded-xl font-medium shadow-md hover:shadow-lg transition-all duration-300"
+          onClick={calculateSize}
+        >
+          Find My Size
+        </motion.button>
+        
         <SizeResult 
           result={result} 
           brandName={brand} 

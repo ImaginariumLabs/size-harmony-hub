@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
+import { HelpCircle } from 'lucide-react';
 
 interface MeasurementInputProps {
   bustValue: string;
@@ -15,6 +16,8 @@ const MeasurementInput: React.FC<MeasurementInputProps> = ({
   units,
   onUnitsChange,
 }) => {
+  const [showTooltip, setShowTooltip] = React.useState(false);
+  
   return (
     <motion.div 
       className="w-full mb-8"
@@ -22,7 +25,25 @@ const MeasurementInput: React.FC<MeasurementInputProps> = ({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, ease: "easeOut", delay: 0.1 }}
     >
-      <label className="text-sm text-muted-foreground mb-2 block">Bust Measurement</label>
+      <div className="flex items-center mb-2">
+        <label className="text-sm text-muted-foreground">Bust Measurement</label>
+        <div className="relative ml-2">
+          <HelpCircle 
+            className="w-4 h-4 text-muted-foreground cursor-pointer" 
+            onMouseEnter={() => setShowTooltip(true)}
+            onMouseLeave={() => setShowTooltip(false)}
+          />
+          {showTooltip && (
+            <motion.div 
+              className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 p-3 w-64 text-xs rounded-lg shadow-lg glass-card z-20"
+              initial={{ opacity: 0, y: 5 }}
+              animate={{ opacity: 1, y: 0 }}
+            >
+              <p>Measure around the fullest part of your bust while wearing a non-padded bra.</p>
+            </motion.div>
+          )}
+        </div>
+      </div>
       
       <div className="flex items-center glass-card p-1 pl-4">
         <input
@@ -61,15 +82,6 @@ const MeasurementInput: React.FC<MeasurementInputProps> = ({
           </button>
         </div>
       </div>
-      
-      <motion.p 
-        className="mt-2 text-sm text-muted-foreground"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.3 }}
-      >
-        Measure around the fullest part of your bust while wearing a non-padded bra.
-      </motion.p>
     </motion.div>
   );
 };

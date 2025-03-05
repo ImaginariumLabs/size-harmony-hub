@@ -112,6 +112,14 @@
       linear-gradient(to right, rgba(0, 0, 0, 0.03) 1px, transparent 1px),
       linear-gradient(to bottom, rgba(0, 0, 0, 0.03) 1px, transparent 1px);
   }
+  
+  /* Background image overlay */
+  .bg-fashion-pattern {
+    background-image: url('/fashion-background.jpg');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+  }
 }
 
 /* Animation utility classes */

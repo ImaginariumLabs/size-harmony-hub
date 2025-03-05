@@ -13,6 +13,9 @@ interface SizeResultProps {
 const SizeResult: React.FC<SizeResultProps> = ({ result, brandName }) => {
   if (!result) return null;
 
+  // Helper to determine if a size is a match or not
+  const isSizeMatch = (size: string) => !size.includes('No exact match');
+
   return (
     <AnimatePresence>
       <motion.div
@@ -33,7 +36,11 @@ const SizeResult: React.FC<SizeResultProps> = ({ result, brandName }) => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 }}
-                className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm"
+                className={`rounded-xl p-4 border shadow-sm ${
+                  isSizeMatch(result.usSize) 
+                    ? 'bg-white border-gray-100' 
+                    : 'bg-yellow-50 border-yellow-100'
+                }`}
               >
                 <div className="text-sm text-muted-foreground mb-1">US Size</div>
                 <div className="text-4xl font-display">{result.usSize}</div>
@@ -43,7 +50,11 @@ const SizeResult: React.FC<SizeResultProps> = ({ result, brandName }) => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}
-                className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm"
+                className={`rounded-xl p-4 border shadow-sm ${
+                  isSizeMatch(result.ukSize) 
+                    ? 'bg-white border-gray-100' 
+                    : 'bg-yellow-50 border-yellow-100'
+                }`}
               >
                 <div className="text-sm text-muted-foreground mb-1">UK Size</div>
                 <div className="text-4xl font-display">{result.ukSize}</div>

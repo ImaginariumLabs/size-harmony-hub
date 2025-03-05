@@ -5,8 +5,9 @@ import SizeConverter from '../components/SizeConverter';
 
 const Index = () => {
   return (
-    <div className="min-h-screen w-full grid-background">
-      <div className="fixed top-0 left-0 w-full h-full bg-gradient-to-br from-blue-50 to-purple-50 opacity-70 -z-10" />
+    <div className="min-h-screen w-full">
+      <div className="fixed top-0 left-0 w-full h-full bg-fashion-pattern opacity-30 -z-10" />
+      <div className="fixed top-0 left-0 w-full h-full bg-gradient-to-br from-blue-50/80 to-purple-50/80 -z-10" />
       
       <div className="container px-4 py-12 md:py-24">
         <SizeConverter />
