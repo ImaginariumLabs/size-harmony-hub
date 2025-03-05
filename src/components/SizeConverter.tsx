@@ -5,12 +5,24 @@ import BrandSelector from './BrandSelector';
 import MeasurementInput from './MeasurementInput';
 import SizeResult from './SizeResult';
 import sizeData from '../utils/sizeData';
+import { Info } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 const SizeConverter: React.FC = () => {
   const [brand, setBrand] = useState('');
   const [bust, setBust] = useState('');
   const [units, setUnits] = useState('inches');
-  const [result, setResult] = useState<{ usSize: string; ukSize: string } | null>(null);
+  const [result, setResult] = useState<{ usSize: string; ukSize: string; euSize: string } | null>(null);
+  const { toast } = useToast();
+  
+  // Calculate size whenever inputs change
+  React.useEffect(() => {
+    if (brand && bust && !isNaN(parseFloat(bust)) && parseFloat(bust) > 0) {
+      calculateSize();
+    } else {
+      setResult(null);
+    }
+  }, [brand, bust, units]);
   
   const calculateSize = () => {
     if (!brand || !bust || isNaN(parseFloat(bust)) || parseFloat(bust) <= 0) {
@@ -28,8 +40,12 @@ const SizeConverter: React.FC = () => {
       return;
     }
 
-    // Find matching US and UK sizes
-    const findMatchingSize = (sizeSystem: 'US' | 'UK') => {
+    // Find matching sizes
+    const findMatchingSize = (sizeSystem: 'US' | 'UK' | 'EU') => {
+      if (!selectedBrand.sizes[sizeSystem]) {
+        return 'Not available';
+      }
+      
       const matchedSize = selectedBrand.sizes[sizeSystem].find(
         size => bustInches >= size.bust_min_inches && bustInches <= size.bust_max_inches
       );
@@ -38,37 +54,34 @@ const SizeConverter: React.FC = () => {
 
     setResult({
       usSize: findMatchingSize('US'),
-      ukSize: findMatchingSize('UK')
+      ukSize: findMatchingSize('UK'),
+      euSize: findMatchingSize('EU')
     });
   };
   
-  // Recalculate when inputs change
-  React.useEffect(() => {
-    calculateSize();
-  }, [brand, bust, units]);
+  const shareResults = () => {
+    if (!result) return;
+    
+    const text = `My size at ${brand} is US: ${result.usSize}, UK: ${result.ukSize}, EU: ${result.euSize}`;
+    
+    if (navigator.share) {
+      navigator.share({
+        title: 'My Size Results',
+        text: text,
+        url: window.location.href,
+      }).catch(err => console.error('Error sharing:', err));
+    } else {
+      navigator.clipboard.writeText(text).then(() => {
+        toast({
+          title: "Copied to clipboard!",
+          description: "Your size info has been copied to share",
+        });
+      });
+    }
+  };
   
   return (
     <div className="w-full max-w-2xl mx-auto">
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="text-center mb-12"
-      >
-        <motion.div 
-          className="inline-block px-4 py-1 bg-primary bg-opacity-10 rounded-full text-primary text-sm font-medium mb-3"
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.2 }}
-        >
-          Find Your Perfect Fit
-        </motion.div>
-        <h1 className="text-4xl md:text-5xl font-display tracking-tight mb-2">Size Harmony</h1>
-        <p className="text-muted-foreground max-w-md mx-auto">
-          Convert your measurements across popular brands for a perfect fit, every time.
-        </p>
-      </motion.div>
-      
       <div className="glass-card p-8">
         <BrandSelector 
           selectedBrand={brand} 
@@ -82,19 +95,28 @@ const SizeConverter: React.FC = () => {
           onUnitsChange={setUnits}
         />
         
-        <motion.button
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-          className="w-full mt-4 bg-primary text-white py-3 rounded-xl font-medium shadow-md hover:shadow-lg transition-all duration-300"
-          onClick={calculateSize}
-        >
-          Find My Size
-        </motion.button>
+        <div className="flex items-center mt-4 p-3 rounded-lg bg-amber-50 border border-amber-100">
+          <Info className="h-5 w-5 text-amber-500 mr-2 flex-shrink-0" />
+          <p className="text-sm text-amber-700">
+            Enter your measurements and we'll automatically find your size. No button needed!
+          </p>
+        </div>
         
         <SizeResult 
           result={result} 
-          brandName={brand} 
+          brandName={brand}
+          onShare={shareResults} 
         />
+        
+        {/* Ad Space */}
+        {result && (
+          <div className="mt-8 pt-6 border-t border-gray-100">
+            <p className="text-xs text-muted-foreground mb-2">ADVERTISEMENT</p>
+            <div className="h-[250px] bg-gray-100 rounded flex items-center justify-center">
+              <p className="text-sm text-gray-400">Ad Space (300x250)</p>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
