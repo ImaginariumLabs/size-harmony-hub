@@ -8,9 +8,12 @@ import { Sparkles, InfoIcon, GithubIcon, BookOpenIcon } from 'lucide-react';
 
 const Index = () => {
   return (
-    <div className="min-h-screen w-full">
-      <div className="fixed top-0 left-0 w-full h-full bg-fashion-pattern opacity-20 -z-10" />
-      <div className="fixed top-0 left-0 w-full h-full bg-gradient-to-br from-purple-50/80 to-pink-50/80 -z-10" />
+    <div className="min-h-screen w-full relative">
+      {/* Background layers */}
+      <div className="fixed inset-0 z-0">
+        <div className="absolute inset-0 bg-fashion-pattern opacity-20"></div>
+        <div className="absolute inset-0 bg-gradient-to-br from-purple-50/90 to-pink-50/90"></div>
+      </div>
       
       {/* Top Navigation Bar */}
       <nav className="w-full py-3 px-4 glass backdrop-blur-sm fixed top-0 z-10">
@@ -37,7 +40,7 @@ const Index = () => {
         </div>
       </nav>
       
-      <div className="container px-4 py-12 md:py-24 pt-20">
+      <div className="container px-4 py-12 md:py-24 pt-20 relative z-1">
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
