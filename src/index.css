@@ -143,4 +143,47 @@
   .animate-delay-500 {
     animation-delay: 500ms;
   }
+  
+  /* New floating animation */
+  .animate-float {
+    animation: floating 6s ease-in-out infinite;
+  }
+  
+  .animate-float-slow {
+    animation: floating 8s ease-in-out infinite;
+  }
+  
+  .animate-float-reverse {
+    animation: floating 7s ease-in-out infinite reverse;
+  }
+}
+
+/* Keyframe animations */
+@keyframes floating {
+  0% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-15px);
+  }
+  100% {
+    transform: translateY(0px);
+  }
+}
+
+/* Breathe animation for gradient elements */
+@keyframes breathe {
+  0%, 100% {
+    opacity: 0.3;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.5;
+    transform: scale(1.05);
+  }
+}
+
+/* Apply breathe animation to gradient backgrounds */
+.bg-gradient-to-br {
+  animation: breathe 8s infinite ease-in-out;
 }

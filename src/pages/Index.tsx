@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import SizeConverter from '../components/SizeConverter';
 import UserGuide from '../components/UserGuide';
@@ -7,12 +7,53 @@ import Footer from '../components/Footer';
 import { Sparkles, InfoIcon, GithubIcon, BookOpenIcon } from 'lucide-react';
 
 const Index = () => {
+  const orbsRef = useRef<HTMLDivElement>(null);
+  
+  useEffect(() => {
+    const orbs = orbsRef.current;
+    if (!orbs) return;
+    
+    // Start animation only if we're not on a mobile device
+    if (window.innerWidth >= 768) {
+      const handleMouseMove = (e: MouseEvent) => {
+        const { clientX, clientY } = e;
+        const centerX = window.innerWidth / 2;
+        const centerY = window.innerHeight / 2;
+        
+        const moveX = (clientX - centerX) / centerX * 15;
+        const moveY = (clientY - centerY) / centerY * 15;
+        
+        // Add some depth with a small delay for a parallax effect
+        Array.from(orbs.children).forEach((orb, index) => {
+          const factor = (index + 1) * 0.2;
+          (orb as HTMLElement).style.transform = `translate(${moveX * factor}px, ${moveY * factor}px)`;
+        });
+      };
+      
+      window.addEventListener('mousemove', handleMouseMove);
+      return () => window.removeEventListener('mousemove', handleMouseMove);
+    }
+  }, []);
+  
   return (
-    <div className="min-h-screen w-full relative">
+    <div className="min-h-screen w-full relative overflow-hidden">
       {/* Background layers */}
-      <div className="fixed inset-0 z-0">
-        <div className="absolute inset-0 bg-fashion-pattern opacity-20"></div>
-        <div className="absolute inset-0 bg-gradient-to-br from-purple-50/90 to-pink-50/90"></div>
+      <div className="fixed inset-0 z-0 bg-gray-50 overflow-hidden">
+        {/* Fashion pattern with reduced opacity */}
+        <div className="absolute inset-0 bg-fashion-pattern opacity-10"></div>
+        
+        {/* Animated gradient orbs */}
+        <div ref={orbsRef} className="absolute inset-0 overflow-hidden">
+          <div className="absolute top-[15%] -left-[10%] w-[35%] h-[35%] rounded-full bg-gradient-to-br from-purple-200 to-pink-200 blur-3xl opacity-40 transition-transform duration-[2000ms]"></div>
+          <div className="absolute bottom-[20%] left-[20%] w-[25%] h-[25%] rounded-full bg-gradient-to-br from-blue-200 to-indigo-200 blur-3xl opacity-30 transition-transform duration-[2000ms]"></div>
+          <div className="absolute top-[30%] right-[10%] w-[30%] h-[30%] rounded-full bg-gradient-to-br from-pink-200 to-red-200 blur-3xl opacity-30 transition-transform duration-[2000ms]"></div>
+        </div>
+        
+        {/* Light mesh gradient overlay */}
+        <div className="absolute inset-0 bg-gradient-to-br from-purple-50/80 via-white/60 to-pink-50/80"></div>
+        
+        {/* Grid pattern for depth */}
+        <div className="absolute inset-0 grid-background opacity-20"></div>
       </div>
       
       {/* Top Navigation Bar */}

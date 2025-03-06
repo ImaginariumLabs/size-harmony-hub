@@ -46,7 +46,7 @@ const BrandSelector: React.FC<BrandSelectorProps> = ({
         
         {isOpen && (
           <motion.div 
-            className="absolute top-full left-0 right-0 mt-2 z-10 max-h-56 overflow-auto rounded-xl glass-card shadow-lg"
+            className="absolute top-full left-0 right-0 mt-2 z-50 max-h-56 overflow-auto rounded-xl glass-card shadow-lg"
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0 }}
