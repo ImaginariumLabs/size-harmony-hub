@@ -179,6 +179,7 @@ const SizeConverter: React.FC = () => {
           <motion.div
             animate={{ opacity: step === 2 ? 1 : 0.3, height: step === 2 ? 'auto' : 'auto' }}
             transition={{ duration: 0.3 }}
+            className="relative z-10" // Higher z-index for the brand selector
           >
             <BrandSelector 
               selectedBrand={brand} 

@@ -57,7 +57,7 @@ const MeasurementInput: React.FC<MeasurementInputProps> = ({
       {clothingType === 'dresses' && (
         <div className="mb-4">
           <label className="text-sm text-muted-foreground mb-2 block">Which measurement would you like to use?</label>
-          <div className="flex space-x-2">
+          <div className="flex flex-wrap gap-2">
             <button
               type="button"
               onClick={() => onMeasurementTypeChange('bust')}
@@ -109,25 +109,25 @@ const MeasurementInput: React.FC<MeasurementInputProps> = ({
         </div>
       </div>
       
-      <div className="flex items-center glass-card p-1 pl-4">
+      <div className="flex items-center glass-card">
         <input
           type="number"
           value={bustValue}
           onChange={(e) => onBustChange(e.target.value)}
-          className="input-clean text-lg w-full"
+          className="input-clean text-lg w-full px-4 py-3"
           placeholder={`Enter your ${measurementType} measurement`}
           min="0"
           step="0.1"
         />
         
-        <div className="flex space-x-1 shrink-0">
+        <div className="flex shrink-0 h-full border-l border-gray-100">
           <button
             type="button"
             onClick={() => onUnitsChange('inches')}
-            className={`px-3 py-2 rounded-lg transition-all duration-300 text-sm font-medium ${
+            className={`px-4 py-3 transition-all duration-300 text-sm font-medium ${
               units === 'inches'
                 ? 'bg-primary text-white'
-                : 'hover:bg-gray-100'
+                : 'hover:bg-gray-50'
             }`}
           >
             in
@@ -136,11 +136,11 @@ const MeasurementInput: React.FC<MeasurementInputProps> = ({
           <button
             type="button"
             onClick={() => onUnitsChange('cm')}
-            className={`px-3 py-2 rounded-lg transition-all duration-300 text-sm font-medium ${
+            className={`px-4 py-3 transition-all duration-300 text-sm font-medium ${
               units === 'cm'
                 ? 'bg-primary text-white'
-                : 'hover:bg-gray-100'
-            }`}
+                : 'hover:bg-gray-50'
+            } rounded-r-xl`}
           >
             cm
           </button>
