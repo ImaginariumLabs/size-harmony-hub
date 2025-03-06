@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Shirt, Pants, Dress } from 'lucide-react';
+import { Shirt, Scissors, ShoppingBag } from 'lucide-react';
 
 interface ClothingTypeSelectorProps {
   selectedType: string;
@@ -50,7 +50,7 @@ const ClothingTypeSelector: React.FC<ClothingTypeSelectorProps> = ({
           }`}
           onClick={() => onTypeChange('bottoms')}
         >
-          <Pants className={`w-10 h-10 mb-3 ${selectedType === 'bottoms' ? 'text-primary' : 'text-muted-foreground'}`} />
+          <Scissors className={`w-10 h-10 mb-3 ${selectedType === 'bottoms' ? 'text-primary' : 'text-muted-foreground'}`} />
           <span className={`font-medium ${selectedType === 'bottoms' ? 'text-primary' : 'text-foreground'}`}>Bottoms</span>
         </motion.div>
         
@@ -64,7 +64,7 @@ const ClothingTypeSelector: React.FC<ClothingTypeSelectorProps> = ({
           }`}
           onClick={() => onTypeChange('dresses')}
         >
-          <Dress className={`w-10 h-10 mb-3 ${selectedType === 'dresses' ? 'text-primary' : 'text-muted-foreground'}`} />
+          <ShoppingBag className={`w-10 h-10 mb-3 ${selectedType === 'dresses' ? 'text-primary' : 'text-muted-foreground'}`} />
           <span className={`font-medium ${selectedType === 'dresses' ? 'text-primary' : 'text-foreground'}`}>Dresses</span>
         </motion.div>
       </div>
