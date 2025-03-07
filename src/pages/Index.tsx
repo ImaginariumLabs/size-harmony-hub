@@ -5,7 +5,8 @@ import SizeConverter from '../components/SizeConverter';
 import UserGuide from '../components/UserGuide';
 import Footer from '../components/Footer';
 import FeaturedBrands from '../components/FeaturedBrands';
-import { Sparkles, InfoIcon, GithubIcon, BookOpenIcon } from 'lucide-react';
+import { Sparkles, InfoIcon, GithubIcon, BookOpenIcon, Settings } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const Index = () => {
   const orbsRef = useRef<HTMLDivElement>(null);
@@ -121,6 +122,10 @@ const Index = () => {
               <GithubIcon className="h-4 w-4 mr-1" />
               <span className="hidden sm:inline">GitHub</span>
             </a>
+            <Link to="/admin" className="text-sm flex items-center text-muted-foreground hover:text-primary transition-colors">
+              <Settings className="h-4 w-4 mr-1" />
+              <span className="hidden sm:inline">Admin</span>
+            </Link>
           </div>
         </div>
       </nav>
