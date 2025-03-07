@@ -1,16 +1,29 @@
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import SizeConverter from '../components/SizeConverter';
 import UserGuide from '../components/UserGuide';
 import Footer from '../components/Footer';
 import FeaturedBrands from '../components/FeaturedBrands';
+import AdSpace from '../components/converter/AdSpace';
 import { Sparkles, InfoIcon, GithubIcon, BookOpenIcon, Settings } from 'lucide-react';
 import { Link } from 'react-router-dom';
+
+// Mock content data (in a real app, this would come from Supabase)
+const mockContent = {
+  'hero-title': 'Find Your Perfect Fit',
+  'hero-description': 'Select your clothing type and measurements to discover your perfect size across different brands.'
+};
 
 const Index = () => {
   const orbsRef = useRef<HTMLDivElement>(null);
   const animatedBgRef = useRef<HTMLDivElement>(null);
+  const [content, setContent] = useState(mockContent);
+  
+  useEffect(() => {
+    // In a real app, this would be an API call to Supabase to get content
+    setContent(mockContent);
+  }, []);
   
   useEffect(() => {
     // Orbs animation
@@ -146,9 +159,9 @@ const Index = () => {
             <Sparkles className="h-4 w-4 mr-2" />
             Fashion Size Harmony
           </motion.div>
-          <h1 className="text-3xl md:text-4xl font-display mb-2">Find Your Perfect Fit</h1>
+          <h1 className="text-3xl md:text-4xl font-display mb-2">{content['hero-title']}</h1>
           <p className="text-muted-foreground max-w-lg mx-auto">
-            Select your clothing type and measurements to discover your perfect size across different brands.
+            {content['hero-description']}
           </p>
         </motion.div>
         
@@ -167,13 +180,8 @@ const Index = () => {
           animate={{ opacity: 1 }}
           transition={{ delay: 0.8 }}
         >
-          {/* Ad Space */}
-          <div className="mt-8 p-4 bg-white/50 rounded-lg border border-gray-200 shadow-sm">
-            <p className="text-xs text-muted-foreground mb-1">ADVERTISEMENT</p>
-            <div className="h-[90px] bg-gray-100 rounded flex items-center justify-center">
-              <p className="text-sm text-gray-400">Ad Space (728x90)</p>
-            </div>
-          </div>
+          {/* Dynamic Ad Space */}
+          <AdSpace variant="banner" slot="banner" />
         </motion.div>
         
         <Footer />
