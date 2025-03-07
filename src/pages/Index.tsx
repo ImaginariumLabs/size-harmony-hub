@@ -4,12 +4,15 @@ import { motion } from 'framer-motion';
 import SizeConverter from '../components/SizeConverter';
 import UserGuide from '../components/UserGuide';
 import Footer from '../components/Footer';
+import FeaturedBrands from '../components/FeaturedBrands';
 import { Sparkles, InfoIcon, GithubIcon, BookOpenIcon } from 'lucide-react';
 
 const Index = () => {
   const orbsRef = useRef<HTMLDivElement>(null);
+  const animatedBgRef = useRef<HTMLDivElement>(null);
   
   useEffect(() => {
+    // Orbs animation
     const orbs = orbsRef.current;
     if (!orbs) return;
     
@@ -34,6 +37,44 @@ const Index = () => {
       return () => window.removeEventListener('mousemove', handleMouseMove);
     }
   }, []);
+
+  useEffect(() => {
+    // Animated background particles
+    const animatedBg = animatedBgRef.current;
+    if (!animatedBg || window.innerWidth < 768) return;
+
+    // Create floating particles
+    const particleCount = 20;
+    for (let i = 0; i < particleCount; i++) {
+      const particle = document.createElement('div');
+      
+      // Random particle properties
+      const size = Math.random() * 10 + 5;
+      const posX = Math.random() * 100;
+      const posY = Math.random() * 100;
+      const duration = Math.random() * 20 + 10;
+      const delay = Math.random() * 5;
+      const opacity = Math.random() * 0.3 + 0.1;
+      
+      // Apply styles
+      particle.className = 'absolute rounded-full bg-primary';
+      particle.style.width = `${size}px`;
+      particle.style.height = `${size}px`;
+      particle.style.left = `${posX}%`;
+      particle.style.top = `${posY}%`;
+      particle.style.opacity = opacity.toString();
+      particle.style.animation = `floating ${duration}s infinite ease-in-out ${delay}s`;
+      
+      animatedBg.appendChild(particle);
+    }
+    
+    return () => {
+      // Clean up particles
+      while (animatedBg.firstChild) {
+        animatedBg.removeChild(animatedBg.firstChild);
+      }
+    };
+  }, []);
   
   return (
     <div className="min-h-screen w-full relative overflow-hidden">
@@ -44,10 +85,13 @@ const Index = () => {
         
         {/* Animated gradient orbs */}
         <div ref={orbsRef} className="absolute inset-0 overflow-hidden">
-          <div className="absolute top-[15%] -left-[10%] w-[35%] h-[35%] rounded-full bg-gradient-to-br from-purple-200 to-pink-200 blur-3xl opacity-40 transition-transform duration-[2000ms]"></div>
-          <div className="absolute bottom-[20%] left-[20%] w-[25%] h-[25%] rounded-full bg-gradient-to-br from-blue-200 to-indigo-200 blur-3xl opacity-30 transition-transform duration-[2000ms]"></div>
-          <div className="absolute top-[30%] right-[10%] w-[30%] h-[30%] rounded-full bg-gradient-to-br from-pink-200 to-red-200 blur-3xl opacity-30 transition-transform duration-[2000ms]"></div>
+          <div className="absolute top-[15%] -left-[10%] w-[35%] h-[35%] rounded-full bg-gradient-to-br from-purple-200 to-pink-200 blur-3xl opacity-40 transition-transform duration-[2000ms] animate-pulse"></div>
+          <div className="absolute bottom-[20%] left-[20%] w-[25%] h-[25%] rounded-full bg-gradient-to-br from-blue-200 to-indigo-200 blur-3xl opacity-30 transition-transform duration-[2000ms] animate-pulse animate-delay-300"></div>
+          <div className="absolute top-[30%] right-[10%] w-[30%] h-[30%] rounded-full bg-gradient-to-br from-pink-200 to-red-200 blur-3xl opacity-30 transition-transform duration-[2000ms] animate-pulse animate-delay-500"></div>
         </div>
+        
+        {/* Animated floating particles */}
+        <div ref={animatedBgRef} className="absolute inset-0 overflow-hidden pointer-events-none"></div>
         
         {/* Light mesh gradient overlay */}
         <div className="absolute inset-0 bg-gradient-to-br from-purple-50/80 via-white/60 to-pink-50/80"></div>
@@ -104,6 +148,9 @@ const Index = () => {
         </motion.div>
         
         <SizeConverter />
+        
+        {/* Featured Brands section between converter and guide */}
+        <FeaturedBrands />
         
         <div id="guide">
           <UserGuide />
