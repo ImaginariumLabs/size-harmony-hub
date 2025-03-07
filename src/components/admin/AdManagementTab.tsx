@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import { Image, LinkIcon, Plus, Save, Trash, Eye, Layout } from 'lucide-react';
 import { toast } from "sonner";
@@ -56,7 +55,6 @@ const AdManagementTab: React.FC = () => {
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] || null;
     if (file) {
-      // Validate file type and size
       const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/svg+xml'];
       if (!validTypes.includes(file.type)) {
         toast.error("Please upload an image file (JPEG, PNG, GIF, SVG)");
@@ -94,13 +92,11 @@ const AdManagementTab: React.FC = () => {
     }
     
     if (isEditing && editIndex >= 0) {
-      // Update existing ad
       const updatedAds = [...ads];
       updatedAds[editIndex] = currentAd;
       setAds(updatedAds);
       toast.success("Ad updated successfully");
     } else {
-      // Add new ad
       setAds([...ads, currentAd]);
       toast.success("Ad created successfully");
     }
@@ -345,7 +341,12 @@ const AdManagementTab: React.FC = () => {
               <h3 className="text-lg font-medium text-gray-500">No ads created yet</h3>
               <p className="text-muted-foreground mb-4">Create your first ad to get started</p>
               <button
-                onClick={() => document.querySelector('[data-value="create"]')?.click()}
+                onClick={() => {
+                  const createTabTrigger = document.querySelector('[data-value="create"]');
+                  if (createTabTrigger instanceof HTMLElement) {
+                    createTabTrigger.click();
+                  }
+                }}
                 className="px-4 py-2 bg-primary text-white rounded-lg inline-flex items-center"
               >
                 <Plus className="h-4 w-4 mr-1" />

@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Text, Save, Eye, Toggle } from 'lucide-react';
+import { Text, Save, Eye } from 'lucide-react';
 import { toast } from "sonner";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
