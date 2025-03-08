@@ -7,6 +7,17 @@ const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'your-anon-key
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
+// Helper to check if Supabase connection is working
+export const isSupabaseConnected = async (): Promise<boolean> => {
+  try {
+    const { error } = await supabase.from('brands').select('count', { count: 'exact', head: true });
+    return !error;
+  } catch (e) {
+    console.error('Supabase connection check failed:', e);
+    return false;
+  }
+};
+
 export type Tables = {
   brands: {
     id: string;

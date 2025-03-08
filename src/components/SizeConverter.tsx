@@ -7,7 +7,7 @@ import SizeResult from './SizeResult';
 import ClothingTypeSelector from './ClothingTypeSelector';
 import { useToast } from '@/hooks/use-toast';
 import { useConverterSteps, ConversionResult } from '../hooks/useConverterSteps';
-import { findSizeByMeasurement } from '../services/sizingService';
+import { findSizeByMeasurement, isSupabaseConnected } from '../services/sizingService';
 
 // Import sub-components
 import ProgressIndicator from './converter/ProgressIndicator';
@@ -19,6 +19,24 @@ import AdSpace from './converter/AdSpace';
 const SizeConverter: React.FC = () => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
+  const [isOfflineMode, setIsOfflineMode] = useState(false);
+  
+  // Check Supabase connection on component mount
+  useEffect(() => {
+    const checkConnection = async () => {
+      const connected = await isSupabaseConnected();
+      if (!connected) {
+        setIsOfflineMode(true);
+        toast({
+          title: "Offline Mode",
+          description: "Using local data since database connection is unavailable.",
+          variant: "default"
+        });
+      }
+    };
+    
+    checkConnection();
+  }, [toast]);
   
   const calculateSize = async () => {
     if (!state.brand || !state.bust || isNaN(parseFloat(state.bust)) || parseFloat(state.bust) <= 0) {
@@ -29,7 +47,7 @@ const SizeConverter: React.FC = () => {
     try {
       setLoading(true);
       
-      // Call our Supabase service to find the size
+      // Call our sizing service to find the size
       const result = await findSizeByMeasurement(
         state.brand,
         state.clothingType,
@@ -39,31 +57,25 @@ const SizeConverter: React.FC = () => {
       );
       
       state.setResult(result);
+      
+      // Show offline mode indicator if we're using fallback calculations
+      if (isOfflineMode && !toast.isActive('offline-mode')) {
+        toast({
+          id: 'offline-mode',
+          title: "Using estimated sizes",
+          description: "Size data is estimated as database connection is unavailable.",
+          variant: "default"
+        });
+      }
     } catch (error) {
       console.error('Error calculating size:', error);
       toast({
-        title: "Size calculation failed",
-        description: "We couldn't determine your size. Please try again.",
+        title: "Size calculation issue",
+        description: "We're having trouble with precise calculations. Showing estimated sizes.",
         variant: "destructive"
       });
       
-      // Fallback to local calculation
-      const measurementInches = state.units === 'cm' ? parseFloat(state.bust) / 2.54 : parseFloat(state.bust);
-      
-      const findMatchingSize = (sizeSystem: 'US' | 'UK' | 'EU') => {
-        // Simple fallback logic - this would be replaced by the Supabase data
-        if (measurementInches < 34) return 'XS';
-        if (measurementInches < 36) return 'S';
-        if (measurementInches < 38) return 'M';
-        if (measurementInches < 40) return 'L';
-        return 'XL';
-      };
-      
-      state.setResult({
-        usSize: findMatchingSize('US'),
-        ukSize: findMatchingSize('UK'),
-        euSize: findMatchingSize('EU')
-      });
+      // Fallback calculation is now handled in the service
     } finally {
       setLoading(false);
     }
@@ -95,6 +107,16 @@ const SizeConverter: React.FC = () => {
   return (
     <div className="w-full max-w-2xl mx-auto">
       <div className="glass-card p-8">
+        {/* Offline Mode Indicator */}
+        {isOfflineMode && (
+          <div className="mb-4 p-2 bg-yellow-100 text-yellow-800 rounded-md text-sm flex items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+            </svg>
+            <span>Offline Mode: Using estimated sizes</span>
+          </div>
+        )}
+      
         {/* Progress indicator */}
         <ProgressIndicator 
           currentStep={state.step} 
@@ -169,6 +191,7 @@ const SizeConverter: React.FC = () => {
           measurementType={state.measurementType}
           measurementValue={state.bust}
           measurementUnit={state.units}
+          isOfflineMode={isOfflineMode}
         />
         
         {/* Reset button (only visible when there's a result) */}
