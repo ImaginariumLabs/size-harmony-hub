@@ -1,5 +1,6 @@
 
 import { supabase, isSupabaseConnected, Tables } from '../lib/supabase';
+import sizeData from '../utils/sizeData';
 
 export type Brand = Tables['brands'];
 export type SizeRange = Tables['size_ranges'];
@@ -123,8 +124,8 @@ export const findSizeByMeasurement = async (
     
     if (!connected) {
       console.log('Using mock size calculation (Supabase not connected)');
-      // Use the mockSizeMapping for fallback calculation
-      return calculateFallbackSize(measurementType, measurementValue, unit);
+      // Use the static size data for offline mode
+      return calculateOfflineSizeFromData(brandName, measurementType, measurementValue, unit);
     }
     
     // First get the brand ID
@@ -136,7 +137,7 @@ export const findSizeByMeasurement = async (
       
     if (!brand) {
       console.log(`Brand ${brandName} not found, using fallback calculation`);
-      return calculateFallbackSize(measurementType, measurementValue, unit);
+      return calculateOfflineSizeFromData(brandName, measurementType, measurementValue, unit);
     }
     
     // Then get the garment ID
@@ -148,7 +149,7 @@ export const findSizeByMeasurement = async (
       
     if (!garment) {
       console.log(`Garment type ${garmentType} not found, using fallback calculation`);
-      return calculateFallbackSize(measurementType, measurementValue, unit);
+      return calculateOfflineSizeFromData(brandName, measurementType, measurementValue, unit);
     }
     
     // Convert to cm if needed for consistency
@@ -156,7 +157,7 @@ export const findSizeByMeasurement = async (
     
     // Query size ranges for each region
     const regions = ['US', 'UK', 'EU'];
-    // Fix for TypeScript error: Initialize with the correct property structure
+    // Initialize with the correct property structure
     const sizes: { usSize: string; ukSize: string; euSize: string } = {
       usSize: 'No exact match found',
       ukSize: 'No exact match found',
@@ -184,11 +185,69 @@ export const findSizeByMeasurement = async (
     return sizes;
   } catch (e) {
     console.error('Error finding size by measurement:', e);
-    return calculateFallbackSize(measurementType, measurementValue, unit);
+    return calculateOfflineSizeFromData(brandName, measurementType, measurementValue, unit);
   }
 };
 
-// Fallback size calculation when Supabase is not available
+// Use the imported static size data for offline calculations
+const calculateOfflineSizeFromData = (
+  brandName: string,
+  measurementType: string,
+  value: number,
+  unit: string
+): { usSize: string; ukSize: string; euSize: string } => {
+  // Find the brand in our static data
+  const brand = sizeData.brands.find(b => b.name === brandName);
+  
+  if (!brand) {
+    console.log(`Brand ${brandName} not found in static data, using generic fallback`);
+    return calculateFallbackSize(measurementType, value, unit);
+  }
+  
+  // Ensure we're working with inches as that's what our static data uses
+  const valueInInches = unit === 'cm' ? value / 2.54 : value;
+  
+  // Initialize result object
+  const result = {
+    usSize: 'No exact match found',
+    ukSize: 'No exact match found',
+    euSize: 'No exact match found'
+  };
+  
+  // Only handling bust measurements from the static data for simplicity
+  if (measurementType === 'bust') {
+    // Check US sizes
+    for (const sizeInfo of brand.sizes.US) {
+      if (valueInInches >= sizeInfo.bust_min_inches && valueInInches <= sizeInfo.bust_max_inches) {
+        result.usSize = sizeInfo.size;
+        break;
+      }
+    }
+    
+    // Check UK sizes
+    for (const sizeInfo of brand.sizes.UK) {
+      if (valueInInches >= sizeInfo.bust_min_inches && valueInInches <= sizeInfo.bust_max_inches) {
+        result.ukSize = sizeInfo.size;
+        break;
+      }
+    }
+    
+    // Check EU sizes
+    for (const sizeInfo of brand.sizes.EU) {
+      if (valueInInches >= sizeInfo.bust_min_inches && valueInInches <= sizeInfo.bust_max_inches) {
+        result.euSize = sizeInfo.size;
+        break;
+      }
+    }
+  } else {
+    // For other measurement types, use the generic fallback
+    return calculateFallbackSize(measurementType, value, unit);
+  }
+  
+  return result;
+};
+
+// Fallback size calculation when no brand-specific data is available
 const calculateFallbackSize = (
   measurementType: string,
   value: number,
@@ -271,8 +330,7 @@ export const getFeedbackStats = async () => {
       ];
     }
     
-    // Fix for TypeScript error: The .group() method doesn't exist in Supabase JS v2
-    // Instead, we'll select the fields we need and do the grouping in code
+    // Select the fields we need and do the grouping in code
     const { data, error } = await supabase
       .from('feedback')
       .select(`

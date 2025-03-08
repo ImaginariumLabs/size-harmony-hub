@@ -16,6 +16,7 @@ interface SizeResultProps {
   measurementType?: string;
   measurementValue?: string;
   measurementUnit?: string;
+  isOfflineMode?: boolean;
   onShare: () => void;
 }
 
@@ -26,6 +27,7 @@ const SizeResult: React.FC<SizeResultProps> = ({
   measurementType = '',
   measurementValue = '',
   measurementUnit = 'inches',
+  isOfflineMode = false,
   onShare 
 }) => {
   const { toast } = useToast();

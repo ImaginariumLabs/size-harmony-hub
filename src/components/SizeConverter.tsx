@@ -7,7 +7,8 @@ import SizeResult from './SizeResult';
 import ClothingTypeSelector from './ClothingTypeSelector';
 import { useToast } from '@/hooks/use-toast';
 import { useConverterSteps, ConversionResult } from '../hooks/useConverterSteps';
-import { findSizeByMeasurement, isSupabaseConnected } from '../services/sizingService';
+import { findSizeByMeasurement } from '../services/sizingService';
+import { isSupabaseConnected } from '../lib/supabase';
 
 // Import sub-components
 import ProgressIndicator from './converter/ProgressIndicator';
@@ -59,9 +60,11 @@ const SizeConverter: React.FC = () => {
       state.setResult(result);
       
       // Show offline mode indicator if we're using fallback calculations
-      if (isOfflineMode && !toast.isActive('offline-mode')) {
+      const offlineToastId = 'offline-mode';
+      const existingToast = toast.dismiss ? toast.dismiss.bind(null, offlineToastId) : undefined;
+      
+      if (isOfflineMode && !existingToast) {
         toast({
-          id: 'offline-mode',
           title: "Using estimated sizes",
           description: "Size data is estimated as database connection is unavailable.",
           variant: "default"
