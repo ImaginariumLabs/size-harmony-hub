@@ -9,13 +9,188 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      admin_users: {
+        Row: {
+          created_at: string
+          id: string
+          is_super_admin: boolean
+        }
+        Insert: {
+          created_at?: string
+          id: string
+          is_super_admin?: boolean
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_super_admin?: boolean
+        }
+        Relationships: []
+      }
+      brands: {
+        Row: {
+          created_at: string
+          id: string
+          logo_url: string | null
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          logo_url?: string | null
+          name: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          logo_url?: string | null
+          name?: string
+        }
+        Relationships: []
+      }
+      feedback: {
+        Row: {
+          brand_id: string
+          created_at: string
+          garment_type: string
+          id: string
+          is_accurate: boolean
+          measurement_type: string
+          measurement_unit: string
+          measurement_value: number
+          size_eu: string | null
+          size_uk: string | null
+          size_us: string | null
+        }
+        Insert: {
+          brand_id: string
+          created_at?: string
+          garment_type: string
+          id?: string
+          is_accurate: boolean
+          measurement_type: string
+          measurement_unit: string
+          measurement_value: number
+          size_eu?: string | null
+          size_uk?: string | null
+          size_us?: string | null
+        }
+        Update: {
+          brand_id?: string
+          created_at?: string
+          garment_type?: string
+          id?: string
+          is_accurate?: boolean
+          measurement_type?: string
+          measurement_unit?: string
+          measurement_value?: number
+          size_eu?: string | null
+          size_uk?: string | null
+          size_us?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "feedback_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      garments: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      size_ranges: {
+        Row: {
+          brand_id: string
+          created_at: string
+          garment_id: string
+          id: string
+          max_value: number
+          measurement_type: string
+          min_value: number
+          region: string
+          size_label: string
+          unit: string
+        }
+        Insert: {
+          brand_id: string
+          created_at?: string
+          garment_id: string
+          id?: string
+          max_value: number
+          measurement_type: string
+          min_value: number
+          region: string
+          size_label: string
+          unit?: string
+        }
+        Update: {
+          brand_id?: string
+          created_at?: string
+          garment_id?: string
+          id?: string
+          max_value?: number
+          measurement_type?: string
+          min_value?: number
+          region?: string
+          size_label?: string
+          unit?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "size_ranges_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "size_ranges_garment_id_fkey"
+            columns: ["garment_id"]
+            isOneToOne: false
+            referencedRelation: "garments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      import_size_data: {
+        Args: {
+          p_brand_name: string
+          p_garment_name: string
+          p_region: string
+          p_size_label: string
+          p_measurement_type: string
+          p_min_value: number
+          p_max_value: number
+          p_unit?: string
+        }
+        Returns: string
+      }
     }
     Enums: {
       [_ in never]: never

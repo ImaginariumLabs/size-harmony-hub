@@ -9,8 +9,8 @@ type FeedbackStat = {
   garmentType: string;
   accurate: number;
   inaccurate: number;
-  total: number;
-  accuracy: number;
+  count: number;
+  accuracy?: number;
 };
 
 const FeedbackStatsTab = () => {
@@ -24,36 +24,13 @@ const FeedbackStatsTab = () => {
         setLoading(true);
         const rawStats = await getFeedbackStats();
         
-        // Process the raw stats into a format for our chart
-        const processedStats: Record<string, FeedbackStat> = {};
+        // Process the raw stats to add accuracy percentage
+        const processedStats = rawStats.map((stat: FeedbackStat) => ({
+          ...stat,
+          accuracy: Math.round((stat.accurate / stat.count) * 100)
+        }));
         
-        rawStats.forEach((stat: any) => {
-          const key = `${stat.brands.name}-${stat.garment_type}`;
-          
-          if (!processedStats[key]) {
-            processedStats[key] = {
-              brand: stat.brands.name,
-              garmentType: stat.garment_type,
-              accurate: 0,
-              inaccurate: 0,
-              total: 0,
-              accuracy: 0
-            };
-          }
-          
-          if (stat.is_accurate) {
-            processedStats[key].accurate += parseInt(stat.count);
-          } else {
-            processedStats[key].inaccurate += parseInt(stat.count);
-          }
-          
-          processedStats[key].total = processedStats[key].accurate + processedStats[key].inaccurate;
-          processedStats[key].accuracy = Math.round(
-            (processedStats[key].accurate / processedStats[key].total) * 100
-          );
-        });
-        
-        setStats(Object.values(processedStats));
+        setStats(processedStats);
       } catch (error) {
         console.error('Error fetching feedback stats:', error);
         toast({
@@ -128,14 +105,14 @@ const FeedbackStatsTab = () => {
                     <td className="px-6 py-4 whitespace-nowrap text-sm capitalize">{stat.garmentType}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-green-600">{stat.accurate}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-red-600">{stat.inaccurate}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">{stat.total}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm">{stat.count}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm">
                       <div className="flex items-center">
                         <div className="w-full bg-gray-200 rounded-full h-2.5 mr-2 max-w-[100px]">
                           <div 
                             className={`h-2.5 rounded-full ${
-                              stat.accuracy >= 70 ? 'bg-green-500' : 
-                              stat.accuracy >= 40 ? 'bg-yellow-500' : 'bg-red-500'
+                              stat.accuracy && stat.accuracy >= 70 ? 'bg-green-500' : 
+                              stat.accuracy && stat.accuracy >= 40 ? 'bg-yellow-500' : 'bg-red-500'
                             }`}
                             style={{ width: `${stat.accuracy}%` }}
                           ></div>

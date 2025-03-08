@@ -1,9 +1,9 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Share2, ThumbsUp, ThumbsDown } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { submitFeedback } from '../services/sizingService';
+import { submitFeedback, fetchBrands } from '../services/sizingService';
 
 interface SizeResultProps {
   result: {
@@ -33,6 +33,26 @@ const SizeResult: React.FC<SizeResultProps> = ({
   const { toast } = useToast();
   const [submittingFeedback, setSubmittingFeedback] = useState(false);
   const [feedbackSubmitted, setFeedbackSubmitted] = useState(false);
+  const [brandId, setBrandId] = useState<string | null>(null);
+  
+  // Fetch brand ID when brandName changes
+  useEffect(() => {
+    const getBrandId = async () => {
+      if (!brandName) return;
+      
+      try {
+        const brands = await fetchBrands();
+        const brand = brands.find(b => b.name === brandName);
+        if (brand) {
+          setBrandId(brand.id);
+        }
+      } catch (error) {
+        console.error("Error fetching brand ID:", error);
+      }
+    };
+    
+    getBrandId();
+  }, [brandName]);
 
   if (!result) return null;
 
@@ -53,12 +73,21 @@ const SizeResult: React.FC<SizeResultProps> = ({
     try {
       setSubmittingFeedback(true);
       
-      // Get the brand ID - in a real implementation, you'd store and pass this ID
-      // This is simplified for this example
-      const brandId = "sample-brand-id"; // This would come from your data
+      // If we couldn't get the brand ID, show an error
+      if (!brandId && !isOfflineMode) {
+        toast({
+          title: "Cannot submit feedback",
+          description: "Could not identify the brand. Please try again later.",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      // In offline mode, we'll use a placeholder brand ID
+      const feedbackBrandId = brandId || "offline-mode-brand-id";
       
       await submitFeedback({
-        brand_id: brandId,
+        brand_id: feedbackBrandId,
         garment_type: clothingType,
         measurement_value: parseFloat(measurementValue) || 0,
         measurement_type: measurementType,

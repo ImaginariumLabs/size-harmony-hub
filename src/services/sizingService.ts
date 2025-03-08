@@ -1,17 +1,55 @@
 
-import { supabase, isSupabaseConnected, Tables } from '../lib/supabase';
+import { supabase, isSupabaseConnected } from '../lib/supabase';
 import sizeData from '../utils/sizeData';
 
-export type Brand = Tables['brands'];
-export type SizeRange = Tables['size_ranges'];
-export type Feedback = Tables['feedback'];
+// Define types for our database tables
+export type Brand = {
+  id: string;
+  name: string;
+  logo_url: string | null;
+  created_at: string;
+};
+
+export type Garment = {
+  id: string;
+  name: string;
+  description: string | null;
+  created_at: string;
+};
+
+export type SizeRange = {
+  id: string;
+  brand_id: string;
+  garment_id: string;
+  region: string;
+  size_label: string;
+  measurement_type: string;
+  min_value: number;
+  max_value: number;
+  unit: string;
+  created_at: string;
+};
+
+export type Feedback = {
+  id: string;
+  brand_id: string;
+  garment_type: string;
+  measurement_value: number;
+  measurement_type: string;
+  measurement_unit: string;
+  size_us: string;
+  size_uk: string;
+  size_eu: string;
+  is_accurate: boolean;
+  created_at: string;
+};
 
 // Mock data for when Supabase is not connected
 const mockBrands: Brand[] = [
-  { id: '1', name: 'H&M', logo_url: null },
-  { id: '2', name: 'Zara', logo_url: null },
-  { id: '3', name: 'Nike', logo_url: null },
-  { id: '4', name: 'Adidas', logo_url: null },
+  { id: '1', name: 'H&M', logo_url: null, created_at: new Date().toISOString() },
+  { id: '2', name: 'Zara', logo_url: null, created_at: new Date().toISOString() },
+  { id: '3', name: 'Nike', logo_url: null, created_at: new Date().toISOString() },
+  { id: '4', name: 'Adidas', logo_url: null, created_at: new Date().toISOString() },
 ];
 
 // Basic size mapping for fallback calculations
@@ -70,7 +108,7 @@ export const fetchBrands = async (): Promise<Brand[]> => {
 
 // Fetch size ranges for a specific brand and garment type
 export const fetchSizeRanges = async (
-  brandId: string, 
+  brandName: string, 
   garmentType: string
 ): Promise<SizeRange[]> => {
   try {
@@ -82,6 +120,18 @@ export const fetchSizeRanges = async (
       return [];
     }
     
+    // Get brand ID
+    const { data: brand } = await supabase
+      .from('brands')
+      .select('id')
+      .eq('name', brandName)
+      .single();
+      
+    if (!brand) {
+      throw new Error(`Brand ${brandName} not found`);
+    }
+    
+    // Get garment ID
     const { data: garment } = await supabase
       .from('garments')
       .select('id')
@@ -92,10 +142,11 @@ export const fetchSizeRanges = async (
       throw new Error(`Garment type ${garmentType} not found`);
     }
     
+    // Get size ranges
     const { data, error } = await supabase
       .from('size_ranges')
       .select('*')
-      .eq('brand_id', brandId)
+      .eq('brand_id', brand.id)
       .eq('garment_id', garment.id);
       
     if (error) {
@@ -129,34 +180,34 @@ export const findSizeByMeasurement = async (
     }
     
     // First get the brand ID
-    const { data: brand } = await supabase
+    const { data: brands } = await supabase
       .from('brands')
       .select('id')
-      .eq('name', brandName)
-      .single();
+      .eq('name', brandName);
       
-    if (!brand) {
+    if (!brands || brands.length === 0) {
       console.log(`Brand ${brandName} not found, using fallback calculation`);
       return calculateOfflineSizeFromData(brandName, measurementType, measurementValue, unit);
     }
     
+    const brandId = brands[0].id;
+    
     // Then get the garment ID
-    const { data: garment } = await supabase
+    const { data: garments } = await supabase
       .from('garments')
       .select('id')
-      .eq('name', garmentType)
-      .single();
+      .eq('name', garmentType);
       
-    if (!garment) {
+    if (!garments || garments.length === 0) {
       console.log(`Garment type ${garmentType} not found, using fallback calculation`);
       return calculateOfflineSizeFromData(brandName, measurementType, measurementValue, unit);
     }
     
+    const garmentId = garments[0].id;
+    
     // Convert to cm if needed for consistency
     const valueInCm = unit === 'inches' ? measurementValue * 2.54 : measurementValue;
     
-    // Query size ranges for each region
-    const regions = ['US', 'UK', 'EU'];
     // Initialize with the correct property structure
     const sizes: { usSize: string; ukSize: string; euSize: string } = {
       usSize: 'No exact match found',
@@ -164,22 +215,49 @@ export const findSizeByMeasurement = async (
       euSize: 'No exact match found'
     };
     
-    for (const region of regions) {
-      const { data } = await supabase
-        .from('size_ranges')
-        .select('*')
-        .eq('brand_id', brand.id)
-        .eq('garment_id', garment.id)
-        .eq('region', region)
-        .eq('measurement_type', measurementType)
-        .eq('unit', 'cm') // Assuming we store everything in cm for consistency
-        .lte('max_value', valueInCm)
-        .gte('min_value', valueInCm);
-        
-      if (data && data.length > 0) {
-        const sizeKey = region.toLowerCase() + 'Size' as 'usSize' | 'ukSize' | 'euSize';
-        sizes[sizeKey] = data[0].size_label;
-      }
+    // Query size ranges for US region
+    const { data: usRanges } = await supabase
+      .from('size_ranges')
+      .select('*')
+      .eq('brand_id', brandId)
+      .eq('garment_id', garmentId)
+      .eq('region', 'US')
+      .eq('measurement_type', measurementType)
+      .lte('max_value', valueInCm)
+      .gte('min_value', valueInCm);
+    
+    if (usRanges && usRanges.length > 0) {
+      sizes.usSize = usRanges[0].size_label;
+    }
+    
+    // Query size ranges for UK region
+    const { data: ukRanges } = await supabase
+      .from('size_ranges')
+      .select('*')
+      .eq('brand_id', brandId)
+      .eq('garment_id', garmentId)
+      .eq('region', 'UK')
+      .eq('measurement_type', measurementType)
+      .lte('max_value', valueInCm)
+      .gte('min_value', valueInCm);
+    
+    if (ukRanges && ukRanges.length > 0) {
+      sizes.ukSize = ukRanges[0].size_label;
+    }
+    
+    // Query size ranges for EU region
+    const { data: euRanges } = await supabase
+      .from('size_ranges')
+      .select('*')
+      .eq('brand_id', brandId)
+      .eq('garment_id', garmentId)
+      .eq('region', 'EU')
+      .eq('measurement_type', measurementType)
+      .lte('max_value', valueInCm)
+      .gte('min_value', valueInCm);
+    
+    if (euRanges && euRanges.length > 0) {
+      sizes.euSize = euRanges[0].size_label;
     }
     
     return sizes;
@@ -330,14 +408,14 @@ export const getFeedbackStats = async () => {
       ];
     }
     
-    // Select the fields we need and do the grouping in code
+    // Get feedback stats with brand names
     const { data, error } = await supabase
       .from('feedback')
       .select(`
-        brands (name),
+        brand_id,
         garment_type,
         is_accurate,
-        created_at
+        brands!inner(name)
       `);
       
     if (error) {
@@ -355,12 +433,13 @@ export const getFeedbackStats = async () => {
     }> = {};
     
     (data || []).forEach((item: any) => {
-      const key = `${item.brands?.name}-${item.garment_type}`;
+      const brandName = item.brands.name;
+      const key = `${brandName}-${item.garment_type}`;
       
       if (!groupedStats[key]) {
         groupedStats[key] = {
-          brand: item.brands?.name || 'Unknown',
-          garmentType: item.garment_type || 'Unknown',
+          brand: brandName,
+          garmentType: item.garment_type,
           accurate: 0,
           inaccurate: 0,
           count: 0
@@ -383,5 +462,140 @@ export const getFeedbackStats = async () => {
       { brand: 'H&M', garmentType: 'tops', accurate: 12, inaccurate: 3, count: 15 },
       { brand: 'Zara', garmentType: 'dresses', accurate: 8, inaccurate: 2, count: 10 }
     ];
+  }
+};
+
+// New function to export data to CSV
+export const exportSizeDataToCSV = async (brandFilter?: string, garmentFilter?: string) => {
+  try {
+    // Check if Supabase is connected
+    const connected = await isSupabaseConnected();
+    
+    if (!connected) {
+      throw new Error('Cannot export data in offline mode');
+    }
+    
+    let query = supabase
+      .from('size_ranges')
+      .select(`
+        id,
+        region,
+        size_label,
+        measurement_type,
+        min_value,
+        max_value,
+        unit,
+        brands!inner(name),
+        garments!inner(name)
+      `);
+    
+    // Apply filters if provided
+    if (brandFilter) {
+      query = query.eq('brands.name', brandFilter);
+    }
+    
+    if (garmentFilter) {
+      query = query.eq('garments.name', garmentFilter);
+    }
+    
+    const { data, error } = await query;
+    
+    if (error) {
+      console.error('Error exporting size data:', error);
+      throw error;
+    }
+    
+    // Format data for CSV
+    const csvRows = data.map((row: any) => {
+      return {
+        brand: row.brands.name,
+        garment: row.garments.name,
+        region: row.region,
+        sizeLabel: row.size_label,
+        measurementType: row.measurement_type,
+        minValue: row.min_value,
+        maxValue: row.max_value,
+        unit: row.unit
+      };
+    });
+    
+    // Convert to CSV string
+    const headers = Object.keys(csvRows[0]);
+    const csvContent = [
+      headers.join(','),
+      ...csvRows.map(row => headers.map(header => JSON.stringify(row[header as keyof typeof row])).join(','))
+    ].join('\n');
+    
+    return csvContent;
+  } catch (e) {
+    console.error('Error exporting size data to CSV:', e);
+    throw e;
+  }
+};
+
+// New function to import size data from CSV
+export const importSizeDataFromCSV = async (csvContent: string) => {
+  try {
+    // Check if Supabase is connected
+    const connected = await isSupabaseConnected();
+    
+    if (!connected) {
+      throw new Error('Cannot import data in offline mode');
+    }
+    
+    // Parse CSV content
+    const rows = csvContent.split('\n');
+    const headers = rows[0].split(',').map(h => h.trim());
+    
+    // Track results
+    const results = {
+      total: 0,
+      success: 0,
+      errors: [] as string[]
+    };
+    
+    // Process each row
+    for (let i = 1; i < rows.length; i++) {
+      try {
+        results.total++;
+        
+        const values = rows[i].split(',').map(v => v.trim());
+        if (values.length !== headers.length) {
+          results.errors.push(`Row ${i}: Invalid column count`);
+          continue;
+        }
+        
+        // Create a record object from the CSV row
+        const record: Record<string, string> = {};
+        headers.forEach((header, index) => {
+          record[header] = values[index].replace(/^"|"$/g, ''); // Remove quotes
+        });
+        
+        // Call the import function via RPC
+        const { data, error } = await supabase.rpc('import_size_data', {
+          p_brand_name: record.brand,
+          p_garment_name: record.garment,
+          p_region: record.region,
+          p_size_label: record.sizeLabel,
+          p_measurement_type: record.measurementType,
+          p_min_value: parseFloat(record.minValue),
+          p_max_value: parseFloat(record.maxValue),
+          p_unit: record.unit || 'cm'
+        });
+        
+        if (error) {
+          results.errors.push(`Row ${i}: ${error.message}`);
+        } else {
+          results.success++;
+        }
+      } catch (err) {
+        results.errors.push(`Row ${i}: ${(err as Error).message}`);
+      }
+    }
+    
+    return results;
+  } catch (e) {
+    console.error('Error importing size data from CSV:', e);
+    throw e;
   }
 };
