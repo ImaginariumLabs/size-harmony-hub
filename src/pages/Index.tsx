@@ -6,7 +6,7 @@ import UserGuide from '../components/UserGuide';
 import Footer from '../components/Footer';
 import FeaturedBrands from '../components/FeaturedBrands';
 import AdSpace from '../components/converter/AdSpace';
-import { Sparkles, InfoIcon, GithubIcon, BookOpenIcon, Settings } from 'lucide-react';
+import { Sparkles, InfoIcon, BookOpenIcon, Settings } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 // Mock content data (in a real app, this would come from Supabase)
@@ -99,43 +99,39 @@ const Index = () => {
         
         {/* Animated gradient orbs */}
         <div ref={orbsRef} className="absolute inset-0 overflow-hidden">
-          <div className="absolute top-[15%] -left-[10%] w-[35%] h-[35%] rounded-full bg-gradient-to-br from-purple-200 to-pink-200 blur-3xl opacity-40 transition-transform duration-[2000ms] animate-pulse"></div>
-          <div className="absolute bottom-[20%] left-[20%] w-[25%] h-[25%] rounded-full bg-gradient-to-br from-blue-200 to-indigo-200 blur-3xl opacity-30 transition-transform duration-[2000ms] animate-pulse animate-delay-300"></div>
-          <div className="absolute top-[30%] right-[10%] w-[30%] h-[30%] rounded-full bg-gradient-to-br from-pink-200 to-red-200 blur-3xl opacity-30 transition-transform duration-[2000ms] animate-pulse animate-delay-500"></div>
+          <div className="absolute top-[15%] -left-[10%] w-[35%] h-[35%] rounded-full bg-gradient-to-br from-purple-300 to-purple-400 blur-3xl opacity-40 transition-transform duration-[2000ms] animate-pulse"></div>
+          <div className="absolute bottom-[20%] left-[20%] w-[25%] h-[25%] rounded-full bg-gradient-to-br from-indigo-300 to-indigo-400 blur-3xl opacity-30 transition-transform duration-[2000ms] animate-pulse animate-delay-300"></div>
+          <div className="absolute top-[30%] right-[10%] w-[30%] h-[30%] rounded-full bg-gradient-to-br from-purple-300 to-purple-400 blur-3xl opacity-30 transition-transform duration-[2000ms] animate-pulse animate-delay-500"></div>
         </div>
         
         {/* Animated floating particles */}
         <div ref={animatedBgRef} className="absolute inset-0 overflow-hidden pointer-events-none"></div>
         
         {/* Light mesh gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-br from-purple-50/80 via-white/60 to-pink-50/80"></div>
+        <div className="absolute inset-0 bg-gradient-to-br from-purple-50/80 via-white/60 to-indigo-50/80"></div>
         
         {/* Grid pattern for depth */}
         <div className="absolute inset-0 grid-background opacity-20"></div>
       </div>
       
       {/* Top Navigation Bar */}
-      <nav className="w-full py-3 px-4 glass backdrop-blur-sm fixed top-0 z-10">
+      <nav className="w-full py-3 px-4 glass backdrop-blur-sm fixed top-0 z-10 border-b border-purple-100">
         <div className="container mx-auto flex items-center justify-between">
           <div className="flex items-center">
-            <Sparkles className="h-5 w-5 text-primary mr-2" />
-            <span className="font-semibold text-foreground">Fashion Size Harmony</span>
+            <img src="/logo.png" alt="Size Harmony Logo" className="h-10 mr-2" />
+            <span className="font-semibold text-purple-900">Size Harmony</span>
           </div>
           
           <div className="flex space-x-4">
-            <a href="#guide" className="text-sm flex items-center text-muted-foreground hover:text-primary transition-colors">
+            <a href="#guide" className="text-sm flex items-center text-purple-700 hover:text-primary transition-colors">
               <InfoIcon className="h-4 w-4 mr-1" />
               <span className="hidden sm:inline">About</span>
             </a>
-            <a href="#guide" className="text-sm flex items-center text-muted-foreground hover:text-primary transition-colors">
+            <a href="#guide" className="text-sm flex items-center text-purple-700 hover:text-primary transition-colors">
               <BookOpenIcon className="h-4 w-4 mr-1" />
               <span className="hidden sm:inline">Guide</span>
             </a>
-            <a href="https://github.com" target="_blank" rel="noopener noreferrer" className="text-sm flex items-center text-muted-foreground hover:text-primary transition-colors">
-              <GithubIcon className="h-4 w-4 mr-1" />
-              <span className="hidden sm:inline">GitHub</span>
-            </a>
-            <Link to="/admin" className="text-sm flex items-center text-muted-foreground hover:text-primary transition-colors">
+            <Link to="/admin" className="text-sm flex items-center text-purple-700 hover:text-primary transition-colors">
               <Settings className="h-4 w-4 mr-1" />
               <span className="hidden sm:inline">Admin</span>
             </Link>
@@ -151,16 +147,16 @@ const Index = () => {
           className="text-center mb-8"
         >
           <motion.div 
-            className="inline-flex items-center px-4 py-1 bg-primary/10 rounded-full text-primary text-sm font-medium mb-3"
+            className="inline-flex items-center px-4 py-1 bg-purple-100 rounded-full text-purple-700 text-sm font-medium mb-3"
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.2 }}
           >
             <Sparkles className="h-4 w-4 mr-2" />
-            Fashion Size Harmony
+            Size Harmony
           </motion.div>
-          <h1 className="text-3xl md:text-4xl font-display mb-2">{content['hero-title']}</h1>
-          <p className="text-muted-foreground max-w-lg mx-auto">
+          <h1 className="text-3xl md:text-4xl font-display mb-2 text-purple-900">{content['hero-title']}</h1>
+          <p className="text-purple-700 max-w-lg mx-auto">
             {content['hero-description']}
           </p>
         </motion.div>

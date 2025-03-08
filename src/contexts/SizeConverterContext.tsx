@@ -49,23 +49,49 @@ export const SizeConverterProvider: React.FC<{ children: ReactNode }> = ({ child
   const [result, setResult] = useState<SizeResult>(null);
   const [loading, setLoading] = useState(false);
   const [isOfflineMode, setIsOfflineMode] = useState(false);
+  const [connectionChecked, setConnectionChecked] = useState(false);
 
-  // Check Supabase connection on mount
+  // Check Supabase connection on mount and retry every 10 seconds
   useEffect(() => {
     const checkConnection = async () => {
-      const connected = await isSupabaseConnected();
-      if (!connected) {
+      try {
+        const connected = await isSupabaseConnected();
+        setIsOfflineMode(!connected);
+        setConnectionChecked(true);
+        
+        if (!connected) {
+          console.log("Supabase connection not available, using offline mode");
+          // Only show toast on initial check
+          if (!connectionChecked) {
+            toast({
+              title: "Offline Mode",
+              description: "Using local data since database connection is unavailable.",
+              variant: "default"
+            });
+          }
+        } else if (connectionChecked && isOfflineMode) {
+          // We've reconnected
+          console.log("Supabase connection restored");
+          toast({
+            title: "Online Mode",
+            description: "Connected to the database successfully.",
+            variant: "default"
+          });
+        }
+      } catch (error) {
+        console.error("Error checking Supabase connection:", error);
         setIsOfflineMode(true);
-        toast({
-          title: "Offline Mode",
-          description: "Using local data since database connection is unavailable.",
-          variant: "default"
-        });
       }
     };
     
+    // Check immediately
     checkConnection();
-  }, [toast]);
+    
+    // Check again every 10 seconds
+    const interval = setInterval(checkConnection, 10000);
+    
+    return () => clearInterval(interval);
+  }, [toast, connectionChecked, isOfflineMode]);
   
   // When clothing type changes, update measurement type and move to step 2
   useEffect(() => {
@@ -117,11 +143,7 @@ export const SizeConverterProvider: React.FC<{ children: ReactNode }> = ({ child
       
       // Show offline mode indicator if we're using fallback calculations
       if (isOfflineMode) {
-        toast({
-          title: "Using estimated sizes",
-          description: "Size data is estimated as database connection is unavailable.",
-          variant: "default"
-        });
+        console.log("Using estimated sizes (offline mode)");
       }
     } catch (error) {
       console.error('Error calculating size:', error);
