@@ -2,12 +2,13 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { LockKeyhole, Plus, Save, Trash, Image, Link as LinkIcon, 
-  FileSpreadsheet, Upload, Eye, Layout, Text, Settings, ArrowLeft } from 'lucide-react';
+  FileSpreadsheet, Upload, Eye, Layout, Text, Settings, ArrowLeft, MessageSquare } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import BrandManagementTab from '../components/admin/BrandManagementTab';
 import AdManagementTab from '../components/admin/AdManagementTab';
 import ContentManagementTab from '../components/admin/ContentManagementTab';
+import FeedbackStatsTab from '../components/admin/FeedbackStatsTab';
 
 const Admin = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -89,10 +90,16 @@ const Admin = () => {
         
         <div className="glass-card p-6 mb-6">
           <Tabs defaultValue="brands">
-            <TabsList className="grid w-full grid-cols-3 mb-6">
+            <TabsList className="grid w-full grid-cols-4 mb-6">
               <TabsTrigger value="brands">Brand Management</TabsTrigger>
               <TabsTrigger value="ads">Ad Management</TabsTrigger>
               <TabsTrigger value="content">Content Control</TabsTrigger>
+              <TabsTrigger value="feedback">
+                <div className="flex items-center">
+                  <MessageSquare className="h-4 w-4 mr-2" />
+                  Feedback
+                </div>
+              </TabsTrigger>
             </TabsList>
             
             <TabsContent value="brands">
@@ -105,6 +112,10 @@ const Admin = () => {
             
             <TabsContent value="content">
               <ContentManagementTab />
+            </TabsContent>
+            
+            <TabsContent value="feedback">
+              <FeedbackStatsTab />
             </TabsContent>
           </Tabs>
         </div>

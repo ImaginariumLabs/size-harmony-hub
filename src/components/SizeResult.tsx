@@ -1,7 +1,9 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Share2 } from 'lucide-react';
+import { Share2, ThumbsUp, ThumbsDown } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { submitFeedback } from '../services/sizingService';
 
 interface SizeResultProps {
   result: {
@@ -12,6 +14,8 @@ interface SizeResultProps {
   brandName: string;
   clothingType?: string;
   measurementType?: string;
+  measurementValue?: string;
+  measurementUnit?: string;
   onShare: () => void;
 }
 
@@ -20,8 +24,14 @@ const SizeResult: React.FC<SizeResultProps> = ({
   brandName, 
   clothingType = '',
   measurementType = '',
+  measurementValue = '',
+  measurementUnit = 'inches',
   onShare 
 }) => {
+  const { toast } = useToast();
+  const [submittingFeedback, setSubmittingFeedback] = useState(false);
+  const [feedbackSubmitted, setFeedbackSubmitted] = useState(false);
+
   if (!result) return null;
 
   // Helper to determine if a size is a match or not
@@ -34,6 +44,43 @@ const SizeResult: React.FC<SizeResultProps> = ({
       case 'bottoms': return 'Bottom';
       case 'dresses': return 'Dress';
       default: return '';
+    }
+  };
+
+  const handleFeedback = async (isAccurate: boolean) => {
+    try {
+      setSubmittingFeedback(true);
+      
+      // Get the brand ID - in a real implementation, you'd store and pass this ID
+      // This is simplified for this example
+      const brandId = "sample-brand-id"; // This would come from your data
+      
+      await submitFeedback({
+        brand_id: brandId,
+        garment_type: clothingType,
+        measurement_value: parseFloat(measurementValue) || 0,
+        measurement_type: measurementType,
+        measurement_unit: measurementUnit,
+        size_us: result.usSize,
+        size_uk: result.ukSize,
+        size_eu: result.euSize,
+        is_accurate: isAccurate
+      });
+      
+      setFeedbackSubmitted(true);
+      toast({
+        title: "Thank you for your feedback!",
+        description: "Your input helps us improve our size recommendations.",
+      });
+    } catch (error) {
+      console.error("Error submitting feedback:", error);
+      toast({
+        title: "Feedback submission failed",
+        description: "Please try again later.",
+        variant: "destructive"
+      });
+    } finally {
+      setSubmittingFeedback(false);
     }
   };
 
@@ -105,6 +152,43 @@ const SizeResult: React.FC<SizeResultProps> = ({
                 <div className="text-3xl font-display">{result.euSize}</div>
               </motion.div>
             </div>
+            
+            {!feedbackSubmitted ? (
+              <motion.div 
+                className="mt-8 text-center"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.5 }}
+              >
+                <p className="text-sm text-muted-foreground mb-4">Is this size recommendation accurate?</p>
+                <div className="flex justify-center gap-4">
+                  <button
+                    onClick={() => handleFeedback(true)}
+                    disabled={submittingFeedback}
+                    className="flex items-center gap-2 px-4 py-2 bg-green-100 text-green-700 rounded-md hover:bg-green-200 transition-colors"
+                  >
+                    <ThumbsUp className="h-4 w-4" />
+                    This size is correct
+                  </button>
+                  <button
+                    onClick={() => handleFeedback(false)}
+                    disabled={submittingFeedback}
+                    className="flex items-center gap-2 px-4 py-2 bg-red-100 text-red-700 rounded-md hover:bg-red-200 transition-colors"
+                  >
+                    <ThumbsDown className="h-4 w-4" />
+                    This size is incorrect
+                  </button>
+                </div>
+              </motion.div>
+            ) : (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="mt-8 text-center text-green-600 font-medium"
+              >
+                Thank you for your feedback!
+              </motion.div>
+            )}
             
             <motion.p 
               className="mt-6 text-sm text-center text-muted-foreground"

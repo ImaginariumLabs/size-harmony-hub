@@ -59,6 +59,21 @@ export const GARMENT_TYPES = [
   { id: 'dresses', name: 'Dresses' }
 ];
 
+export interface FeedbackData {
+  id: string;
+  brand_id: string;
+  brand_name: string;
+  garment_type: string;
+  measurement_value: number;
+  measurement_type: string;
+  measurement_unit: string;
+  size_us: string;
+  size_uk: string;
+  size_eu: string;
+  is_accurate: boolean;
+  created_at: string;
+}
+
 export const defaultSizeTemplates: Record<string, Record<string, any>> = {
   tops: {
     xs: { 

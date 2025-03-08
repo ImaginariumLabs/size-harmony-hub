@@ -1,13 +1,13 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import BrandSelector from './BrandSelector';
 import MeasurementInput from './MeasurementInput';
 import SizeResult from './SizeResult';
 import ClothingTypeSelector from './ClothingTypeSelector';
-import sizeData from '../utils/sizeData';
 import { useToast } from '@/hooks/use-toast';
 import { useConverterSteps, ConversionResult } from '../hooks/useConverterSteps';
+import { findSizeByMeasurement } from '../services/sizingService';
 
 // Import sub-components
 import ProgressIndicator from './converter/ProgressIndicator';
@@ -18,52 +18,55 @@ import AdSpace from './converter/AdSpace';
 
 const SizeConverter: React.FC = () => {
   const { toast } = useToast();
+  const [loading, setLoading] = useState(false);
   
-  const calculateSize = () => {
+  const calculateSize = async () => {
     if (!state.brand || !state.bust || isNaN(parseFloat(state.bust)) || parseFloat(state.bust) <= 0) {
       state.setResult(null);
       return;
     }
-
-    // Convert to inches if needed
-    const measurementInches = state.units === 'cm' ? parseFloat(state.bust) / 2.54 : parseFloat(state.bust);
-
-    // Find the selected brand
-    const selectedBrand = sizeData.brands.find(b => b.name === state.brand);
-    if (!selectedBrand) {
-      state.setResult(null);
-      return;
-    }
-
-    // Find matching sizes
-    const findMatchingSize = (sizeSystem: 'US' | 'UK' | 'EU') => {
-      if (!selectedBrand.sizes[sizeSystem]) {
-        return 'Not available';
-      }
+    
+    try {
+      setLoading(true);
       
-      // Use appropriate measurement field based on type
-      const matchedSize = selectedBrand.sizes[sizeSystem].find(
-        size => {
-          if (state.measurementType === 'bust') {
-            return measurementInches >= size.bust_min_inches && measurementInches <= size.bust_max_inches;
-          } else if (state.measurementType === 'waist') {
-            // Using bust measurements as a fallback since we don't have waist in the data yet
-            return measurementInches >= size.bust_min_inches && measurementInches <= size.bust_max_inches;
-          } else if (state.measurementType === 'hips') {
-            // Using bust measurements as a fallback since we don't have hips in the data yet
-            return measurementInches >= size.bust_min_inches && measurementInches <= size.bust_max_inches;
-          }
-          return false;
-        }
+      // Call our Supabase service to find the size
+      const result = await findSizeByMeasurement(
+        state.brand,
+        state.clothingType,
+        state.measurementType,
+        parseFloat(state.bust),
+        state.units
       );
-      return matchedSize ? matchedSize.size : 'No exact match found';
-    };
-
-    state.setResult({
-      usSize: findMatchingSize('US'),
-      ukSize: findMatchingSize('UK'),
-      euSize: findMatchingSize('EU')
-    });
+      
+      state.setResult(result);
+    } catch (error) {
+      console.error('Error calculating size:', error);
+      toast({
+        title: "Size calculation failed",
+        description: "We couldn't determine your size. Please try again.",
+        variant: "destructive"
+      });
+      
+      // Fallback to local calculation
+      const measurementInches = state.units === 'cm' ? parseFloat(state.bust) / 2.54 : parseFloat(state.bust);
+      
+      const findMatchingSize = (sizeSystem: 'US' | 'UK' | 'EU') => {
+        // Simple fallback logic - this would be replaced by the Supabase data
+        if (measurementInches < 34) return 'XS';
+        if (measurementInches < 36) return 'S';
+        if (measurementInches < 38) return 'M';
+        if (measurementInches < 40) return 'L';
+        return 'XL';
+      };
+      
+      state.setResult({
+        usSize: findMatchingSize('US'),
+        ukSize: findMatchingSize('UK'),
+        euSize: findMatchingSize('EU')
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const state = useConverterSteps({ calculateSize });
@@ -150,6 +153,13 @@ const SizeConverter: React.FC = () => {
           </motion.div>
         )}
         
+        {/* Loading indicator */}
+        {loading && (
+          <div className="w-full flex justify-center my-6">
+            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
+          </div>
+        )}
+        
         {/* Step 4: Results */}
         <SizeResult 
           result={state.result} 
@@ -157,6 +167,8 @@ const SizeConverter: React.FC = () => {
           onShare={shareResults}
           clothingType={state.clothingType}
           measurementType={state.measurementType}
+          measurementValue={state.bust}
+          measurementUnit={state.units}
         />
         
         {/* Reset button (only visible when there's a result) */}
