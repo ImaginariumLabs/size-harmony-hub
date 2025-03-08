@@ -84,7 +84,8 @@ export const findSizeByMeasurement = async (
   
   // Query size ranges for each region
   const regions = ['US', 'UK', 'EU'];
-  const sizes: Record<string, string> = {
+  // Fix for TypeScript error: Initialize with the correct property structure
+  const sizes: { usSize: string; ukSize: string; euSize: string } = {
     usSize: 'No exact match found',
     ukSize: 'No exact match found',
     euSize: 'No exact match found'
@@ -127,20 +128,52 @@ export const submitFeedback = async (feedback: Omit<Feedback, 'id' | 'created_at
 
 // Get feedback statistics for admin
 export const getFeedbackStats = async () => {
+  // Fix for TypeScript error: The .group() method doesn't exist in Supabase JS v2
+  // Instead, we'll select the fields we need and do the grouping in code
   const { data, error } = await supabase
     .from('feedback')
     .select(`
       brands (name),
       garment_type,
       is_accurate,
-      count
-    `)
-    .group('brands(name), garment_type, is_accurate');
+      created_at
+    `);
     
   if (error) {
     console.error('Error fetching feedback stats:', error);
     throw error;
   }
   
-  return data || [];
+  // Process data manually to group and count
+  const groupedStats: Record<string, { 
+    brand: string; 
+    garmentType: string; 
+    accurate: number; 
+    inaccurate: number; 
+    count: number;
+  }> = {};
+  
+  (data || []).forEach((item: any) => {
+    const key = `${item.brands?.name}-${item.garment_type}`;
+    
+    if (!groupedStats[key]) {
+      groupedStats[key] = {
+        brand: item.brands?.name || 'Unknown',
+        garmentType: item.garment_type || 'Unknown',
+        accurate: 0,
+        inaccurate: 0,
+        count: 0
+      };
+    }
+    
+    if (item.is_accurate) {
+      groupedStats[key].accurate += 1;
+    } else {
+      groupedStats[key].inaccurate += 1;
+    }
+    
+    groupedStats[key].count += 1;
+  });
+  
+  return Object.values(groupedStats);
 };
