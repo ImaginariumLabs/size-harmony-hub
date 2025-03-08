@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import BrandSelector from './BrandSelector';
@@ -6,7 +5,7 @@ import MeasurementInput from './MeasurementInput';
 import SizeResult from './SizeResult';
 import ClothingTypeSelector from './ClothingTypeSelector';
 import { useToast } from '@/hooks/use-toast';
-import { useConverterSteps, ConversionResult } from '../hooks/useConverterSteps';
+import { useConverterSteps } from '../hooks/useConverterSteps';
 import { findSizeByMeasurement } from '../services/sizingService';
 import { isSupabaseConnected } from '../lib/supabase';
 
@@ -61,10 +60,11 @@ const SizeConverter: React.FC = () => {
       
       // Show offline mode indicator if we're using fallback calculations
       const offlineToastId = 'offline-mode';
-      const existingToast = toast.dismiss ? toast.dismiss.bind(null, offlineToastId) : undefined;
       
-      if (isOfflineMode && !existingToast) {
+      // Fixed this part - don't try to access toast.dismiss
+      if (isOfflineMode) {
         toast({
+          id: offlineToastId,
           title: "Using estimated sizes",
           description: "Size data is estimated as database connection is unavailable.",
           variant: "default"
