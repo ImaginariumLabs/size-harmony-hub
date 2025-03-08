@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import BrandSelector from './BrandSelector';
@@ -59,12 +60,8 @@ const SizeConverter: React.FC = () => {
       state.setResult(result);
       
       // Show offline mode indicator if we're using fallback calculations
-      const offlineToastId = 'offline-mode';
-      
-      // Fixed this part - don't try to access toast.dismiss
       if (isOfflineMode) {
         toast({
-          id: offlineToastId,
           title: "Using estimated sizes",
           description: "Size data is estimated as database connection is unavailable.",
           variant: "default"
