@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { LockKeyhole, ArrowLeft, MessageSquare, FileText, Database } from 'lucide-react';
+import { LockKeyhole, ArrowLeft, MessageSquare, FileText, Database, PenTool } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import BrandManagementTab from '../components/admin/BrandManagementTab';
@@ -9,6 +9,7 @@ import AdManagementTab from '../components/admin/AdManagementTab';
 import ContentManagementTab from '../components/admin/ContentManagementTab';
 import FeedbackStatsTab from '../components/admin/FeedbackStatsTab';
 import ImportExportTab from '../components/admin/ImportExportTab';
+import BlogManagementTab from '../components/admin/BlogManagementTab';
 
 const Admin = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -90,10 +91,16 @@ const Admin = () => {
         
         <div className="glass-card p-6 mb-6">
           <Tabs defaultValue="brands">
-            <TabsList className="grid w-full grid-cols-5 mb-6">
+            <TabsList className="grid w-full grid-cols-6 mb-6">
               <TabsTrigger value="brands">Brand Management</TabsTrigger>
               <TabsTrigger value="ads">Ad Management</TabsTrigger>
               <TabsTrigger value="content">Content Control</TabsTrigger>
+              <TabsTrigger value="blog">
+                <div className="flex items-center">
+                  <PenTool className="h-4 w-4 mr-2" />
+                  Blog
+                </div>
+              </TabsTrigger>
               <TabsTrigger value="feedback">
                 <div className="flex items-center">
                   <MessageSquare className="h-4 w-4 mr-2" />
@@ -118,6 +125,10 @@ const Admin = () => {
             
             <TabsContent value="content">
               <ContentManagementTab />
+            </TabsContent>
+            
+            <TabsContent value="blog">
+              <BlogManagementTab />
             </TabsContent>
             
             <TabsContent value="feedback">

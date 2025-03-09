@@ -1,45 +1,92 @@
 
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Book, Info } from 'lucide-react';
+import { Home, Info, BookOpen, ShoppingBag, PenTool } from 'lucide-react';
+import { useMedia } from '@/hooks/use-mobile';
 
 const Navbar: React.FC = () => {
   const location = useLocation();
+  const isMobile = useMedia('(max-width: 768px)');
+  
+  const isActive = (path: string) => {
+    return location.pathname === path;
+  };
   
   return (
-    <header className="bg-white border-b border-gray-200">
-      <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between h-16">
-          <Link to="/" className="flex items-center space-x-2">
-            <img src="/logo.png" alt="Size Harmony Hub" className="h-8" />
-            <span className="font-display text-lg font-semibold text-primary">Size Harmony Hub</span>
+    <nav className="sticky top-0 z-40 w-full bg-white/80 backdrop-blur-md border-b">
+      <div className="container mx-auto px-4 py-3">
+        <div className="flex items-center justify-between">
+          <Link to="/" className="flex items-center">
+            <img src="/logo.png" alt="Size Harmony Hub" className="h-10 w-auto" />
+            {!isMobile && (
+              <span className="ml-2 text-xl font-display font-bold">Size Harmony Hub</span>
+            )}
           </Link>
           
-          <nav className="flex items-center space-x-6">
-            <Link 
+          <div className="flex space-x-1 md:space-x-2 text-sm">
+            <Link
+              to="/"
+              className={`px-3 py-2 rounded-md flex items-center transition-colors ${
+                isActive('/') 
+                  ? 'bg-primary/10 text-primary' 
+                  : 'text-gray-600 hover:bg-gray-100'
+              }`}
+            >
+              <Home className="h-4 w-4 md:mr-1.5" />
+              {!isMobile && <span>Home</span>}
+            </Link>
+            
+            <Link
+              to="/blog"
+              className={`px-3 py-2 rounded-md flex items-center transition-colors ${
+                isActive('/blog') || location.pathname.startsWith('/blog/') 
+                  ? 'bg-primary/10 text-primary' 
+                  : 'text-gray-600 hover:bg-gray-100'
+              }`}
+            >
+              <PenTool className="h-4 w-4 md:mr-1.5" />
+              {!isMobile && <span>Blog</span>}
+            </Link>
+            
+            <Link
               to="/guide"
-              className={`flex items-center text-sm ${location.pathname === '/guide' ? 'text-primary font-medium' : 'text-muted-foreground hover:text-primary'}`}
+              className={`px-3 py-2 rounded-md flex items-center transition-colors ${
+                isActive('/guide') 
+                  ? 'bg-primary/10 text-primary' 
+                  : 'text-gray-600 hover:bg-gray-100'
+              }`}
             >
-              <Book className="h-4 w-4 mr-1" />
-              Guide
+              <BookOpen className="h-4 w-4 md:mr-1.5" />
+              {!isMobile && <span>Guide</span>}
             </Link>
-            <Link 
+            
+            <Link
               to="/about"
-              className={`flex items-center text-sm ${location.pathname === '/about' ? 'text-primary font-medium' : 'text-muted-foreground hover:text-primary'}`}
+              className={`px-3 py-2 rounded-md flex items-center transition-colors ${
+                isActive('/about') 
+                  ? 'bg-primary/10 text-primary' 
+                  : 'text-gray-600 hover:bg-gray-100'
+              }`}
             >
-              <Info className="h-4 w-4 mr-1" />
-              About
+              <Info className="h-4 w-4 md:mr-1.5" />
+              {!isMobile && <span>About</span>}
             </Link>
+            
             <Link
               to="/admin"
-              className="text-sm bg-primary/10 text-primary px-3 py-1.5 rounded-md hover:bg-primary/20 transition-colors"
+              className={`px-3 py-2 rounded-md flex items-center transition-colors ${
+                isActive('/admin') 
+                  ? 'bg-primary/10 text-primary' 
+                  : 'text-gray-600 hover:bg-gray-100'
+              }`}
             >
-              Admin
+              <ShoppingBag className="h-4 w-4 md:mr-1.5" />
+              {!isMobile && <span>Admin</span>}
             </Link>
-          </nav>
+          </div>
         </div>
       </div>
-    </header>
+    </nav>
   );
 };
 
