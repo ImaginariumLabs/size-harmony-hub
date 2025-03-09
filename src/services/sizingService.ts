@@ -1,5 +1,5 @@
-import { supabase, isSupabaseConnected } from '../lib/supabase';
-import sizeData from '../utils/sizeData';
+import { supabase } from '../integrations/supabase/client';
+import { getConnectionStatus } from '../lib/supabase';
 
 // Define types for our database tables
 export type Brand = {
@@ -465,13 +465,14 @@ export const getFeedbackStats = async () => {
 };
 
 // Improved CSV import and export functions
-export const exportSizeDataToCSV = async (brandFilter?: string, garmentFilter?: string) => {
+export const exportSizeDataToCSV = async (
+  brandFilter?: string,
+  garmentFilter?: string
+): Promise<string> => {
   try {
-    // Check if Supabase is connected
-    const connected = await isSupabaseConnected();
-    
-    if (!connected) {
-      throw new Error('Cannot export data in offline mode - Please check your Supabase connection');
+    const status = getConnectionStatus();
+    if (status.status !== 'connected') {
+      throw new Error('Database connection is not available. Please try again when online.');
     }
     
     let query = supabase
@@ -530,20 +531,20 @@ export const exportSizeDataToCSV = async (brandFilter?: string, garmentFilter?: 
     ].join('\n');
     
     return csvContent;
-  } catch (e) {
-    console.error('Error exporting size data to CSV:', e);
-    throw e;
+  } catch (error) {
+    console.error('Error exporting size data:', error);
+    throw error;
   }
 };
 
 // Enhanced import function with better error handling and validation
-export const importSizeDataFromCSV = async (csvContent: string) => {
+export const importSizeDataFromCSV = async (
+  csvContent: string
+): Promise<{ total: number; success: number; errors: string[] }> => {
   try {
-    // Check if Supabase is connected
-    const connected = await isSupabaseConnected();
-    
-    if (!connected) {
-      throw new Error('Cannot import data in offline mode - Please check your Supabase connection');
+    const status = getConnectionStatus();
+    if (status.status !== 'connected') {
+      throw new Error('Database connection is not available. Please try again when online.');
     }
     
     // Parse CSV content
@@ -594,7 +595,7 @@ export const importSizeDataFromCSV = async (csvContent: string) => {
         }
         
         // Add the last value
-        values.push(currentValue.replace(/^"|"$/g, ''));
+        values.push(currentValue.replace(/^"|"$/g, '));
         
         if (values.length !== headers.length) {
           results.errors.push(`Row ${i}: Column count mismatch. Found ${values.length}, expected ${headers.length}`);

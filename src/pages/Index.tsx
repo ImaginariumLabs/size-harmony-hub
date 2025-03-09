@@ -5,10 +5,13 @@ import Footer from '@/components/Footer';
 import UserGuide from '@/components/UserGuide';
 import { fetchBrands } from '@/services/sizingService';
 import Navbar from '@/components/Navbar';
+import Loader2 from '@/components/Loader2';
+import FeaturedBrands from '@/components/FeaturedBrands';
 
 const Index = () => {
   const [brands, setBrands] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingBrands, setIsLoadingBrands] = useState(true);
   
   useEffect(() => {
     const loadBrands = async () => {
@@ -26,11 +29,13 @@ const Index = () => {
   }, []);
   
   return (
-    <div className="min-h-screen grid-background">
+    <div className="min-h-screen overflow-hidden">
+      <div className="fixed inset-0 bg-gradient-to-b from-purple-50 to-pink-50 -z-10" />
+      
       <Navbar />
       
-      <div className="container mx-auto p-4 md:p-8">
-        <div className="max-w-4xl mx-auto pt-8 md:pt-16 pb-8">
+      <main className="container mx-auto px-4 py-12">
+        <section className="flex flex-col items-center justify-center text-center mb-16">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -53,7 +58,21 @@ const Index = () => {
           >
             <SizeConverter brands={brands} isLoading={isLoading} />
           </motion.div>
-        </div>
+        </section>
+        
+        <section className="mb-16">
+          <h2 className="text-2xl font-display font-semibold text-center mb-8">
+            Popular Brands
+          </h2>
+          
+          {isLoadingBrands ? (
+            <div className="flex justify-center">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+          ) : (
+            <FeaturedBrands />
+          )}
+        </section>
         
         <UserGuide />
         
@@ -109,7 +128,7 @@ const Index = () => {
             </div>
           </motion.div>
         </div>
-      </div>
+      </main>
       
       <Footer />
     </div>
