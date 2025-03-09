@@ -18,3 +18,8 @@ export function useMedia(query: string): boolean {
   
   return matches;
 }
+
+// Add the useIsMobile hook that the sidebar component is trying to use
+export function useIsMobile(): boolean {
+  return useMedia('(max-width: 768px)');
+}

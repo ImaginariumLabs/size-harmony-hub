@@ -384,23 +384,39 @@ export const saveBlogPost = async (post: Partial<BlogPost>): Promise<BlogPost | 
       } as BlogPost;
     }
     
+    // Ensure required fields have values
+    const postData: any = {
+      ...post
+    };
+    
     // If id exists, update existing post, otherwise insert new one
     let operation;
     if (post.id) {
       operation = supabase
         .from('blog_posts')
         .update({
-          ...post,
+          ...postData,
           updated_at: new Date().toISOString()
         })
         .eq('id', post.id);
     } else {
+      // For new posts, ensure required fields are present
+      const requiredFields = {
+        title: post.title || 'Untitled Post',
+        slug: post.slug || `post-${Date.now()}`,
+        excerpt: post.excerpt || '',
+        content: post.content || '',
+        author_id: post.author_id || 'author1',
+        author_name: post.author_name || 'Anonymous',
+        published_at: post.published_at || new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+      
       operation = supabase
         .from('blog_posts')
         .insert({
-          ...post,
-          published_at: post.published_at || new Date().toISOString(),
-          updated_at: new Date().toISOString()
+          ...postData,
+          ...requiredFields
         });
     }
     
