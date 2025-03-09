@@ -1,9 +1,8 @@
-
 import { supabase } from '../integrations/supabase/client';
 import { getConnectionStatus, isSupabaseConnected } from '../lib/supabase';
 import { BlogPost, BlogTag, BlogComment } from '../models/blog';
 
-// Sample blog posts for offline mode
+// Sample blog posts for offline mode (keeping the existing mock data)
 const mockBlogPosts: BlogPost[] = [
   {
     id: '1',
@@ -152,7 +151,7 @@ const mockBlogPosts: BlogPost[] = [
   }
 ];
 
-// Sample blog tags for offline mode
+// Sample blog tags for offline mode (keeping the existing mock data)
 const mockBlogTags: BlogTag[] = [
   { id: '1', name: 'Size Guide', slug: 'size-guide', post_count: 1 },
   { id: '2', name: 'Shopping Tips', slug: 'shopping-tips', post_count: 3 },
@@ -183,7 +182,7 @@ export const fetchBlogPosts = async (): Promise<BlogPost[]> => {
       return mockBlogPosts;
     }
     
-    return data.length > 0 ? data : mockBlogPosts;
+    return data as BlogPost[] || mockBlogPosts;
   } catch (e) {
     console.error('Unexpected error fetching blog posts:', e);
     return mockBlogPosts;
@@ -206,7 +205,7 @@ export const fetchBlogPostBySlug = async (slug: string): Promise<BlogPost | null
       .select('*')
       .eq('slug', slug)
       .eq('is_published', true)
-      .single();
+      .maybeSingle();
     
     if (error) {
       console.error('Error fetching blog post:', error);
@@ -215,7 +214,7 @@ export const fetchBlogPostBySlug = async (slug: string): Promise<BlogPost | null
       return mockPost || null;
     }
     
-    return data;
+    return data as BlogPost || null;
   } catch (e) {
     console.error('Unexpected error fetching blog post:', e);
     // Fall back to mock data
@@ -256,7 +255,7 @@ export const fetchRelatedPosts = async (currentPostId: string, tags: string[]): 
     
     // Filter for posts that share tags with the current post
     // In a real implementation, this would be done at the database level
-    const relatedPosts = data
+    const relatedPosts = (data as BlogPost[])
       .filter((post: BlogPost) => post.tags.some(tag => tags.includes(tag)))
       .slice(0, 2);
     
@@ -291,7 +290,7 @@ export const fetchBlogTags = async (): Promise<BlogTag[]> => {
       return mockBlogTags;
     }
     
-    return data.length > 0 ? data : mockBlogTags;
+    return data as BlogTag[] || mockBlogTags;
   } catch (e) {
     console.error('Unexpected error fetching blog tags:', e);
     return mockBlogTags;
@@ -327,7 +326,7 @@ export const submitBlogComment = async (comment: Omit<BlogComment, 'id' | 'creat
       throw error;
     }
     
-    return data;
+    return data as BlogComment;
   } catch (e) {
     console.error('Error submitting comment:', e);
     return null;
@@ -363,7 +362,7 @@ export const fetchAllBlogPostsAdmin = async (): Promise<BlogPost[]> => {
       return mockBlogPosts;
     }
     
-    return data.length > 0 ? data : mockBlogPosts;
+    return data as BlogPost[] || mockBlogPosts;
   } catch (e) {
     console.error('Unexpected error fetching blog posts for admin:', e);
     return mockBlogPosts;
@@ -386,16 +385,24 @@ export const saveBlogPost = async (post: Partial<BlogPost>): Promise<BlogPost | 
     }
     
     // If id exists, update existing post, otherwise insert new one
-    const operation = post.id ? 
-      supabase.from('blog_posts').update({
-        ...post,
-        updated_at: new Date().toISOString()
-      }).eq('id', post.id) :
-      supabase.from('blog_posts').insert({
-        ...post,
-        published_at: post.published_at || new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      });
+    let operation;
+    if (post.id) {
+      operation = supabase
+        .from('blog_posts')
+        .update({
+          ...post,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', post.id);
+    } else {
+      operation = supabase
+        .from('blog_posts')
+        .insert({
+          ...post,
+          published_at: post.published_at || new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        });
+    }
     
     const { data, error } = await operation.select().single();
     
@@ -404,7 +411,7 @@ export const saveBlogPost = async (post: Partial<BlogPost>): Promise<BlogPost | 
       throw error;
     }
     
-    return data;
+    return data as BlogPost;
   } catch (e) {
     console.error('Error saving blog post:', e);
     return null;

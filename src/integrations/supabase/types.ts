@@ -27,6 +27,122 @@ export type Database = {
         }
         Relationships: []
       }
+      blog_comments: {
+        Row: {
+          author_email: string
+          author_name: string
+          content: string
+          created_at: string
+          id: string
+          is_approved: boolean
+          post_id: string
+        }
+        Insert: {
+          author_email: string
+          author_name: string
+          content: string
+          created_at?: string
+          id?: string
+          is_approved?: boolean
+          post_id: string
+        }
+        Update: {
+          author_email?: string
+          author_name?: string
+          content?: string
+          created_at?: string
+          id?: string
+          is_approved?: boolean
+          post_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "blog_comments_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "blog_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      blog_posts: {
+        Row: {
+          author_id: string
+          author_name: string
+          content: string
+          excerpt: string
+          featured_image: string | null
+          id: string
+          is_published: boolean
+          published_at: string
+          read_time: number
+          seo_description: string | null
+          seo_keywords: string | null
+          seo_title: string | null
+          slug: string
+          tags: string[]
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          author_id: string
+          author_name: string
+          content: string
+          excerpt: string
+          featured_image?: string | null
+          id?: string
+          is_published?: boolean
+          published_at?: string
+          read_time?: number
+          seo_description?: string | null
+          seo_keywords?: string | null
+          seo_title?: string | null
+          slug: string
+          tags?: string[]
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          author_id?: string
+          author_name?: string
+          content?: string
+          excerpt?: string
+          featured_image?: string | null
+          id?: string
+          is_published?: boolean
+          published_at?: string
+          read_time?: number
+          seo_description?: string | null
+          seo_keywords?: string | null
+          seo_title?: string | null
+          slug?: string
+          tags?: string[]
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      blog_tags: {
+        Row: {
+          id: string
+          name: string
+          post_count: number
+          slug: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          post_count?: number
+          slug: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          post_count?: number
+          slug?: string
+        }
+        Relationships: []
+      }
       brands: {
         Row: {
           created_at: string
