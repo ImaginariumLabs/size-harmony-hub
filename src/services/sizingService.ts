@@ -1,4 +1,3 @@
-
 import { supabase, isSupabaseConnected } from '../lib/supabase';
 import sizeData from '../utils/sizeData';
 
@@ -465,14 +464,14 @@ export const getFeedbackStats = async () => {
   }
 };
 
-// New function to export data to CSV
+// Improved CSV import and export functions
 export const exportSizeDataToCSV = async (brandFilter?: string, garmentFilter?: string) => {
   try {
     // Check if Supabase is connected
     const connected = await isSupabaseConnected();
     
     if (!connected) {
-      throw new Error('Cannot export data in offline mode');
+      throw new Error('Cannot export data in offline mode - Please check your Supabase connection');
     }
     
     let query = supabase
@@ -505,6 +504,10 @@ export const exportSizeDataToCSV = async (brandFilter?: string, garmentFilter?: 
       throw error;
     }
     
+    if (!data || data.length === 0) {
+      throw new Error('No data found with the specified filters');
+    }
+    
     // Format data for CSV
     const csvRows = data.map((row: any) => {
       return {
@@ -533,23 +536,35 @@ export const exportSizeDataToCSV = async (brandFilter?: string, garmentFilter?: 
   }
 };
 
-// New function to import size data from CSV
+// Enhanced import function with better error handling and validation
 export const importSizeDataFromCSV = async (csvContent: string) => {
   try {
     // Check if Supabase is connected
     const connected = await isSupabaseConnected();
     
     if (!connected) {
-      throw new Error('Cannot import data in offline mode');
+      throw new Error('Cannot import data in offline mode - Please check your Supabase connection');
     }
     
     // Parse CSV content
     const rows = csvContent.split('\n');
-    const headers = rows[0].split(',').map(h => h.trim());
+    if (rows.length < 2) {
+      throw new Error('CSV file appears to be empty or invalid');
+    }
+    
+    const headers = rows[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
+    const requiredHeaders = ['brand', 'garment', 'region', 'sizeLabel', 'measurementType', 'minValue', 'maxValue'];
+    
+    // Validate required headers
+    for (const required of requiredHeaders) {
+      if (!headers.includes(required)) {
+        throw new Error(`Missing required column: ${required}. Please check your CSV format.`);
+      }
+    }
     
     // Track results
     const results = {
-      total: 0,
+      total: rows.length - 1, // Exclude header row
       success: 0,
       errors: [] as string[]
     };
@@ -557,19 +572,54 @@ export const importSizeDataFromCSV = async (csvContent: string) => {
     // Process each row
     for (let i = 1; i < rows.length; i++) {
       try {
-        results.total++;
+        const row = rows[i].trim();
+        if (!row) continue; // Skip empty rows
         
-        const values = rows[i].split(',').map(v => v.trim());
+        // Parse CSV row (handling quoted values correctly)
+        const values: string[] = [];
+        let inQuotes = false;
+        let currentValue = '';
+        
+        for (let j = 0; j < row.length; j++) {
+          const char = row[j];
+          
+          if (char === '"') {
+            inQuotes = !inQuotes;
+          } else if (char === ',' && !inQuotes) {
+            values.push(currentValue.replace(/^"|"$/g, ''));
+            currentValue = '';
+          } else {
+            currentValue += char;
+          }
+        }
+        
+        // Add the last value
+        values.push(currentValue.replace(/^"|"$/g, ''));
+        
         if (values.length !== headers.length) {
-          results.errors.push(`Row ${i}: Invalid column count`);
+          results.errors.push(`Row ${i}: Column count mismatch. Found ${values.length}, expected ${headers.length}`);
           continue;
         }
         
         // Create a record object from the CSV row
         const record: Record<string, string> = {};
         headers.forEach((header, index) => {
-          record[header] = values[index].replace(/^"|"$/g, ''); // Remove quotes
+          record[header] = values[index];
         });
+        
+        // Validate numeric fields
+        const minValue = parseFloat(record.minValue);
+        const maxValue = parseFloat(record.maxValue);
+        
+        if (isNaN(minValue) || isNaN(maxValue)) {
+          results.errors.push(`Row ${i}: minValue and maxValue must be numeric`);
+          continue;
+        }
+        
+        if (minValue > maxValue) {
+          results.errors.push(`Row ${i}: minValue (${minValue}) cannot be greater than maxValue (${maxValue})`);
+          continue;
+        }
         
         // Call the import function via RPC
         const { data, error } = await supabase.rpc('import_size_data', {
@@ -578,8 +628,8 @@ export const importSizeDataFromCSV = async (csvContent: string) => {
           p_region: record.region,
           p_size_label: record.sizeLabel,
           p_measurement_type: record.measurementType,
-          p_min_value: parseFloat(record.minValue),
-          p_max_value: parseFloat(record.maxValue),
+          p_min_value: minValue,
+          p_max_value: maxValue,
           p_unit: record.unit || 'cm'
         });
         
@@ -598,4 +648,32 @@ export const importSizeDataFromCSV = async (csvContent: string) => {
     console.error('Error importing size data from CSV:', e);
     throw e;
   }
+};
+
+// Update isSupabaseConnected to include a max retries pattern for better reliability
+export const isSupabaseConnected = async (maxRetries = 2): Promise<boolean> => {
+  let retries = 0;
+  
+  const checkConnection = async (): Promise<boolean> => {
+    try {
+      const { error } = await supabase.from('brands').select('count', { count: 'exact', head: true });
+      return !error;
+    } catch (e) {
+      console.error('Supabase connection check failed:', e);
+      return false;
+    }
+  };
+  
+  while (retries <= maxRetries) {
+    const connected = await checkConnection();
+    if (connected) return true;
+    
+    retries++;
+    if (retries <= maxRetries) {
+      // Wait before retrying (exponential backoff)
+      await new Promise(resolve => setTimeout(resolve, 500 * Math.pow(2, retries - 1)));
+    }
+  }
+  
+  return false;
 };

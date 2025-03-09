@@ -1,17 +1,21 @@
 
-import React, { useState } from 'react';
-import { FileSpreadsheet, Download, Upload, AlertCircle, Check } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import React, { useState, useRef } from 'react';
+import { FileSpreadsheet, Download, Upload, AlertCircle, Check, Info, X } from 'lucide-react';
+import { toast } from 'sonner';
 import { exportSizeDataToCSV, importSizeDataFromCSV } from '../../services/sizingService';
+import { Button } from '../ui/button';
+import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
+import { Progress } from '../ui/progress';
 
 const ImportExportTab: React.FC = () => {
-  const { toast } = useToast();
   const [isExporting, setIsExporting] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
+  const [importProgress, setImportProgress] = useState(0);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [brandFilter, setBrandFilter] = useState('');
   const [garmentFilter, setGarmentFilter] = useState('');
   const [importResults, setImportResults] = useState<{ total: number; success: number; errors: string[] } | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleExport = async () => {
     try {
@@ -27,22 +31,23 @@ const ImportExportTab: React.FC = () => {
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.setAttribute('download', 'size_data.csv');
+      
+      // Create filename with date for better organization
+      const date = new Date().toISOString().split('T')[0];
+      const filename = `size_data_${brandFilter || 'all'}_${date}.csv`;
+      
+      link.setAttribute('download', filename);
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
       
-      toast({
-        title: "Export successful",
+      toast.success("Export successful", {
         description: "Size data has been exported to CSV",
-        variant: "default"
       });
     } catch (error) {
       console.error('Error exporting data:', error);
-      toast({
-        title: "Export failed",
+      toast.error("Export failed", {
         description: (error as Error).message || "An error occurred during export",
-        variant: "destructive"
       });
     } finally {
       setIsExporting(false);
@@ -56,64 +61,82 @@ const ImportExportTab: React.FC = () => {
     }
   };
 
+  const resetFileInput = () => {
+    setSelectedFile(null);
+    setImportResults(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
   const handleImport = async () => {
     if (!selectedFile) {
-      toast({
-        title: "No file selected",
+      toast.error("No file selected", {
         description: "Please select a CSV file to import",
-        variant: "destructive"
       });
       return;
     }
     
     try {
       setIsImporting(true);
+      setImportProgress(10); // Start progress
       
       // Read the file
       const reader = new FileReader();
       reader.onload = async (e) => {
         try {
           const csvContent = e.target?.result as string;
+          setImportProgress(30); // Reading complete
           
           // Import the data
           const results = await importSizeDataFromCSV(csvContent);
+          setImportProgress(100); // Import complete
           setImportResults(results);
           
           if (results.errors.length === 0) {
-            toast({
-              title: "Import successful",
+            toast.success("Import successful", {
               description: `Successfully imported ${results.success} size records`,
-              variant: "default"
             });
           } else {
-            toast({
-              title: "Import completed with errors",
+            toast.warning("Import completed with errors", {
               description: `Imported ${results.success} of ${results.total} records`,
-              variant: "default"
             });
           }
         } catch (error) {
           console.error('Error importing data:', error);
-          toast({
-            title: "Import failed",
+          toast.error("Import failed", {
             description: (error as Error).message || "An error occurred during import",
-            variant: "destructive"
           });
         } finally {
-          setIsImporting(false);
+          setTimeout(() => {
+            setIsImporting(false);
+            setImportProgress(0);
+          }, 500);
+        }
+      };
+      
+      reader.onprogress = (e) => {
+        if (e.lengthComputable) {
+          const percentLoaded = Math.round((e.loaded / e.total) * 20) + 10; // 10-30% range for reading
+          setImportProgress(percentLoaded);
         }
       };
       
       reader.readAsText(selectedFile);
     } catch (error) {
       console.error('Error reading file:', error);
-      toast({
-        title: "Import failed",
+      toast.error("Import failed", {
         description: (error as Error).message || "An error occurred reading the file",
-        variant: "destructive"
       });
       setIsImporting(false);
+      setImportProgress(0);
     }
+  };
+
+  const renderFileSize = (size: number) => {
+    if (size < 1024) return `${size} B`;
+    if (size < 1024 * 1024) return `${(size / 1024).toFixed(2)} KB`;
+    return `${(size / (1024 * 1024)).toFixed(2)} MB`;
   };
 
   return (
@@ -121,6 +144,21 @@ const ImportExportTab: React.FC = () => {
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-semibold">Import & Export</h2>
       </div>
+      
+      <Alert className="bg-primary/5 border-primary/20">
+        <Info className="h-4 w-4 text-primary" />
+        <AlertTitle>CSV Import/Export Guidelines</AlertTitle>
+        <AlertDescription className="text-sm">
+          <p className="mb-2">
+            The CSV file should include the following columns: brand, garment, region, sizeLabel, 
+            measurementType, minValue, maxValue, and unit (optional, defaults to cm).
+          </p>
+          <p>
+            Import will add new size data and update existing entries if the brand, garment, region, 
+            size label, and measurement type combination already exists.
+          </p>
+        </AlertDescription>
+      </Alert>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Export Section */}
@@ -154,10 +192,11 @@ const ImportExportTab: React.FC = () => {
             </div>
           </div>
           
-          <button
+          <Button
             onClick={handleExport}
             disabled={isExporting}
-            className="flex items-center justify-center w-full py-2 bg-primary text-white rounded-md hover:bg-primary/90 transition-colors"
+            className="w-full"
+            variant="default"
           >
             {isExporting ? (
               <>
@@ -170,7 +209,7 @@ const ImportExportTab: React.FC = () => {
                 <span>Export to CSV</span>
               </>
             )}
-          </button>
+          </Button>
         </div>
         
         {/* Import Section */}
@@ -181,37 +220,56 @@ const ImportExportTab: React.FC = () => {
           </div>
           
           <div className="space-y-4 mb-6">
-            <div className="border-2 border-dashed border-gray-200 rounded-md p-4 text-center">
-              <label className="block cursor-pointer">
-                <input
-                  type="file"
-                  accept=".csv"
-                  onChange={handleFileChange}
-                  className="hidden"
-                />
-                <div className="flex flex-col items-center">
-                  <FileSpreadsheet className="h-10 w-10 text-gray-400 mb-2" />
-                  <span className="text-sm text-muted-foreground">
-                    {selectedFile ? selectedFile.name : "Click to select a CSV file"}
-                  </span>
-                  {selectedFile && (
-                    <span className="text-xs text-gray-500 mt-1">
-                      {(selectedFile.size / 1024).toFixed(2)} KB
+            <div className="relative">
+              <div className={`border-2 border-dashed ${selectedFile ? 'border-primary' : 'border-gray-200'} rounded-md p-4 text-center transition-colors hover:bg-gray-50`}>
+                <label className="block cursor-pointer">
+                  <input
+                    type="file"
+                    accept=".csv"
+                    onChange={handleFileChange}
+                    className="hidden"
+                    ref={fileInputRef}
+                  />
+                  <div className="flex flex-col items-center">
+                    <FileSpreadsheet className={`h-10 w-10 ${selectedFile ? 'text-primary' : 'text-gray-400'} mb-2`} />
+                    <span className="text-sm text-muted-foreground">
+                      {selectedFile ? selectedFile.name : "Click to select a CSV file"}
                     </span>
-                  )}
-                </div>
-              </label>
+                    {selectedFile && (
+                      <span className="text-xs text-gray-500 mt-1">
+                        {renderFileSize(selectedFile.size)}
+                      </span>
+                    )}
+                  </div>
+                </label>
+              </div>
+              
+              {selectedFile && (
+                <button 
+                  className="absolute top-2 right-2 rounded-full p-1 bg-gray-100 hover:bg-gray-200 transition-colors"
+                  onClick={resetFileInput}
+                >
+                  <X className="h-4 w-4 text-gray-500" />
+                </button>
+              )}
             </div>
+            
+            {isImporting && (
+              <div className="space-y-2">
+                <div className="flex justify-between text-xs text-muted-foreground mb-1">
+                  <span>Importing data...</span>
+                  <span>{importProgress}%</span>
+                </div>
+                <Progress value={importProgress} className="h-2" />
+              </div>
+            )}
           </div>
           
-          <button
+          <Button
             onClick={handleImport}
             disabled={!selectedFile || isImporting}
-            className={`flex items-center justify-center w-full py-2 rounded-md transition-colors ${
-              !selectedFile
-                ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
-                : 'bg-primary text-white hover:bg-primary/90'
-            }`}
+            className="w-full"
+            variant={!selectedFile ? "outline" : "default"}
           >
             {isImporting ? (
               <>
@@ -224,7 +282,7 @@ const ImportExportTab: React.FC = () => {
                 <span>Import from CSV</span>
               </>
             )}
-          </button>
+          </Button>
           
           {/* Import Results */}
           {importResults && (
@@ -254,6 +312,19 @@ const ImportExportTab: React.FC = () => {
               )}
             </div>
           )}
+        </div>
+      </div>
+      
+      <div className="bg-white rounded-lg shadow-sm border p-4 mt-4">
+        <h3 className="text-sm font-medium flex items-center mb-2">
+          <Info className="h-4 w-4 mr-2 text-primary" />
+          CSV Format Example
+        </h3>
+        <div className="bg-gray-50 p-3 rounded text-xs font-mono overflow-x-auto">
+          brand,garment,region,sizeLabel,measurementType,minValue,maxValue,unit<br/>
+          "H&M","tops","US","S","bust",84,88,"cm"<br/>
+          "H&M","tops","US","S","waist",68,72,"cm"<br/>
+          "Zara","dresses","UK","10","bust",90,94,"cm"
         </div>
       </div>
     </div>

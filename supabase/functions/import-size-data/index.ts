@@ -23,6 +23,17 @@ serve(async (req) => {
     // Create Supabase client
     const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
+    
+    if (!supabaseUrl || !supabaseServiceKey) {
+      return new Response(JSON.stringify({ 
+        error: 'Missing Supabase environment variables',
+        details: 'Please ensure SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are configured correctly.'
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 500,
+      });
+    }
+    
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
     
     // Get admin token from request
@@ -39,7 +50,10 @@ serve(async (req) => {
     const { data: { user }, error } = await supabase.auth.getUser(token);
     
     if (error || !user) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+      return new Response(JSON.stringify({ 
+        error: 'Unauthorized',
+        details: error?.message || 'Invalid or expired authentication token'
+      }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 401,
       });
@@ -59,8 +73,23 @@ serve(async (req) => {
       });
     }
     
-    // Import H&M Tops Size Chart data
-    const topsData = [
+    // Get request body if this is an import with specific data
+    let customData = null;
+    
+    if (req.method === "POST") {
+      try {
+        const requestBody = await req.json();
+        if (requestBody && requestBody.data) {
+          customData = requestBody.data;
+          console.log(`Received custom import data with ${customData.length} entries`);
+        }
+      } catch (parseError) {
+        console.log("No custom data in request or invalid JSON format");
+      }
+    }
+    
+    // Use custom data if provided, otherwise use default H&M data
+    const dataToImport = customData || [
       // XS (US)
       { brand: 'H&M', garment: 'tops', region: 'US', size: 'XS', measurement: 'bust', min: 76, max: 80, unit: 'cm' },
       { brand: 'H&M', garment: 'tops', region: 'US', size: 'XS', measurement: 'waist', min: 60, max: 64, unit: 'cm' },
@@ -94,56 +123,51 @@ serve(async (req) => {
       { brand: 'H&M', garment: 'tops', region: 'EU', size: '36', measurement: 'bust', min: 92, max: 96, unit: 'cm' },
       { brand: 'H&M', garment: 'tops', region: 'EU', size: '38', measurement: 'bust', min: 100, max: 104, unit: 'cm' },
       { brand: 'H&M', garment: 'tops', region: 'EU', size: '40', measurement: 'bust', min: 110, max: 116, unit: 'cm' },
-    ];
-    
-    // Import H&M Bottoms Size Chart data
-    const bottomsData = [
-      // XS (US)
-      { brand: 'H&M', garment: 'bottoms', region: 'US', size: 'XS', measurement: 'waist', min: 61, max: 64, unit: 'cm' },
-      { brand: 'H&M', garment: 'bottoms', region: 'US', size: 'XS', measurement: 'hip', min: 84, max: 88, unit: 'cm' },
       
-      // S (US)
-      { brand: 'H&M', garment: 'bottoms', region: 'US', size: 'S', measurement: 'waist', min: 66, max: 71, unit: 'cm' },
-      { brand: 'H&M', garment: 'bottoms', region: 'US', size: 'S', measurement: 'hip', min: 92, max: 96, unit: 'cm' },
-      
-      // Add all the other size data from the charts
-      // ...
+      // Zara tops (adding another brand for diversity)
+      { brand: 'Zara', garment: 'tops', region: 'US', size: 'XS', measurement: 'bust', min: 78, max: 82, unit: 'cm' },
+      { brand: 'Zara', garment: 'tops', region: 'US', size: 'S', measurement: 'bust', min: 86, max: 90, unit: 'cm' },
+      { brand: 'Zara', garment: 'tops', region: 'US', size: 'M', measurement: 'bust', min: 94, max: 98, unit: 'cm' },
+      { brand: 'Zara', garment: 'tops', region: 'US', size: 'L', measurement: 'bust', min: 102, max: 106, unit: 'cm' },
     ];
-    
-    // Import H&M Dresses Size Chart data
-    const dressesData = [
-      // XS (US)
-      { brand: 'H&M', garment: 'dresses', region: 'US', size: 'XS', measurement: 'bust', min: 76, max: 80, unit: 'cm' },
-      { brand: 'H&M', garment: 'dresses', region: 'US', size: 'XS', measurement: 'waist', min: 60, max: 64, unit: 'cm' },
-      { brand: 'H&M', garment: 'dresses', region: 'US', size: 'XS', measurement: 'hip', min: 84, max: 88, unit: 'cm' },
-      
-      // Add more dress size data
-      // ...
-    ];
-    
-    // Combine all data
-    const allData = [...topsData, ...bottomsData, ...dressesData];
     
     // Import data into Supabase
-    const importPromises = allData.map(item => {
-      return supabase.rpc('import_size_data', {
-        p_brand_name: item.brand,
-        p_garment_name: item.garment,
-        p_region: item.region,
-        p_size_label: item.size,
-        p_measurement_type: item.measurement,
-        p_min_value: item.min,
-        p_max_value: item.max,
-        p_unit: item.unit
-      });
-    });
+    const results = {
+      success: 0,
+      failed: 0,
+      errors: [] as string[]
+    };
     
-    await Promise.all(importPromises);
+    for (const item of dataToImport) {
+      try {
+        const { data, error } = await supabase.rpc('import_size_data', {
+          p_brand_name: item.brand,
+          p_garment_name: item.garment,
+          p_region: item.region,
+          p_size_label: item.size,
+          p_measurement_type: item.measurement,
+          p_min_value: item.min,
+          p_max_value: item.max,
+          p_unit: item.unit
+        });
+        
+        if (error) {
+          results.failed++;
+          results.errors.push(`Error importing ${item.brand} ${item.garment} ${item.size}: ${error.message}`);
+        } else {
+          results.success++;
+        }
+      } catch (error) {
+        results.failed++;
+        results.errors.push(`Exception importing ${item.brand} ${item.garment} ${item.size}: ${(error as Error).message}`);
+      }
+    }
     
     return new Response(
       JSON.stringify({ 
         success: true, 
-        message: `Imported ${allData.length} size data entries for H&M`
+        message: `Imported ${results.success} size data entries successfully, ${results.failed} failed`,
+        details: results
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -151,8 +175,12 @@ serve(async (req) => {
       }
     );
   } catch (error) {
+    console.error('Unexpected error:', error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: 'Server error',
+        details: (error as Error).message
+      }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 500,
