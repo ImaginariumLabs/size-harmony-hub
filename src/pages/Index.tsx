@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import SizeConverter from '@/components/SizeConverter';
@@ -56,7 +57,8 @@ const Index = () => {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.1, duration: 0.5 }}
           >
-            <SizeConverter brands={brands} isLoading={isLoading} />
+            {/* Removed brands and isLoading props as they are not expected by SizeConverter */}
+            <SizeConverter />
           </motion.div>
         </section>
         

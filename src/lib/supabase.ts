@@ -1,63 +1,45 @@
+import { createClient } from '@supabase/supabase-js';
 
-import { supabase } from '../integrations/supabase/client';
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://your-supabase-url.supabase.co';
+const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'your-anon-key';
 
-// Track connection status
-type ConnectionStatus = 'checking' | 'connected' | 'disconnected';
+export const supabase = createClient(supabaseUrl, supabaseKey);
 
-interface ConnectionState {
-  status: ConnectionStatus;
-  lastChecked: Date;
-  error?: Error;
+export async function getConnectionStatus() {
+  try {
+    const { data, error } = await supabase.from('brands').select('id').limit(1);
+    if (error) {
+      console.error("Supabase connection error:", error);
+      return { connected: false, error: error.message };
+    }
+    return { connected: true };
+  } catch (error) {
+    console.error("Supabase connection error:", error);
+    return { connected: false, error: String(error) };
+  }
 }
 
-let connectionState: ConnectionState = {
-  status: 'checking',
-  lastChecked: new Date()
-};
-
-// Check if Supabase is connected
-export const isSupabaseConnected = async (): Promise<boolean> => {
+// Function to check if a table exists in the database
+export async function tableExists(tableName: string) {
   try {
-    // Try to ping the Supabase server
-    const { data, error } = await supabase.from('sizes').select('count').limit(1);
+    // This is a workaround to check if a table exists
+    // We try to select a single row with a limit of 1
+    // If the table doesn't exist, it will throw an error
+    const { error } = await supabase
+      .from(tableName as any)
+      .select('*')
+      .limit(1);
     
-    if (error) {
-      connectionState = {
-        status: 'disconnected',
-        lastChecked: new Date(),
-        error: new Error(error.message)
-      };
-      console.error("Supabase connection error:", error);
+    // If there's an error with a message containing "does not exist", 
+    // the table doesn't exist
+    if (error && error.message.includes('does not exist')) {
       return false;
     }
     
-    connectionState = {
-      status: 'connected',
-      lastChecked: new Date()
-    };
+    // Otherwise, the table exists
     return true;
   } catch (error) {
-    connectionState = {
-      status: 'disconnected',
-      lastChecked: new Date(),
-      error: error instanceof Error ? error : new Error(String(error))
-    };
-    console.error("Supabase connection error:", error);
+    console.error(`Error checking if table ${tableName} exists:`, error);
     return false;
   }
-};
-
-// Get current connection status without checking
-export const getConnectionStatus = (): ConnectionState => {
-  // If status is 'checking' or last checked was more than 30 seconds ago, check again
-  if (connectionState.status === 'checking' || 
-      new Date().getTime() - connectionState.lastChecked.getTime() > 30000) {
-    isSupabaseConnected(); // Don't await, just trigger the check
-  }
-  return connectionState;
-};
-
-// Fix for the equality comparison
-export const isConnectedStatus = (status: ConnectionStatus): boolean => {
-  return status === 'connected';
-};
+}
