@@ -1,5 +1,6 @@
 import { supabase } from '../integrations/supabase/client';
 import { getConnectionStatus } from '../lib/supabase';
+import sizeData from '../utils/sizeData';
 
 // Define types for our database tables
 export type Brand = {
@@ -595,7 +596,7 @@ export const importSizeDataFromCSV = async (
         }
         
         // Add the last value
-        values.push(currentValue.replace(/^"|"$/g, '));
+        values.push(currentValue.replace(/^"|"$/g, ''));
         
         if (values.length !== headers.length) {
           results.errors.push(`Row ${i}: Column count mismatch. Found ${values.length}, expected ${headers.length}`);
