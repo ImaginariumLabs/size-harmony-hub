@@ -2,8 +2,8 @@
 import React, { useState, useEffect } from 'react';
 import { Edit, Trash2, Plus, Eye, EyeOff, Filter } from 'lucide-react';
 import { format } from 'date-fns';
-import { fetchAllBlogPostsAdmin, deleteBlogPost } from '@/services/blogService';
-import { BlogPost } from '@/models/blog';
+import { fetchAllBlogPostsAdmin, deleteBlogPost } from '@/services/blog/adminBlogService';
+import { BlogPost } from '@/services/blog/types';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,

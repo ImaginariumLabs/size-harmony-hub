@@ -5,8 +5,8 @@ import { Link } from 'react-router-dom';
 import { ChevronRight, Clock, Tag, Calendar } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import { fetchBlogPosts, fetchBlogTags } from '@/services/blogService';
-import { BlogPost, BlogTag } from '@/models/blog';
+import { fetchBlogPosts, fetchBlogTags } from '@/services/blog/publicBlogService';
+import { BlogPost, BlogTag } from '@/services/blog/types';
 import { format } from 'date-fns';
 
 const Blog: React.FC = () => {
