@@ -16,9 +16,9 @@ const ConnectionStatus: React.FC = () => {
     checkConnection();
     
     // Set up interval to check connection periodically
-    const intervalId = setInterval(() => {
-      const status = getConnectionStatus();
-      setIsConnected(status.status === 'connected');
+    const intervalId = setInterval(async () => {
+      const status = await getConnectionStatus();
+      setIsConnected(status.connected);
     }, 5000);
     
     return () => clearInterval(intervalId);

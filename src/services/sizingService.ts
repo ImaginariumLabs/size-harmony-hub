@@ -1,5 +1,5 @@
 import { supabase } from '../integrations/supabase/client';
-import { getConnectionStatus } from '../lib/supabase';
+import { getConnectionStatus, isSupabaseConnected } from '../lib/supabase';
 import sizeData from '../utils/sizeData';
 
 // Define types for our database tables
@@ -465,14 +465,14 @@ export const getFeedbackStats = async () => {
   }
 };
 
-// Improved CSV import and export functions
+// Enhanced export function with better error handling and validation
 export const exportSizeDataToCSV = async (
   brandFilter?: string,
   garmentFilter?: string
 ): Promise<string> => {
   try {
-    const status = getConnectionStatus();
-    if (status.status !== 'connected') {
+    const status = await getConnectionStatus();
+    if (!status.connected) {
       throw new Error('Database connection is not available. Please try again when online.');
     }
     
@@ -543,8 +543,8 @@ export const importSizeDataFromCSV = async (
   csvContent: string
 ): Promise<{ total: number; success: number; errors: string[] }> => {
   try {
-    const status = getConnectionStatus();
-    if (status.status !== 'connected') {
+    const status = await getConnectionStatus();
+    if (!status.connected) {
       throw new Error('Database connection is not available. Please try again when online.');
     }
     
@@ -653,7 +653,7 @@ export const importSizeDataFromCSV = async (
 };
 
 // Update isSupabaseConnected to include a max retries pattern for better reliability
-export const isSupabaseConnected = async (maxRetries = 2): Promise<boolean> => {
+export const isSupabaseConnectedWithRetry = async (maxRetries = 2): Promise<boolean> => {
   let retries = 0;
   
   const checkConnection = async (): Promise<boolean> => {

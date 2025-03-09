@@ -1,3 +1,4 @@
+
 import { createClient } from '@supabase/supabase-js';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://your-supabase-url.supabase.co';
@@ -17,6 +18,12 @@ export async function getConnectionStatus() {
     console.error("Supabase connection error:", error);
     return { connected: false, error: String(error) };
   }
+}
+
+// Function to check if Supabase is connected - returns a boolean for simpler use
+export async function isSupabaseConnected() {
+  const status = await getConnectionStatus();
+  return status.connected;
 }
 
 // Function to check if a table exists in the database
