@@ -2,7 +2,7 @@
 import React, { useState, useRef } from 'react';
 import { FileSpreadsheet, Upload, X } from 'lucide-react';
 import { toast } from 'sonner';
-import { importSizeDataFromCSV } from '../../../services/sizingService';
+import { importSizeDataFromCSV, isSupabaseConnectedWithRetry } from '../../../services/sizingService';
 import { Button } from '../../ui/button';
 import { Progress } from '../../ui/progress';
 import ImportResults from './ImportResults';
@@ -12,7 +12,17 @@ const ImportSection: React.FC = () => {
   const [importProgress, setImportProgress] = useState(0);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [importResults, setImportResults] = useState<{ total: number; success: number; errors: string[] } | null>(null);
+  const [isOfflineMode, setIsOfflineMode] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Check connection status on component mount
+  React.useEffect(() => {
+    const checkConnection = async () => {
+      const connected = await isSupabaseConnectedWithRetry();
+      setIsOfflineMode(!connected);
+    };
+    checkConnection();
+  }, []);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
@@ -40,6 +50,51 @@ const ImportSection: React.FC = () => {
       toast.error("No file selected", {
         description: "Please select a CSV file to import",
       });
+      return;
+    }
+    
+    if (isOfflineMode) {
+      toast.warning("Demo Mode Active", {
+        description: "Import is simulated in demo mode. Connect to database for actual imports.",
+      });
+      setIsImporting(true);
+      setImportProgress(20);
+      
+      // Simulate progress in offline mode
+      const progressInterval = setInterval(() => {
+        setImportProgress(prev => {
+          if (prev >= 90) {
+            clearInterval(progressInterval);
+            return 90;
+          }
+          return prev + 10;
+        });
+      }, 300);
+      
+      // Simulate completion after 2 seconds
+      setTimeout(() => {
+        clearInterval(progressInterval);
+        setImportProgress(100);
+        
+        // Mock results
+        setImportResults({
+          total: 10,
+          success: 8,
+          errors: [
+            "Row 3: Demo mode - actual import not available",
+            "Row 7: Demo mode - actual import not available"
+          ]
+        });
+        
+        toast.info("Demo Mode Import", {
+          description: "Import simulation complete. Connect to database for actual imports."
+        });
+        
+        setTimeout(() => {
+          setIsImporting(false);
+        }, 500);
+      }, 2000);
+      
       return;
     }
     
@@ -106,6 +161,20 @@ const ImportSection: React.FC = () => {
         <h3 className="text-lg font-medium">Import Size Data</h3>
       </div>
       
+      {isOfflineMode && (
+        <div className="bg-amber-50 border border-amber-200 rounded-md p-3 mb-4 text-sm text-amber-800">
+          <div className="flex items-start">
+            <svg className="h-5 w-5 mr-2 mt-0.5 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <div>
+              <p className="font-medium">Demo Mode Active</p>
+              <p className="mt-1">Import is simulated in demo mode. Connect to database for actual imports.</p>
+            </div>
+          </div>
+        </div>
+      )}
+      
       <div className="space-y-4 mb-6">
         <div className="relative">
           <div className={`border-2 border-dashed ${selectedFile ? 'border-primary' : 'border-gray-200'} rounded-md p-4 text-center transition-colors hover:bg-gray-50`}>
@@ -166,7 +235,7 @@ const ImportSection: React.FC = () => {
         ) : (
           <>
             <Upload className="h-4 w-4 mr-2" />
-            <span>Import from CSV</span>
+            <span>{isOfflineMode ? "Simulate Import" : "Import from CSV"}</span>
           </>
         )}
       </Button>

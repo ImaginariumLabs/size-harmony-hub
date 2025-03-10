@@ -12,10 +12,18 @@ import {
 const ConnectionStatus: React.FC = () => {
   const [isConnected, setIsConnected] = useState<boolean | null>(null);
   const [showHelpInfo, setShowHelpInfo] = useState(false);
+  const [checkCount, setCheckCount] = useState(0);
   
   useEffect(() => {
     // Check connection initially
     const checkConnection = async () => {
+      // Only try to reconnect a limited number of times to avoid excessive logs
+      if (checkCount > 5 && !isConnected) {
+        console.log('Connection check limit reached, assuming offline mode');
+        setIsConnected(false);
+        return;
+      }
+      
       const connected = await isSupabaseConnected();
       setIsConnected(connected);
       
@@ -25,18 +33,23 @@ const ConnectionStatus: React.FC = () => {
         // Auto-hide the help info after 8 seconds
         setTimeout(() => setShowHelpInfo(false), 8000);
       }
+      
+      setCheckCount(prevCount => prevCount + 1);
     };
     
     checkConnection();
     
-    // Set up interval to check connection periodically
+    // Set up interval to check connection periodically but less frequently
     const intervalId = setInterval(async () => {
-      const status = await getConnectionStatus();
-      setIsConnected(status.connected);
-    }, 5000);
+      if (checkCount <= 5 || isConnected) {
+        const status = await getConnectionStatus();
+        setIsConnected(status.connected);
+        setCheckCount(prevCount => prevCount + 1);
+      }
+    }, 30000); // Check every 30 seconds instead of 5 seconds
     
     return () => clearInterval(intervalId);
-  }, [isConnected]);
+  }, [isConnected, checkCount]);
   
   // Dismiss help info
   const dismissHelp = () => {
@@ -71,7 +84,7 @@ const ConnectionStatus: React.FC = () => {
           <TooltipContent side="left">
             {isConnected 
               ? "Connected to database - all features available"
-              : "Using local data - some features limited"}
+              : "Using local demo data - some features are simulated"}
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>
@@ -95,10 +108,7 @@ const ConnectionStatus: React.FC = () => {
             </button>
           </div>
           <p className="text-sm text-gray-600">
-            The app is running in demo mode with local data. Database features like saving changes will be simulated.
-          </p>
-          <p className="text-xs text-gray-500 mt-2">
-            This is normal in development environments.
+            Size Harmony Hub is running in demo mode with sample data. All features work but use local data.
           </p>
         </div>
       )}
