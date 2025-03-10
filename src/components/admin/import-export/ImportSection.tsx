@@ -2,7 +2,7 @@
 import React, { useState, useRef } from 'react';
 import { FileSpreadsheet, Upload, X } from 'lucide-react';
 import { toast } from 'sonner';
-import { importSizeDataFromCSV, isSupabaseConnectedWithRetry } from '../../../services/sizingService';
+import { importSizeDataFromCSV, isSupabaseConnectedWithRetry } from '../../../services/sizing';
 import { Button } from '../../ui/button';
 import { Progress } from '../../ui/progress';
 import ImportResults from './ImportResults';

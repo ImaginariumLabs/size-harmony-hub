@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { FileSpreadsheet, Download } from 'lucide-react';
 import { toast } from 'sonner';
-import { exportSizeDataToCSV, isSupabaseConnectedWithRetry } from '../../../services/sizingService';
+import { exportSizeDataToCSV, isSupabaseConnectedWithRetry } from '../../../services/sizing';
 import { Button } from '../../ui/button';
 
 const ExportSection: React.FC = () => {

@@ -1,9 +1,8 @@
-
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Share2, ThumbsUp, ThumbsDown } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { submitFeedback, fetchBrands } from '../services/sizingService';
+import { submitFeedback, fetchBrands } from '../services/sizing';
 
 interface SizeResultProps {
   result: {
@@ -35,7 +34,6 @@ const SizeResult: React.FC<SizeResultProps> = ({
   const [feedbackSubmitted, setFeedbackSubmitted] = useState(false);
   const [brandId, setBrandId] = useState<string | null>(null);
   
-  // Fetch brand ID when brandName changes
   useEffect(() => {
     const getBrandId = async () => {
       if (!brandName) return;
@@ -56,10 +54,8 @@ const SizeResult: React.FC<SizeResultProps> = ({
 
   if (!result) return null;
 
-  // Helper to determine if a size is a match or not
   const isSizeMatch = (size: string) => !size.includes('No exact match') && !size.includes('Not available');
   
-  // Get clothing type display name
   const getClothingTypeDisplay = () => {
     switch(clothingType) {
       case 'tops': return 'Top';
@@ -73,7 +69,6 @@ const SizeResult: React.FC<SizeResultProps> = ({
     try {
       setSubmittingFeedback(true);
       
-      // If we couldn't get the brand ID, show an error
       if (!brandId && !isOfflineMode) {
         toast({
           title: "Cannot submit feedback",
@@ -83,7 +78,6 @@ const SizeResult: React.FC<SizeResultProps> = ({
         return;
       }
       
-      // In offline mode, we'll use a placeholder brand ID
       const feedbackBrandId = brandId || "offline-mode-brand-id";
       
       await submitFeedback({

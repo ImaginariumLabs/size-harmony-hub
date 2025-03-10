@@ -1,5 +1,6 @@
+
 import React, { createContext, useContext, ReactNode, useState, useCallback, useEffect } from 'react';
-import { findSizeByMeasurement } from '../services/sizingService';
+import { findSizeByMeasurement, SizeResult } from '../services/sizing';
 import { isSupabaseConnected, getConnectionStatus } from '../lib/supabase';
 import { useToast } from '@/hooks/use-toast';
 
