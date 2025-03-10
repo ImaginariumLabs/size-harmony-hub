@@ -48,11 +48,11 @@
 
 @keyframes pulse {
   0%, 100% {
-    opacity: 0.3;
+    opacity: 0.4;
     transform: scale(1);
   }
   50% {
-    opacity: 0.5;
+    opacity: 0.7;
     transform: scale(1.05);
   }
 }
@@ -98,22 +98,23 @@
   }
 }
 
-/* Glass card effect */
+/* Enhanced glass card effect */
 .glass-card {
-  background: rgba(255, 255, 255, 0.7);
-  backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(12px);
   border-radius: 1rem;
-  border: 1px solid rgba(255, 255, 255, 0.5);
-  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
   transition: all 0.3s;
 }
 
 .glass-card:hover {
-  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.12);
-  background: rgba(255, 255, 255, 0.8);
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.12);
+  background: rgba(255, 255, 255, 0.85);
+  transform: translateY(-5px);
 }
 
-/* Button pulse effect */
+/* Enhanced button pulse effect */
 .button-pulse {
   position: relative;
 }
@@ -135,7 +136,7 @@
     box-shadow: 0 0 0 0 rgba(155, 135, 245, 0.7);
   }
   70% {
-    box-shadow: 0 0 0 10px rgba(155, 135, 245, 0);
+    box-shadow: 0 0 0 15px rgba(155, 135, 245, 0);
   }
   100% {
     box-shadow: 0 0 0 0 rgba(155, 135, 245, 0);
@@ -144,7 +145,7 @@
 
 /* Modern button styles */
 .modern-button {
-  background: linear-gradient(135deg, rgba(155, 135, 245, 0.8) 0%, rgba(135, 115, 225, 0.9) 100%);
+  background: linear-gradient(135deg, rgba(155, 135, 245, 0.9) 0%, rgba(135, 115, 225, 1) 100%);
   border: none;
   padding: 12px 24px;
   border-radius: 50px;
@@ -152,12 +153,12 @@
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s;
-  box-shadow: 0 4px 10px rgba(155, 135, 245, 0.5);
+  box-shadow: 0 4px 15px rgba(155, 135, 245, 0.5);
 }
 
 .modern-button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 15px rgba(155, 135, 245, 0.6);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(155, 135, 245, 0.6);
 }
 
 .modern-button:active {

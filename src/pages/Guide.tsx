@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Book, Ruler, Search, ShoppingBag, MessageSquare } from 'lucide-react';
@@ -34,7 +33,7 @@ const Guide = () => {
     <div className="min-h-screen bg-gray-50">
       <Navbar />
       
-      <main>
+      <main className="container mx-auto px-4 pt-28 pb-8">
         <section className="bg-gradient-to-b from-white to-purple-50 py-16">
           <div className="container mx-auto px-4">
             <motion.div

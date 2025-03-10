@@ -56,6 +56,11 @@
     overflow-x: hidden;
   }
 
+  /* Apply padding-top to all route pages to account for fixed navbar */
+  #root > main {
+    padding-top: 5rem;
+  }
+
   .font-inter {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
   }
@@ -66,7 +71,7 @@
     letter-spacing: -0.025em;
   }
 
-  /* Glass effect styles */
+  /* Enhanced glass effect styles */
   .glass {
     background: rgba(255, 255, 255, 0.7);
     backdrop-filter: blur(10px) saturate(180%);
@@ -88,12 +93,12 @@
     @apply transition-all duration-300 border-b-2 border-gray-200 focus:border-primary py-2;
   }
   
-  /* Background patterns */
+  /* Background patterns - improved visibility */
   .bg-grid-pattern {
     background-size: 30px 30px;
     background-image: 
-      linear-gradient(to right, rgba(0, 0, 0, 0.03) 1px, transparent 1px),
-      linear-gradient(to bottom, rgba(0, 0, 0, 0.03) 1px, transparent 1px);
+      linear-gradient(to right, rgba(0, 0, 0, 0.07) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(0, 0, 0, 0.07) 1px, transparent 1px);
   }
   
   /* Custom scroll styles */
@@ -114,12 +119,12 @@
     @apply bg-muted-foreground;
   }
   
-  /* Grid background */
+  /* Enhanced grid background */
   .grid-background {
     background-size: 40px 40px;
     background-image: 
-      linear-gradient(to right, rgba(0, 0, 0, 0.03) 1px, transparent 1px),
-      linear-gradient(to bottom, rgba(0, 0, 0, 0.03) 1px, transparent 1px);
+      linear-gradient(to right, rgba(0, 0, 0, 0.07) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(0, 0, 0, 0.07) 1px, transparent 1px);
   }
   
   /* Background image overlay */
@@ -153,7 +158,7 @@
     animation-delay: 500ms;
   }
   
-  /* New floating animation */
+  /* Enhanced floating animations */
   .animate-float {
     animation: floating 6s ease-in-out infinite;
   }
@@ -167,7 +172,7 @@
   }
 }
 
-/* Keyframe animations */
+/* Keyframe animations with improved visibility */
 @keyframes floating {
   0% {
     transform: translateY(0px);
@@ -180,19 +185,19 @@
   }
 }
 
-/* Breathe animation for gradient elements */
+/* Enhanced breathe animation for gradient elements */
 @keyframes breathe {
   0%, 100% {
-    opacity: 0.3;
+    opacity: 0.4;
     transform: scale(1);
   }
   50% {
-    opacity: 0.5;
+    opacity: 0.7;
     transform: scale(1.05);
   }
 }
 
-/* Sparkle animation */
+/* Enhanced sparkle animation */
 @keyframes twinkle {
   0%, 100% {
     opacity: 0;
@@ -209,14 +214,13 @@
   animation: breathe 8s infinite ease-in-out;
 }
 
-/* Sparkle style */
+/* Enhanced sparkle style */
 .sparkle {
   position: absolute;
-  width: 4px;
-  height: 4px;
+  width: 5px;
+  height: 5px;
   border-radius: 50%;
-  background-color: white;
-  box-shadow: 0 0 10px 2px rgba(255, 255, 255, 0.8);
+  background-color: #9b87f5;
+  box-shadow: 0 0 10px 2px rgba(155, 135, 245, 0.8);
   animation: twinkle 4s infinite ease-in-out;
 }
-

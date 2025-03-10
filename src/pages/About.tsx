@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, Ruler, Sparkles, ShoppingBag } from 'lucide-react';
@@ -11,7 +10,7 @@ const About = () => {
     <div className="min-h-screen bg-background">
       <Navbar />
       
-      <div className="container mx-auto px-4 py-12">
+      <main className="container mx-auto px-4 pt-28 pb-8">
         <div className="mb-6">
           <Link to="/" className="flex items-center text-sm text-primary hover:underline">
             <ArrowLeft className="h-4 w-4 mr-1" />
@@ -103,7 +102,7 @@ const About = () => {
             </section>
           </div>
         </motion.div>
-      </div>
+      </main>
       
       <Footer />
     </div>

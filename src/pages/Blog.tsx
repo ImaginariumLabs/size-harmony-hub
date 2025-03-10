@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
@@ -45,7 +44,7 @@ const Blog: React.FC = () => {
       
       <Navbar />
       
-      <main className="container mx-auto px-4 py-12">
+      <main className="container mx-auto px-4 pt-28 pb-8">
         <div className="flex flex-col md:flex-row gap-8">
           {/* Main Content */}
           <div className="flex-1">
