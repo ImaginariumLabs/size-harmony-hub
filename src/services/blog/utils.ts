@@ -24,3 +24,24 @@ export async function handleDbQuery<T>(
     return fallbackValue;
   }
 }
+
+/**
+ * Format a slug from a title string
+ */
+export function formatSlug(title: string): string {
+  return title
+    .toLowerCase()
+    .replace(/[^\w\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .trim();
+}
+
+/**
+ * Calculate estimated read time for blog content
+ */
+export function calculateReadTime(content: string): number {
+  const wordsPerMinute = 200;
+  const wordCount = content.split(/\s+/).length;
+  return Math.max(1, Math.ceil(wordCount / wordsPerMinute));
+}
