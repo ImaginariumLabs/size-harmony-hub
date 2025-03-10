@@ -4,10 +4,12 @@ import { motion } from 'framer-motion';
 import SizeConverter from '@/components/SizeConverter';
 import Footer from '@/components/Footer';
 import UserGuide from '@/components/UserGuide';
-import { fetchBrands } from '@/services/sizingService';
+import { fetchBrands } from '@/services/sizing';
 import Navbar from '@/components/Navbar';
 import Loader2 from '@/components/Loader2';
 import FeaturedBrands from '@/components/FeaturedBrands';
+import { ArrowRight, Sparkles, Ruler, Share2, ShoppingBag } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 const Index = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -25,11 +27,38 @@ const Index = () => {
     
     loadData();
   }, []);
+
+  // Create random sparkles for the background
+  const sparkles = Array.from({ length: 20 }).map((_, i) => ({
+    id: i,
+    top: `${Math.random() * 100}%`,
+    left: `${Math.random() * 100}%`,
+    size: Math.random() * 3 + 2,
+    delay: Math.random() * 10,
+    duration: Math.random() * 5 + 3
+  }));
   
   return (
     <div className="min-h-screen overflow-hidden relative">
-      {/* Animated background */}
-      <div className="fixed inset-0 bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50 animate-gradient bg-[length:200%_200%] -z-10" />
+      {/* Modern animated background */}
+      <div className="morphing-bg"></div>
+      <div className="grid-overlay"></div>
+      
+      {/* Sparkle effects */}
+      {sparkles.map((sparkle) => (
+        <div 
+          key={sparkle.id}
+          className="sparkle"
+          style={{
+            top: sparkle.top,
+            left: sparkle.left,
+            width: `${sparkle.size}px`,
+            height: `${sparkle.size}px`,
+            animationDelay: `${sparkle.delay}s`,
+            animationDuration: `${sparkle.duration}s`
+          }}
+        />
+      ))}
       
       {/* Animated background elements */}
       <div className="animated-bg-element animated-bg-circle-1"></div>
@@ -44,26 +73,47 @@ const Index = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
-            className="text-center mb-12"
+            className="text-center mb-12 fade-in-up"
           >
             {/* App Logo */}
             <div className="flex justify-center mb-6">
               <motion.div 
-                className="w-24 h-24 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl flex items-center justify-center text-white text-2xl font-bold"
+                className="w-24 h-24 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl flex items-center justify-center text-white text-2xl font-bold shadow-lg"
                 whileHover={{ scale: 1.05, rotate: 5 }}
                 transition={{ type: "spring", stiffness: 300 }}
               >
+                <Sparkles className="absolute w-8 h-8 -top-2 -right-2 text-yellow-300" />
                 <span>SHH</span>
               </motion.div>
             </div>
             
-            <h1 className="text-4xl md:text-5xl font-display font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-primary to-purple-400">
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-display font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-primary to-purple-400">
               Size Harmony Hub
             </h1>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
               Find your perfect size across different brands with our advanced size converter.
               No more guessing or returns due to sizing issues.
             </p>
+            
+            <div className="flex flex-wrap gap-3 mt-6 justify-center">
+              <Button 
+                variant="gradient" 
+                roundedness="pill"
+                size="lg"
+                onClick={() => document.getElementById('converter')?.scrollIntoView({ behavior: 'smooth' })}
+                className="group"
+              >
+                Start Converting <ArrowRight className="group-hover:translate-x-1 transition-transform" />
+              </Button>
+              <Button 
+                variant="outline" 
+                roundedness="pill"
+                size="lg"
+                onClick={() => document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' })}
+              >
+                Learn How It Works
+              </Button>
+            </div>
           </motion.div>
           
           <motion.div
@@ -71,6 +121,7 @@ const Index = () => {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.1, duration: 0.5 }}
             className="w-full"
+            id="converter"
           >
             <SizeConverter />
           </motion.div>
@@ -83,13 +134,18 @@ const Index = () => {
         ) : (
           <>
             <section className="mb-16">
-              <h2 className="text-2xl font-display font-semibold text-center mb-8">
-                Popular Brands
-              </h2>
+              <div className="text-center mb-8">
+                <h2 className="text-2xl font-display font-semibold inline-block relative">
+                  Popular Brands
+                  <div className="absolute -bottom-2 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-primary/50 to-transparent"></div>
+                </h2>
+              </div>
               <FeaturedBrands />
             </section>
             
-            <UserGuide />
+            <div id="how-it-works" className="scroll-mt-20">
+              <UserGuide />
+            </div>
             
             <div className="max-w-4xl mx-auto mt-16 mb-8 text-center">
               <motion.div
@@ -97,7 +153,7 @@ const Index = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.4, duration: 0.5 }}
               >
-                <h2 className="text-2xl md:text-3xl font-display font-bold mb-4">
+                <h2 className="text-2xl md:text-3xl font-display font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-primary to-purple-400">
                   Why Use Size Harmony Hub?
                 </h2>
                 <p className="text-muted-foreground mb-8">
@@ -105,11 +161,9 @@ const Index = () => {
                 </p>
                 
                 <div className="grid md:grid-cols-3 gap-6">
-                  <div className="glass-card p-6">
-                    <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
+                  <div className="staggered-item glass-card p-6 transform transition-all duration-500 hover:translate-y-[-5px] hover:shadow-lg">
+                    <div className="h-12 w-12 rounded-full bg-gradient-to-br from-primary/20 to-purple-300/20 flex items-center justify-center mx-auto mb-4">
+                      <Ruler className="h-6 w-6 text-primary" />
                     </div>
                     <h3 className="font-medium mb-2">Accurate Sizing</h3>
                     <p className="text-sm text-muted-foreground">
@@ -117,11 +171,9 @@ const Index = () => {
                     </p>
                   </div>
                   
-                  <div className="glass-card p-6">
-                    <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
+                  <div className="staggered-item glass-card p-6 transform transition-all duration-500 hover:translate-y-[-5px] hover:shadow-lg">
+                    <div className="h-12 w-12 rounded-full bg-gradient-to-br from-primary/20 to-purple-300/20 flex items-center justify-center mx-auto mb-4">
+                      <Share2 className="h-6 w-6 text-primary" />
                     </div>
                     <h3 className="font-medium mb-2">Save Time</h3>
                     <p className="text-sm text-muted-foreground">
@@ -129,17 +181,26 @@ const Index = () => {
                     </p>
                   </div>
                   
-                  <div className="glass-card p-6">
-                    <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3" />
-                      </svg>
+                  <div className="staggered-item glass-card p-6 transform transition-all duration-500 hover:translate-y-[-5px] hover:shadow-lg">
+                    <div className="h-12 w-12 rounded-full bg-gradient-to-br from-primary/20 to-purple-300/20 flex items-center justify-center mx-auto mb-4">
+                      <ShoppingBag className="h-6 w-6 text-primary" />
                     </div>
                     <h3 className="font-medium mb-2">Shop Confidently</h3>
                     <p className="text-sm text-muted-foreground">
                       Know your size before you buy, even when shopping from brands you've never tried before.
                     </p>
                   </div>
+                </div>
+                
+                <div className="mt-12">
+                  <Button 
+                    variant="glow" 
+                    size="xl"
+                    roundedness="pill"
+                    onClick={() => document.getElementById('converter')?.scrollIntoView({ behavior: 'smooth' })}
+                  >
+                    Try The Size Converter Now <ArrowRight className="ml-1" />
+                  </Button>
                 </div>
               </motion.div>
             </div>

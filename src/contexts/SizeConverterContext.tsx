@@ -58,27 +58,32 @@ export const SizeConverterProvider: React.FC<{ children: ReactNode }> = ({ child
     const checkConnection = async () => {
       try {
         const connected = await isSupabaseConnected();
+        const wasOffline = isOfflineMode;
         setIsOfflineMode(!connected);
         setConnectionChecked(true);
         
-        if (!connected) {
+        if (!connected && !wasOffline) {
           console.log("Supabase connection not available, using offline mode");
-          // Only show toast on initial check
-          if (!connectionChecked) {
-            toast({
-              title: "Offline Mode",
-              description: "Using local data since database connection is unavailable.",
-              variant: "default"
-            });
-          }
-        } else if (connectionChecked && isOfflineMode) {
+          toast({
+            title: "Offline Mode",
+            description: "Using local data since database connection is unavailable. Some features may be limited.",
+            variant: "warning",
+            duration: 5000
+          });
+        } else if (connected && wasOffline) {
           // We've reconnected
           console.log("Supabase connection restored");
           toast({
             title: "Online Mode",
-            description: "Connected to the database successfully.",
-            variant: "default"
+            description: "Connected to the database successfully. All features are now available.",
+            variant: "default",
+            duration: 3000
           });
+          
+          // Recalculate sizes with online data if we have a result
+          if (result && brand && bust) {
+            calculateSize();
+          }
         }
       } catch (error) {
         console.error("Error checking Supabase connection:", error);
@@ -93,7 +98,7 @@ export const SizeConverterProvider: React.FC<{ children: ReactNode }> = ({ child
     const interval = setInterval(checkConnection, 10000);
     
     return () => clearInterval(interval);
-  }, [toast, connectionChecked, isOfflineMode]);
+  }, [toast, isOfflineMode, brand, bust, result]);
   
   // When clothing type changes, update measurement type and move to step 2
   useEffect(() => {
@@ -181,14 +186,22 @@ export const SizeConverterProvider: React.FC<{ children: ReactNode }> = ({ child
   const shareResults = useCallback(() => {
     if (!result) return;
     
-    const text = `My ${clothingType} size at ${brand} is US: ${result.usSize}, UK: ${result.ukSize}, EU: ${result.euSize}`;
+    const text = `My ${clothingType} size at ${brand} is US: ${result.usSize}, UK: ${result.ukSize}, EU: ${result.euSize} (via Size Harmony Hub)`;
     
     if (navigator.share) {
       navigator.share({
-        title: 'My Size Results',
+        title: 'My Size Results from Size Harmony Hub',
         text: text,
         url: window.location.href,
-      }).catch(err => console.error('Error sharing:', err));
+      }).catch(err => {
+        console.error('Error sharing:', err);
+        navigator.clipboard.writeText(text).then(() => {
+          toast({
+            title: "Copied to clipboard!",
+            description: "Your size info has been copied to share",
+          });
+        });
+      });
     } else {
       navigator.clipboard.writeText(text).then(() => {
         toast({
