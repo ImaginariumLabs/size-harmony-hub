@@ -40,15 +40,22 @@ const Index = () => {
   
   return (
     <div className="min-h-screen overflow-hidden relative">
-      {/* Modern animated background */}
-      <div className="morphing-bg"></div>
-      <div className="grid-overlay"></div>
+      {/* Enhanced background with more professional gradient */}
+      <div className="absolute inset-0 bg-gradient-to-br from-purple-50 via-white to-blue-50 z-[-2]"></div>
+      
+      {/* Refined grid overlay */}
+      <div className="absolute inset-0 bg-grid-pattern opacity-10 z-[-1]"></div>
+      
+      {/* Subtle background circles */}
+      <div className="absolute -top-[10%] -right-[5%] w-[40%] h-[40%] rounded-full bg-purple-100/30 filter blur-[70px] z-[-1]"></div>
+      <div className="absolute top-[30%] -left-[5%] w-[30%] h-[30%] rounded-full bg-blue-100/20 filter blur-[70px] z-[-1]"></div>
+      <div className="absolute -bottom-[5%] right-[10%] w-[25%] h-[25%] rounded-full bg-pink-100/20 filter blur-[70px] z-[-1]"></div>
       
       {/* Sparkle effects */}
       {sparkles.map((sparkle) => (
         <div 
           key={sparkle.id}
-          className="sparkle"
+          className="absolute sparkle"
           style={{
             top: sparkle.top,
             left: sparkle.left,
@@ -60,14 +67,9 @@ const Index = () => {
         />
       ))}
       
-      {/* Animated background elements */}
-      <div className="animated-bg-element animated-bg-circle-1"></div>
-      <div className="animated-bg-element animated-bg-circle-2"></div>
-      <div className="animated-bg-element animated-bg-circle-3"></div>
-      
       <Navbar />
       
-      <main className="container mx-auto px-4 py-12">
+      <main className="container mx-auto px-4 pt-24 pb-12">
         <section className="flex flex-col items-center justify-center text-center mb-16">
           <motion.div
             initial={{ opacity: 0, y: 20 }}

@@ -54,10 +54,10 @@ const Navbar: React.FC = () => {
   
   return (
     <nav className={cn(
-      "sticky top-0 z-40 w-full transition-all duration-300",
+      "fixed top-0 left-0 right-0 z-50 transition-all duration-300",
       isScrolled 
-        ? "bg-white/80 backdrop-blur-md shadow-sm" 
-        : "bg-white/40 backdrop-blur-sm"
+        ? "bg-white/90 backdrop-blur-md shadow-sm" 
+        : "bg-white/70 backdrop-blur-sm"
     )}>
       <div className="container mx-auto px-4 py-3">
         <div className="flex items-center justify-between">
