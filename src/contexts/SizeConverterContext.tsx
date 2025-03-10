@@ -1,10 +1,12 @@
 
 import React, { createContext, useContext, ReactNode, useState, useCallback, useEffect } from 'react';
-import { findSizeByMeasurement, SizeResult } from '../services/sizing';
+import { findSizeByMeasurement } from '../services/sizing';
 import { isSupabaseConnected, getConnectionStatus } from '../lib/supabase';
 import { useToast } from '@/hooks/use-toast';
+import { SizeResult as SizingServiceResult } from '../services/sizing';
 
-export type SizeResult = {
+// Rename the local type to avoid conflict with the imported type
+export type SizeResultType = {
   usSize: string;
   ukSize: string;
   euSize: string;
@@ -18,7 +20,7 @@ interface SizeConverterContextType {
   bust: string;
   units: string;
   measurementType: string;
-  result: SizeResult;
+  result: SizeResultType;
   loading: boolean;
   isOfflineMode: boolean;
   
@@ -46,7 +48,7 @@ export const SizeConverterProvider: React.FC<{ children: ReactNode }> = ({ child
   const [bust, setBust] = useState('');
   const [units, setUnits] = useState('inches');
   const [measurementType, setMeasurementType] = useState('bust');
-  const [result, setResult] = useState<SizeResult>(null);
+  const [result, setResult] = useState<SizeResultType>(null);
   const [loading, setLoading] = useState(false);
   const [isOfflineMode, setIsOfflineMode] = useState(false);
   const [connectionChecked, setConnectionChecked] = useState(false);
@@ -131,7 +133,7 @@ export const SizeConverterProvider: React.FC<{ children: ReactNode }> = ({ child
       setLoading(true);
       
       // Call our sizing service to find the size
-      const result = await findSizeByMeasurement(
+      const sizingResult = await findSizeByMeasurement(
         brand,
         clothingType,
         measurementType,
@@ -139,7 +141,7 @@ export const SizeConverterProvider: React.FC<{ children: ReactNode }> = ({ child
         units
       );
       
-      setResult(result);
+      setResult(sizingResult);
       
       // Show offline mode indicator if we're using fallback calculations
       if (isOfflineMode) {
