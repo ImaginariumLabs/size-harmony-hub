@@ -1,213 +1,166 @@
-import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import SizeConverter from '@/components/SizeConverter';
-import Footer from '@/components/Footer';
-import UserGuide from '@/components/UserGuide';
-import { fetchBrands } from '@/services/sizing';
-import Navbar from '@/components/Navbar';
-import Loader2 from '@/components/Loader2';
-import FeaturedBrands from '@/components/FeaturedBrands';
-import { ArrowRight, Sparkles, Ruler, Share2, ShoppingBag } from 'lucide-react';
+
+import React from 'react';
+import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import SizeConverter from '@/components/SizeConverter';
+import Navbar from '@/components/Navbar';
+import Footer from '@/components/Footer';
+import FeaturedBrands from '@/components/FeaturedBrands';
+import { motion } from 'framer-motion';
+import { Ruler, Check, UserCircle } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
 
 const Index = () => {
-  const [isLoading, setIsLoading] = useState(true);
+  const { user, signOut } = useAuth();
   
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        await fetchBrands();
-      } catch (error) {
-        console.error('Error loading initial data:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    
-    loadData();
-  }, []);
+  const features = [
+    {
+      title: "Accurate Conversions",
+      description: "Our data-driven size converter uses real measurements to match your size across brands."
+    },
+    {
+      title: "Save Your Sizes",
+      description: "Create an account to save your measurements and quickly convert sizes for future shopping."
+    },
+    {
+      title: "Brand Database",
+      description: "We maintain size charts for hundreds of popular brands, updated regularly for accuracy."
+    }
+  ];
 
-  // Create random sparkles for the background
-  const sparkles = Array.from({ length: 20 }).map((_, i) => ({
-    id: i,
-    top: `${Math.random() * 100}%`,
-    left: `${Math.random() * 100}%`,
-    size: Math.random() * 3 + 2,
-    delay: Math.random() * 10,
-    duration: Math.random() * 5 + 3
-  }));
-  
   return (
-    <div className="min-h-screen overflow-hidden relative">
-      {/* Enhanced background with more visible gradient */}
-      <div className="absolute inset-0 bg-gradient-to-br from-purple-100 via-white to-blue-100 z-[-2]"></div>
-      
-      {/* More visible grid overlay */}
-      <div className="absolute inset-0 bg-grid-pattern opacity-20 z-[-1]"></div>
-      
-      {/* More vibrant background circles */}
-      <div className="absolute -top-[10%] -right-[5%] w-[40%] h-[40%] rounded-full bg-purple-200/40 filter blur-[70px] z-[-1] animate-float-slow"></div>
-      <div className="absolute top-[30%] -left-[5%] w-[30%] h-[30%] rounded-full bg-blue-200/30 filter blur-[70px] z-[-1] animate-float"></div>
-      <div className="absolute -bottom-[5%] right-[10%] w-[25%] h-[25%] rounded-full bg-pink-200/30 filter blur-[70px] z-[-1] animate-float-reverse"></div>
-      
-      {/* Sparkle effects with improved visibility */}
-      {sparkles.map((sparkle) => (
-        <div 
-          key={sparkle.id}
-          className="absolute sparkle"
-          style={{
-            top: sparkle.top,
-            left: sparkle.left,
-            width: `${sparkle.size}px`,
-            height: `${sparkle.size}px`,
-            animationDelay: `${sparkle.delay}s`,
-            animationDuration: `${sparkle.duration}s`
-          }}
-        />
-      ))}
+    <div className="min-h-screen flex flex-col">
+      {/* Background effects */}
+      <div className="fixed inset-0 -z-10 overflow-hidden">
+        <div className="absolute inset-0 bg-animated-gradient opacity-40"></div>
+        <div className="absolute inset-0 grid-background"></div>
+        <div className="floating-circle floating-circle-1"></div>
+        <div className="floating-circle floating-circle-2"></div>
+        <div className="floating-circle floating-circle-3"></div>
+      </div>
       
       <Navbar />
       
-      {/* Add additional top padding to account for fixed navbar */}
-      <main className="container mx-auto px-4 pt-28 pb-12">
-        <section className="flex flex-col items-center justify-center text-center mb-16">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="text-center mb-12 fade-in-up"
-          >
-            {/* App Logo */}
-            <div className="flex justify-center mb-6">
-              <motion.div 
-                className="w-24 h-24 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl flex items-center justify-center text-white text-2xl font-bold shadow-lg"
-                whileHover={{ scale: 1.05, rotate: 5 }}
-                transition={{ type: "spring", stiffness: 300 }}
-              >
-                <Sparkles className="absolute w-8 h-8 -top-2 -right-2 text-yellow-300" />
-                <span>SHH</span>
-              </motion.div>
+      <main className="flex-grow">
+        {/* Hero Section */}
+        <section className="pt-24 md:pt-32 pb-16 px-4">
+          <div className="container mx-auto">
+            <div className="flex flex-col md:flex-row items-center gap-8 md:gap-16">
+              <div className="md:w-1/2 text-center md:text-left">
+                <motion.div 
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5 }}
+                >
+                  <h1 className="text-4xl md:text-5xl lg:text-6xl font-display font-bold mb-6 leading-tight">
+                    Find Your <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary to-purple-400">Perfect Size</span> in Any Brand
+                  </h1>
+                  <p className="text-lg md:text-xl text-gray-600 mb-8 max-w-xl mx-auto md:mx-0">
+                    Shop with confidence using our size converter that translates your measurements across different brands and regions.
+                  </p>
+                  
+                  <div className="flex flex-col sm:flex-row justify-center md:justify-start gap-4">
+                    <Button size="lg" asChild>
+                      <a href="#converter" className="group">
+                        <Ruler className="mr-2 h-5 w-5 group-hover:animate-bounce" />
+                        Convert My Size
+                      </a>
+                    </Button>
+                    
+                    {user ? (
+                      <Button variant="outline" size="lg" onClick={signOut}>
+                        <UserCircle className="mr-2 h-5 w-5" />
+                        Sign Out
+                      </Button>
+                    ) : (
+                      <Button variant="outline" size="lg" asChild>
+                        <Link to="/auth">
+                          <UserCircle className="mr-2 h-5 w-5" />
+                          Sign In / Register
+                        </Link>
+                      </Button>
+                    )}
+                  </div>
+                </motion.div>
+              </div>
+              
+              <div className="md:w-1/2">
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.5, delay: 0.2 }}
+                  className="glass-card p-6"
+                >
+                  <img 
+                    src="/fashion-background.jpg" 
+                    alt="Fashion size guide" 
+                    className="rounded-xl object-cover w-full h-80 md:h-96"
+                  />
+                </motion.div>
+              </div>
             </div>
-            
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-display font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-primary to-purple-400">
-              Size Harmony Hub
-            </h1>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Find your perfect size across different brands with our advanced size converter.
-              No more guessing or returns due to sizing issues.
-            </p>
-            
-            <div className="flex flex-wrap gap-3 mt-6 justify-center">
-              <Button 
-                variant="gradient" 
-                roundedness="pill"
-                size="lg"
-                onClick={() => document.getElementById('converter')?.scrollIntoView({ behavior: 'smooth' })}
-                className="group"
-              >
-                Start Converting <ArrowRight className="group-hover:translate-x-1 transition-transform" />
-              </Button>
-              <Button 
-                variant="outline" 
-                roundedness="pill"
-                size="lg"
-                onClick={() => document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' })}
-              >
-                Learn How It Works
-              </Button>
-            </div>
-          </motion.div>
-          
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.1, duration: 0.5 }}
-            className="w-full"
-            id="converter"
-          >
-            <SizeConverter />
-          </motion.div>
+          </div>
         </section>
         
-        {isLoading ? (
-          <div className="flex justify-center my-16">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        {/* Features Section */}
+        <section className="py-16 px-4 bg-white/80 backdrop-blur-sm">
+          <div className="container mx-auto">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl font-display font-bold mb-4">Why Use Size Harmony Hub?</h2>
+              <p className="text-gray-600 max-w-2xl mx-auto">
+                Our platform offers accurate size conversions based on real measurements, not just generic size charts.
+              </p>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              {features.map((feature, index) => (
+                <motion.div 
+                  key={index}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: index * 0.1 + 0.3 }}
+                  className="glass-card p-6"
+                >
+                  <div className="bg-primary/10 w-12 h-12 rounded-full flex items-center justify-center mb-4">
+                    <Check className="text-primary h-6 w-6" />
+                  </div>
+                  <h3 className="text-xl font-bold mb-3">{feature.title}</h3>
+                  <p className="text-gray-600">{feature.description}</p>
+                </motion.div>
+              ))}
+            </div>
           </div>
-        ) : (
-          <>
-            <section className="mb-16">
-              <div className="text-center mb-8">
-                <h2 className="text-2xl font-display font-semibold inline-block relative">
-                  Popular Brands
-                  <div className="absolute -bottom-2 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-primary/50 to-transparent"></div>
-                </h2>
-              </div>
-              <FeaturedBrands />
-            </section>
-            
-            <div id="how-it-works" className="scroll-mt-20">
-              <UserGuide />
+        </section>
+        
+        {/* Featured Brands */}
+        <section className="py-16 px-4">
+          <div className="container mx-auto">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl font-display font-bold mb-4">Brands We Support</h2>
+              <p className="text-gray-600 max-w-2xl mx-auto">
+                Our size converter works with hundreds of fashion brands worldwide.
+              </p>
             </div>
             
-            <div className="max-w-4xl mx-auto mt-16 mb-8 text-center">
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.4, duration: 0.5 }}
-              >
-                <h2 className="text-2xl md:text-3xl font-display font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-primary to-purple-400">
-                  Why Use Size Harmony Hub?
-                </h2>
-                <p className="text-muted-foreground mb-8">
-                  Our size converter helps you shop with confidence across different brands.
-                </p>
-                
-                <div className="grid md:grid-cols-3 gap-6">
-                  <div className="staggered-item glass-card p-6 transform transition-all duration-500 hover:translate-y-[-5px] hover:shadow-lg">
-                    <div className="h-12 w-12 rounded-full bg-gradient-to-br from-primary/20 to-purple-300/20 flex items-center justify-center mx-auto mb-4">
-                      <Ruler className="h-6 w-6 text-primary" />
-                    </div>
-                    <h3 className="font-medium mb-2">Accurate Sizing</h3>
-                    <p className="text-sm text-muted-foreground">
-                      Our database contains precise measurements from popular brands to ensure accurate size recommendations.
-                    </p>
-                  </div>
-                  
-                  <div className="staggered-item glass-card p-6 transform transition-all duration-500 hover:translate-y-[-5px] hover:shadow-lg">
-                    <div className="h-12 w-12 rounded-full bg-gradient-to-br from-primary/20 to-purple-300/20 flex items-center justify-center mx-auto mb-4">
-                      <Share2 className="h-6 w-6 text-primary" />
-                    </div>
-                    <h3 className="font-medium mb-2">Save Time</h3>
-                    <p className="text-sm text-muted-foreground">
-                      No more wasting time with returns or exchanges due to incorrect sizing when shopping online.
-                    </p>
-                  </div>
-                  
-                  <div className="staggered-item glass-card p-6 transform transition-all duration-500 hover:translate-y-[-5px] hover:shadow-lg">
-                    <div className="h-12 w-12 rounded-full bg-gradient-to-br from-primary/20 to-purple-300/20 flex items-center justify-center mx-auto mb-4">
-                      <ShoppingBag className="h-6 w-6 text-primary" />
-                    </div>
-                    <h3 className="font-medium mb-2">Shop Confidently</h3>
-                    <p className="text-sm text-muted-foreground">
-                      Know your size before you buy, even when shopping from brands you've never tried before.
-                    </p>
-                  </div>
-                </div>
-                
-                <div className="mt-12">
-                  <Button 
-                    variant="glow" 
-                    size="xl"
-                    roundedness="pill"
-                    onClick={() => document.getElementById('converter')?.scrollIntoView({ behavior: 'smooth' })}
-                  >
-                    Try The Size Converter Now <ArrowRight className="ml-1" />
-                  </Button>
-                </div>
-              </motion.div>
+            <FeaturedBrands />
+          </div>
+        </section>
+        
+        {/* Converter Section */}
+        <section id="converter" className="py-16 px-4 bg-white/80 backdrop-blur-sm">
+          <div className="container mx-auto">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl font-display font-bold mb-4">Size Converter</h2>
+              <p className="text-gray-600 max-w-2xl mx-auto">
+                Convert your size across different brands and regions with just a few clicks.
+              </p>
             </div>
-          </>
-        )}
+            
+            <div className="max-w-4xl mx-auto">
+              <SizeConverter />
+            </div>
+          </div>
+        </section>
       </main>
       
       <Footer />

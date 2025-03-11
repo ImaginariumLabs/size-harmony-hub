@@ -31,6 +31,9 @@
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 210 40% 98%;
+    
+    --warning: 38 92% 50%;
+    --warning-foreground: 210 40% 98%;
 
     --border: 220 13% 91%;
     --input: 214 32% 91%;
@@ -123,8 +126,8 @@
   .grid-background {
     background-size: 40px 40px;
     background-image: 
-      linear-gradient(to right, rgba(0, 0, 0, 0.07) 1px, transparent 1px),
-      linear-gradient(to bottom, rgba(0, 0, 0, 0.07) 1px, transparent 1px);
+      linear-gradient(to right, rgba(155, 135, 245, 0.05) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(155, 135, 245, 0.05) 1px, transparent 1px);
   }
   
   /* Background image overlay */
@@ -133,6 +136,61 @@
     background-size: cover;
     background-position: center;
     background-attachment: fixed;
+  }
+
+  /* Animated gradient background */
+  .bg-animated-gradient {
+    background: linear-gradient(-45deg, #f3f4f6, #ede9fe, #ddd6fe, #f3f4f6);
+    background-size: 400% 400%;
+    animation: gradient 15s ease infinite;
+  }
+
+  @keyframes gradient {
+    0% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
+    100% {
+      background-position: 0% 50%;
+    }
+  }
+
+  /* Floating blurred circles */
+  .floating-circle {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(60px);
+    opacity: 0.15;
+    z-index: -1;
+  }
+
+  .floating-circle-1 {
+    top: 10%;
+    left: 15%;
+    width: 40vw;
+    height: 40vw;
+    background: radial-gradient(circle, rgba(155, 135, 245, 0.8) 0%, rgba(155, 135, 245, 0.3) 70%);
+    animation: float 15s ease-in-out infinite;
+  }
+
+  .floating-circle-2 {
+    bottom: 10%;
+    right: 15%;
+    width: 30vw;
+    height: 30vw;
+    background: radial-gradient(circle, rgba(124, 58, 237, 0.8) 0%, rgba(124, 58, 237, 0.3) 70%);
+    animation: float 20s ease-in-out infinite reverse;
+  }
+
+  .floating-circle-3 {
+    top: 40%;
+    right: 25%;
+    width: 20vw;
+    height: 20vw;
+    background: radial-gradient(circle, rgba(212, 171, 242, 0.8) 0%, rgba(212, 171, 242, 0.3) 70%);
+    animation: float 25s ease-in-out infinite;
   }
 }
 
@@ -223,4 +281,23 @@
   background-color: #9b87f5;
   box-shadow: 0 0 10px 2px rgba(155, 135, 245, 0.8);
   animation: twinkle 4s infinite ease-in-out;
+}
+
+/* Float animation */
+@keyframes float {
+  0% {
+    transform: translate(0, 0);
+  }
+  25% {
+    transform: translate(-10px, 10px);
+  }
+  50% {
+    transform: translate(0, 20px);
+  }
+  75% {
+    transform: translate(10px, 10px);
+  }
+  100% {
+    transform: translate(0, 0);
+  }
 }

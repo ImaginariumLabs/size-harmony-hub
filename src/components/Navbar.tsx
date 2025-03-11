@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Home, Info, BookOpen, ShoppingBag, PenTool, Menu, X, ChevronDown } from 'lucide-react';
+import { Home, Info, BookOpen, PenTool, Menu, X, ChevronDown, Settings } from 'lucide-react';
 import { useMedia } from '@/hooks/use-mobile';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
@@ -44,12 +44,11 @@ const Navbar: React.FC = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
   
-  const navLinks = [
+  const mainNavLinks = [
     { path: '/', label: 'Home', icon: <Home className="h-4 w-4" /> },
     { path: '/blog', label: 'Blog', icon: <PenTool className="h-4 w-4" /> },
     { path: '/guide', label: 'Guide', icon: <BookOpen className="h-4 w-4" /> },
     { path: '/about', label: 'About', icon: <Info className="h-4 w-4" /> },
-    { path: '/admin', label: 'Admin', icon: <ShoppingBag className="h-4 w-4" /> },
   ];
   
   return (
@@ -96,7 +95,7 @@ const Navbar: React.FC = () => {
                     className="absolute top-full left-0 right-0 bg-white shadow-lg z-50 overflow-hidden"
                   >
                     <div className="py-3 px-4 flex flex-col space-y-2">
-                      {navLinks.map((link) => (
+                      {mainNavLinks.map((link) => (
                         <Link
                           key={link.path}
                           to={link.path}
@@ -111,22 +110,42 @@ const Navbar: React.FC = () => {
                           <span className="ml-3">{link.label}</span>
                         </Link>
                       ))}
+                      <div className="border-t border-gray-200 my-2 pt-2">
+                        <Link
+                          to="/admin"
+                          className="p-3 rounded-md flex items-center text-gray-500 hover:bg-gray-100"
+                          onClick={() => setMobileMenuOpen(false)}
+                        >
+                          <Settings className="h-4 w-4" />
+                          <span className="ml-3">Admin Portal</span>
+                        </Link>
+                      </div>
                     </div>
                   </motion.div>
                 )}
               </AnimatePresence>
             </>
           ) : (
-            <div className="flex space-x-1 md:space-x-2 bg-gray-100/80 p-1 rounded-full">
-              {navLinks.map((link) => (
-                <NavLink 
-                  key={link.path}
-                  to={link.path}
-                  icon={link.icon}
-                  label={link.label}
-                  isActive={isActive(link.path) || (link.path === '/blog' && location.pathname.startsWith('/blog/'))}
-                />
-              ))}
+            <div className="flex items-center space-x-4">
+              <div className="flex space-x-1 md:space-x-2 bg-gray-100/80 p-1 rounded-full">
+                {mainNavLinks.map((link) => (
+                  <NavLink 
+                    key={link.path}
+                    to={link.path}
+                    icon={link.icon}
+                    label={link.label}
+                    isActive={isActive(link.path) || (link.path === '/blog' && location.pathname.startsWith('/blog/'))}
+                  />
+                ))}
+              </div>
+              
+              <Link 
+                to="/admin" 
+                className="text-gray-500 hover:text-primary transition-colors" 
+                title="Admin Portal"
+              >
+                <Settings className="h-5 w-5" />
+              </Link>
             </div>
           )}
         </div>
