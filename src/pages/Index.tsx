@@ -6,6 +6,7 @@ import SizeConverter from '@/components/SizeConverter';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import FeaturedBrands from '@/components/FeaturedBrands';
+import WelcomePopup from '@/components/WelcomePopup';
 import { motion } from 'framer-motion';
 import { Ruler, Check, UserCircle } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
@@ -40,6 +41,9 @@ const Index = () => {
       </div>
       
       <Navbar />
+      
+      {/* Welcome Popup */}
+      <WelcomePopup />
       
       <main className="flex-grow">
         {/* Hero Section with Size Converter */}

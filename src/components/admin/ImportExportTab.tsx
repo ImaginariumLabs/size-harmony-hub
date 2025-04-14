@@ -1,12 +1,12 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Button } from '@/components/ui/button';
 import ImportSection from './import-export/ImportSection';
 import ExportSection from './import-export/ExportSection';
 import CsvFormatExample from './import-export/CsvFormatExample';
 import ImportExportGuidelines from './import-export/ImportExportGuidelines';
 import DataImporter from './DataImporter';
+import SyncFromStaticData from './import-export/SyncFromStaticData';
 
 const ImportExportTab = () => {
   return (
@@ -38,6 +38,7 @@ const ImportExportTab = () => {
         
         <div className="space-y-6">
           <DataImporter />
+          <SyncFromStaticData />
           <ImportExportGuidelines />
         </div>
       </div>
