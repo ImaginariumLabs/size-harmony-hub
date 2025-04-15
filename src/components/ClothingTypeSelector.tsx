@@ -16,6 +16,13 @@ const ClothingTypeSelector: React.FC<ClothingTypeSelectorProps> = ({
 }) => {
   if (!visible) return null;
   
+  const getSelectedStyles = (type: string) => {
+    if (selectedType === type) {
+      return 'bg-primary/10 border-2 border-primary shadow-lg ring-2 ring-primary/20';
+    }
+    return 'glass-card hover:shadow-md hover:bg-accent/5 border border-transparent';
+  };
+  
   return (
     <motion.div 
       className="w-full mb-8"
@@ -29,11 +36,7 @@ const ClothingTypeSelector: React.FC<ClothingTypeSelectorProps> = ({
         <motion.div
           whileHover={{ scale: 1.03 }}
           whileTap={{ scale: 0.98 }}
-          className={`p-4 sm:p-6 rounded-xl flex flex-row sm:flex-col items-center sm:justify-center cursor-pointer transition-all ${
-            selectedType === 'tops' 
-              ? 'bg-primary/10 border-2 border-primary'
-              : 'glass-card hover:shadow-md'
-          }`}
+          className={`p-4 sm:p-6 rounded-xl flex flex-row sm:flex-col items-center sm:justify-center cursor-pointer transition-all ${getSelectedStyles('tops')}`}
           onClick={() => onTypeChange('tops')}
         >
           <Shirt className={`w-8 h-8 sm:w-10 sm:h-10 sm:mb-3 mr-3 sm:mr-0 ${selectedType === 'tops' ? 'text-primary' : 'text-muted-foreground'}`} />
@@ -43,11 +46,7 @@ const ClothingTypeSelector: React.FC<ClothingTypeSelectorProps> = ({
         <motion.div
           whileHover={{ scale: 1.03 }}
           whileTap={{ scale: 0.98 }}
-          className={`p-4 sm:p-6 rounded-xl flex flex-row sm:flex-col items-center sm:justify-center cursor-pointer transition-all ${
-            selectedType === 'bottoms' 
-              ? 'bg-primary/10 border-2 border-primary'
-              : 'glass-card hover:shadow-md'
-          }`}
+          className={`p-4 sm:p-6 rounded-xl flex flex-row sm:flex-col items-center sm:justify-center cursor-pointer transition-all ${getSelectedStyles('bottoms')}`}
           onClick={() => onTypeChange('bottoms')}
         >
           <Scissors className={`w-8 h-8 sm:w-10 sm:h-10 sm:mb-3 mr-3 sm:mr-0 ${selectedType === 'bottoms' ? 'text-primary' : 'text-muted-foreground'}`} />
@@ -57,11 +56,7 @@ const ClothingTypeSelector: React.FC<ClothingTypeSelectorProps> = ({
         <motion.div
           whileHover={{ scale: 1.03 }}
           whileTap={{ scale: 0.98 }}
-          className={`p-4 sm:p-6 rounded-xl flex flex-row sm:flex-col items-center sm:justify-center cursor-pointer transition-all ${
-            selectedType === 'dresses' 
-              ? 'bg-primary/10 border-2 border-primary'
-              : 'glass-card hover:shadow-md'
-          }`}
+          className={`p-4 sm:p-6 rounded-xl flex flex-row sm:flex-col items-center sm:justify-center cursor-pointer transition-all ${getSelectedStyles('dresses')}`}
           onClick={() => onTypeChange('dresses')}
         >
           <ShoppingBag className={`w-8 h-8 sm:w-10 sm:h-10 sm:mb-3 mr-3 sm:mr-0 ${selectedType === 'dresses' ? 'text-primary' : 'text-muted-foreground'}`} />
