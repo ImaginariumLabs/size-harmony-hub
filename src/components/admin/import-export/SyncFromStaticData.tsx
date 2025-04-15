@@ -1,117 +1,80 @@
 
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Database, RefreshCw } from 'lucide-react';
-import { syncSizeDataWithSupabase } from '@/services/sizing/syncService';
+import { Card, CardContent } from '@/components/ui/card';
 import { toast } from 'sonner';
+import { RefreshCw, Database, Check } from 'lucide-react';
+import { syncSizeDataWithSupabase } from '@/services/sizing/syncService';
 
 const SyncFromStaticData = () => {
-  const [isSyncing, setIsSyncing] = useState(false);
-  const [syncResults, setSyncResults] = useState<{ 
-    success: boolean; 
-    brands?: number; 
-    sizeRanges?: number; 
-    errors?: string[] 
-  } | null>(null);
-
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
+  
   const handleSync = async () => {
-    setIsSyncing(true);
-    setSyncResults(null);
-    
     try {
+      setIsLoading(true);
+      setIsSuccess(false);
+      
       const result = await syncSizeDataWithSupabase();
       
       if (result.success) {
-        toast.success("Data synchronized successfully");
-        setSyncResults({
-          success: true,
-          brands: result.details?.brands || 0,
-          sizeRanges: result.details?.sizeRanges || 0,
-          errors: result.details?.errors || []
+        setIsSuccess(true);
+        toast.success("Size data synchronized successfully", {
+          description: `Synced ${result.details?.brands} brands and ${result.details?.sizeRanges} size ranges`
         });
       } else {
-        toast.error(result.message);
-        setSyncResults({
-          success: false,
-          errors: [result.error || 'Unknown error']
+        toast.error("Failed to synchronize size data", {
+          description: result.message || "Unknown error occurred"
         });
       }
     } catch (error) {
-      toast.error("Failed to sync data");
-      setSyncResults({
-        success: false,
-        errors: [error instanceof Error ? error.message : String(error)]
+      console.error("Error syncing data:", error);
+      toast.error("Error syncing data", {
+        description: error instanceof Error ? error.message : "Unknown error occurred"
       });
     } finally {
-      setIsSyncing(false);
+      setIsLoading(false);
     }
   };
-
+  
   return (
-    <div className="bg-white rounded-lg shadow-sm border p-6">
-      <div className="flex items-center mb-4">
-        <Database className="h-5 w-5 text-primary mr-2" />
-        <h3 className="text-base font-medium">Sync Static Data</h3>
-      </div>
-      
-      <div className="space-y-4 mb-6">
-        <p className="text-sm text-gray-600">
-          This tool will synchronize the built-in static size data to your Supabase database.
-          It's useful for setting up initial size data quickly.
-        </p>
-        
-        {syncResults && (
-          <div className={`p-3 rounded-lg ${syncResults.success ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
-            <div className="font-medium mb-1">
-              {syncResults.success ? 'Sync Successful' : 'Sync Failed'}
-            </div>
-            
-            {syncResults.success && (
-              <div className="text-sm">
-                <p>Processed:</p>
-                <ul className="list-disc pl-5 mt-1">
-                  <li>Brands: {syncResults.brands}</li>
-                  <li>Size Ranges: {syncResults.sizeRanges}</li>
-                </ul>
-              </div>
-            )}
-            
-            {syncResults.errors && syncResults.errors.length > 0 && (
-              <div className="mt-2">
-                <div className="text-sm font-medium">Errors ({syncResults.errors.length}):</div>
-                <div className="mt-1 max-h-32 overflow-y-auto text-xs">
-                  {syncResults.errors.slice(0, 5).map((error, index) => (
-                    <div key={index} className="mb-1">• {error}</div>
-                  ))}
-                  {syncResults.errors.length > 5 && (
-                    <div className="italic">...and {syncResults.errors.length - 5} more errors</div>
-                  )}
-                </div>
-              </div>
-            )}
+    <Card>
+      <CardContent className="pt-6">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h3 className="text-lg font-semibold mb-1">Sync Demo Data</h3>
+            <p className="text-sm text-muted-foreground">
+              Populate the database with sample size data for testing
+            </p>
           </div>
-        )}
-      </div>
-      
-      <Button
-        onClick={handleSync}
-        disabled={isSyncing}
-        variant="default"
-        className="w-full"
-      >
-        {isSyncing ? (
-          <>
-            <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-            Syncing Data...
-          </>
-        ) : (
-          <>
-            <RefreshCw className="mr-2 h-4 w-4" />
-            Sync Static Data with Database
-          </>
-        )}
-      </Button>
-    </div>
+          
+          {isSuccess && (
+            <div className="bg-green-100 text-green-700 p-1 rounded-full">
+              <Check className="h-5 w-5" />
+            </div>
+          )}
+        </div>
+        
+        <Button 
+          className="w-full mt-2 flex gap-2 items-center"
+          variant="outline"
+          disabled={isLoading}
+          onClick={handleSync}
+        >
+          {isLoading ? (
+            <RefreshCw className="h-4 w-4 animate-spin" />
+          ) : (
+            <Database className="h-4 w-4" />
+          )}
+          {isLoading ? "Synchronizing..." : "Sync Size Data"}
+        </Button>
+        
+        <p className="text-xs text-muted-foreground mt-4">
+          This will populate the database with sample size data from the static file.
+          Use this to quickly set up the application for testing.
+        </p>
+      </CardContent>
+    </Card>
   );
 };
 

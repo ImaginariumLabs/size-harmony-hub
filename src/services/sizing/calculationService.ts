@@ -1,7 +1,7 @@
 
-import { supabase } from '../../integrations/supabase/client';
-import { isSupabaseConnected } from '../../lib/supabase';
-import sizeData from '../../utils/sizeData';
+import { supabase } from '@/integrations/supabase/client';
+import { isSupabaseConnected } from '@/lib/supabase';
+import sizeData from '@/utils/sizeData';
 import { SizeResult, mockSizeMapping } from './types';
 
 // Determine size based on measurement
@@ -48,8 +48,8 @@ export const findSizeByMeasurement = async (
     
     const garmentId = garments[0].id;
     
-    // Convert to cm if needed for consistency
-    const valueInCm = unit === 'inches' ? measurementValue * 2.54 : measurementValue;
+    // Convert to inches if needed for consistency (database uses inches)
+    const valueInInches = unit === 'cm' ? measurementValue / 2.54 : measurementValue;
     
     // Initialize with the correct property structure
     const sizes: SizeResult = {
@@ -66,11 +66,16 @@ export const findSizeByMeasurement = async (
       .eq('garment_id', garmentId)
       .eq('region', 'US')
       .eq('measurement_type', measurementType)
-      .lte('max_value', valueInCm)
-      .gte('min_value', valueInCm);
+      .eq('unit', 'inches');
     
     if (usRanges && usRanges.length > 0) {
-      sizes.usSize = usRanges[0].size_label;
+      // Find the right size range
+      for (const range of usRanges) {
+        if (valueInInches >= range.min_value && valueInInches <= range.max_value) {
+          sizes.usSize = range.size_label;
+          break;
+        }
+      }
     }
     
     // Query size ranges for UK region
@@ -81,11 +86,16 @@ export const findSizeByMeasurement = async (
       .eq('garment_id', garmentId)
       .eq('region', 'UK')
       .eq('measurement_type', measurementType)
-      .lte('max_value', valueInCm)
-      .gte('min_value', valueInCm);
+      .eq('unit', 'inches');
     
     if (ukRanges && ukRanges.length > 0) {
-      sizes.ukSize = ukRanges[0].size_label;
+      // Find the right size range
+      for (const range of ukRanges) {
+        if (valueInInches >= range.min_value && valueInInches <= range.max_value) {
+          sizes.ukSize = range.size_label;
+          break;
+        }
+      }
     }
     
     // Query size ranges for EU region
@@ -96,11 +106,21 @@ export const findSizeByMeasurement = async (
       .eq('garment_id', garmentId)
       .eq('region', 'EU')
       .eq('measurement_type', measurementType)
-      .lte('max_value', valueInCm)
-      .gte('min_value', valueInCm);
+      .eq('unit', 'inches');
     
     if (euRanges && euRanges.length > 0) {
-      sizes.euSize = euRanges[0].size_label;
+      // Find the right size range
+      for (const range of euRanges) {
+        if (valueInInches >= range.min_value && valueInInches <= range.max_value) {
+          sizes.euSize = range.size_label;
+          break;
+        }
+      }
+    }
+    
+    // If we don't have exact matches in the database, use offline calculation as fallback
+    if (sizes.usSize === 'No exact match found' && sizes.ukSize === 'No exact match found' && sizes.euSize === 'No exact match found') {
+      return calculateOfflineSizeFromData(brandName, measurementType, measurementValue, unit);
     }
     
     return sizes;
@@ -175,36 +195,47 @@ export const calculateFallbackSize = (
   unit: string
 ): SizeResult => {
   // Ensure we're working with cm
-  const valueInCm = unit === 'inches' ? value * 2.54 : value;
+  const valueInInches = unit === 'cm' ? value / 2.54 : value;
   
   // Get the appropriate mapping based on measurement type
   const mapping = mockSizeMapping[measurementType as keyof typeof mockSizeMapping];
   if (!mapping) {
-    return { usSize: 'M', ukSize: 'M', euSize: 'M' }; // Default fallback
+    return { usSize: 'M', ukSize: '10', euSize: '38' }; // Default fallback
   }
   
   // Find the size where value falls within range
-  let sizeLabel = 'M'; // Default to medium if no match
+  let usSizeLabel = 'M'; // Default to medium if no match
+  let ukSizeLabel = '10';
+  let euSizeLabel = '38';
   
-  for (const [size, range] of Object.entries(mapping)) {
-    if (valueInCm >= range.min && valueInCm <= range.max) {
-      sizeLabel = size;
-      break;
+  // Simple mapping table based on bust measurement in inches
+  if (measurementType === 'bust') {
+    if (valueInInches < 32) {
+      usSizeLabel = 'XS';
+      ukSizeLabel = '6';
+      euSizeLabel = '34';
+    } else if (valueInInches >= 32 && valueInInches < 35) {
+      usSizeLabel = 'S';
+      ukSizeLabel = '8';
+      euSizeLabel = '36';
+    } else if (valueInInches >= 35 && valueInInches < 38) {
+      usSizeLabel = 'M';
+      ukSizeLabel = '10';
+      euSizeLabel = '38';
+    } else if (valueInInches >= 38 && valueInInches < 41) {
+      usSizeLabel = 'L';
+      ukSizeLabel = '12';
+      euSizeLabel = '40';
+    } else {
+      usSizeLabel = 'XL';
+      ukSizeLabel = '14';
+      euSizeLabel = '42';
     }
   }
   
-  // Simple mapping for different regions (in reality, these would vary by brand)
-  const euMapping: Record<string, string> = {
-    'XS': '34',
-    'S': '36',
-    'M': '38',
-    'L': '40',
-    'XL': '42'
-  };
-  
   return {
-    usSize: sizeLabel,
-    ukSize: sizeLabel,
-    euSize: euMapping[sizeLabel] || '38'
+    usSize: usSizeLabel,
+    ukSize: ukSizeLabel,
+    euSize: euSizeLabel
   };
 };

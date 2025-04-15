@@ -1,8 +1,10 @@
+
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Share2, ThumbsUp, ThumbsDown } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { submitFeedback, fetchBrands } from '../services/sizing';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface SizeResultProps {
   result: {
@@ -33,6 +35,7 @@ const SizeResult: React.FC<SizeResultProps> = ({
   const [submittingFeedback, setSubmittingFeedback] = useState(false);
   const [feedbackSubmitted, setFeedbackSubmitted] = useState(false);
   const [brandId, setBrandId] = useState<string | null>(null);
+  const isMobile = useIsMobile();
   
   useEffect(() => {
     const getBrandId = async () => {
@@ -134,7 +137,7 @@ const SizeResult: React.FC<SizeResultProps> = ({
           </div>
           
           <div className="p-6">
-            <div className="grid grid-cols-3 gap-4">
+            <div className={`grid ${isMobile ? 'grid-cols-1 gap-3' : 'grid-cols-3 gap-4'}`}>
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -186,11 +189,11 @@ const SizeResult: React.FC<SizeResultProps> = ({
                 transition={{ delay: 0.5 }}
               >
                 <p className="text-sm text-muted-foreground mb-4">Is this size recommendation accurate?</p>
-                <div className="flex justify-center gap-4">
+                <div className={`flex justify-center ${isMobile ? 'flex-col' : ''} gap-4`}>
                   <button
                     onClick={() => handleFeedback(true)}
                     disabled={submittingFeedback}
-                    className="flex items-center gap-2 px-4 py-2 bg-green-100 text-green-700 rounded-md hover:bg-green-200 transition-colors"
+                    className="flex items-center justify-center gap-2 px-4 py-2 bg-green-100 text-green-700 rounded-md hover:bg-green-200 transition-colors"
                   >
                     <ThumbsUp className="h-4 w-4" />
                     This size is correct
@@ -198,7 +201,7 @@ const SizeResult: React.FC<SizeResultProps> = ({
                   <button
                     onClick={() => handleFeedback(false)}
                     disabled={submittingFeedback}
-                    className="flex items-center gap-2 px-4 py-2 bg-red-100 text-red-700 rounded-md hover:bg-red-200 transition-colors"
+                    className="flex items-center justify-center gap-2 px-4 py-2 bg-red-100 text-red-700 rounded-md hover:bg-red-200 transition-colors"
                   >
                     <ThumbsDown className="h-4 w-4" />
                     This size is incorrect

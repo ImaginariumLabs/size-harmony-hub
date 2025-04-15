@@ -1,8 +1,8 @@
 
-import { supabase } from '../../integrations/supabase/client';
-import { isSupabaseConnected } from '../../lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
+import { isSupabaseConnected } from '@/lib/supabase';
 import { toast } from 'sonner';
-import sizeData from '../../utils/sizeData';
+import sizeData from '@/utils/sizeData';
 
 /**
  * Synchronizes the static size data with the Supabase database
@@ -75,7 +75,13 @@ export const syncSizeDataWithSupabase = async () => {
             // Process each size in this region
             for (const sizeData of regionSizes) {
               // Add measurement types based on garment
-              const measurementTypes = ['bust', 'waist', 'hips'];
+              let measurementTypes: string[] = [];
+              
+              if (garmentType === 'tops' || garmentType === 'dresses') {
+                measurementTypes = ['bust'];
+              } else if (garmentType === 'bottoms') {
+                measurementTypes = ['waist', 'hips'];
+              }
               
               for (const measurementType of measurementTypes) {
                 // Get min/max values based on measurement type
@@ -85,10 +91,11 @@ export const syncSizeDataWithSupabase = async () => {
                   minValue = sizeData.bust_min_inches;
                   maxValue = sizeData.bust_max_inches;
                 } else if (measurementType === 'waist') {
-                  // Use bust values as fallback for other measurements
+                  // Use bust values as fallback for waist measurements (reduced by ~10 inches)
                   minValue = sizeData.bust_min_inches - 10;
                   maxValue = sizeData.bust_max_inches - 10;
                 } else if (measurementType === 'hips') {
+                  // Use bust values as fallback for hip measurements (increased by ~2 inches)
                   minValue = sizeData.bust_min_inches + 2;
                   maxValue = sizeData.bust_max_inches + 2;
                 }
@@ -97,7 +104,7 @@ export const syncSizeDataWithSupabase = async () => {
                   continue;
                 }
                 
-                // Add size range
+                // Add size range to database
                 const { error: sizeError } = await supabase
                   .from('size_ranges')
                   .upsert({
@@ -126,13 +133,16 @@ export const syncSizeDataWithSupabase = async () => {
       }
     }
     
+    // Add a small delay to ensure all data is properly committed
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
     return {
       success: true,
       message: `Synced ${brandCount} brands and ${sizeRangeCount} size ranges`,
       details: {
         brands: brandCount,
         sizeRanges: sizeRangeCount,
-        errors: errors
+        errors: errors.length > 0 ? errors : []
       }
     };
   } catch (error) {
