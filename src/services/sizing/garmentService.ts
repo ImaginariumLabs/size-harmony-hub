@@ -1,19 +1,13 @@
 
 import { supabase } from '../../integrations/supabase/client';
 import { isSupabaseConnected } from '../../lib/supabase';
-
-export type Garment = {
-  id: string;
-  name: string;
-  description: string | null;
-  created_at: string;
-};
+import { SizeRange } from './types';
 
 // Fetch size ranges for a specific brand and garment type
 export const fetchSizeRanges = async (
   brandName: string, 
   garmentType: string
-) => {
+): Promise<SizeRange[]> => {
   try {
     // Check if Supabase is connected
     const connected = await isSupabaseConnected();
@@ -31,7 +25,8 @@ export const fetchSizeRanges = async (
       .single();
       
     if (!brand) {
-      throw new Error(`Brand ${brandName} not found`);
+      console.warn(`Brand ${brandName} not found`);
+      return [];
     }
     
     // Get garment ID
@@ -42,10 +37,11 @@ export const fetchSizeRanges = async (
       .single();
       
     if (!garment) {
-      throw new Error(`Garment type ${garmentType} not found`);
+      console.warn(`Garment type ${garmentType} not found`);
+      return [];
     }
     
-    // Get size ranges
+    // Get size ranges with proper filtering
     const { data, error } = await supabase
       .from('size_ranges')
       .select('*')
@@ -54,12 +50,12 @@ export const fetchSizeRanges = async (
       
     if (error) {
       console.error('Error fetching size ranges:', error);
-      throw error;
+      return [];
     }
     
     return data || [];
   } catch (e) {
-    console.error('Error fetching size ranges:', e);
+    console.error('Unexpected error fetching size ranges:', e);
     return [];
   }
 };
