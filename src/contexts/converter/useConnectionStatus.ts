@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { isSupabaseConnected } from '@/lib/supabase';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/lib/supabase';
 
 export const useConnectionStatus = (onConnectionChange: (isOffline: boolean) => void) => {
   const { toast } = useToast();
@@ -46,16 +46,22 @@ export const useConnectionStatus = (onConnectionChange: (isOffline: boolean) => 
 
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      // When user is signed in, check connection again to show authorized features
       if (event === 'SIGNED_IN') {
-        toast({
-          title: "Welcome back!",
-          description: "You can now save your measurements and view size history.",
-        });
+        setTimeout(() => {
+          checkConnection();
+          toast({
+            title: "Welcome back!",
+            description: "You can now save your measurements and view size history.",
+          });
+        }, 0);
       }
     });
     
+    // Initial connection check
     checkConnection();
-    const interval = setInterval(checkConnection, 10000);
+    // Periodic check
+    const interval = setInterval(checkConnection, 30000);
     
     return () => {
       clearInterval(interval);

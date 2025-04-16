@@ -29,11 +29,22 @@ const SizeResult: React.FC<SizeResultProps> = ({
 
   return (
     <div className="space-y-4">
-      <div>
-        <h3 className="text-lg font-semibold">Your Size</h3>
-        <p>US: {result.usSize}</p>
-        <p>UK: {result.ukSize}</p>
-        <p>EU: {result.euSize}</p>
+      <div className="p-4 bg-primary/5 rounded-lg">
+        <h3 className="text-lg font-semibold mb-3">Your Size in {brand}</h3>
+        <div className="grid grid-cols-3 gap-4">
+          <div className="text-center p-3 bg-white rounded-md shadow-sm">
+            <div className="text-xs text-gray-500 mb-1">US</div>
+            <div className="text-xl font-bold">{result.usSize}</div>
+          </div>
+          <div className="text-center p-3 bg-white rounded-md shadow-sm">
+            <div className="text-xs text-gray-500 mb-1">UK</div>
+            <div className="text-xl font-bold">{result.ukSize}</div>
+          </div>
+          <div className="text-center p-3 bg-white rounded-md shadow-sm">
+            <div className="text-xs text-gray-500 mb-1">EU</div>
+            <div className="text-xl font-bold">{result.euSize}</div>
+          </div>
+        </div>
       </div>
 
       <div className="flex flex-col gap-2">
@@ -51,6 +62,10 @@ const SizeResult: React.FC<SizeResultProps> = ({
           measurementType={measurementType}
           units={units}
         />
+      </div>
+
+      <div className="text-xs text-gray-500 mt-2 italic text-center">
+        Note: Sizes may vary slightly between different styles.
       </div>
     </div>
   );
