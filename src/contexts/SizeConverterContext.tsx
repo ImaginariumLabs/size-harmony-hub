@@ -5,56 +5,34 @@ import { useToast } from '@/hooks/use-toast';
 import { SizeConverterContextType, SizeResultType } from './converter/types';
 import { useShare } from './converter/useShare';
 import { useConnectionStatus } from './converter/useConnectionStatus';
+import { useConverterSteps } from '@/hooks/useConverterSteps';
 
 const SizeConverterContext = createContext<SizeConverterContextType | undefined>(undefined);
 
 export const SizeConverterProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const { toast } = useToast();
   const { shareResults: share } = useShare();
-  
-  // State
-  const [step, setStep] = useState(1);
-  const [clothingType, setClothingType] = useState('');
-  const [brand, setBrand] = useState('');
-  const [bust, setBust] = useState('');
-  const [units, setUnits] = useState('inches');
-  const [measurementType, setMeasurementType] = useState('bust');
-  const [result, setResult] = useState<SizeResultType>(null);
   const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState<SizeResultType>(null);
   
-  const handleConnectionChange = useCallback((isOffline: boolean) => {
-    if (!isOffline && result && brand && bust) {
-      calculateSize();
-    }
-  }, [result, brand, bust]);
-  
-  const { isOfflineMode } = useConnectionStatus(handleConnectionChange);
-  
-  // When clothing type changes, update measurement type and move to step 2
-  useEffect(() => {
-    if (clothingType) {
-      if (clothingType === 'tops') setMeasurementType('bust');
-      else if (clothingType === 'bottoms') setMeasurementType('waist');
-      else if (clothingType === 'dresses') setMeasurementType('bust');
-      setStep(2);
-    }
-  }, [clothingType]);
-  
-  // When brand changes, move to step 3
-  useEffect(() => {
-    if (brand) {
-      setStep(3);
-    }
-  }, [brand]);
-  
-  // Calculate size whenever inputs change
-  useEffect(() => {
-    if (brand && bust && !isNaN(parseFloat(bust)) && parseFloat(bust) > 0) {
-      calculateSize();
-    } else {
-      setResult(null);
-    }
-  }, [brand, bust, units, measurementType]);
+  // Use the converter steps hook for managing form state and steps
+  const {
+    brand,
+    setBrand,
+    bust,
+    setBust,
+    units,
+    setUnits,
+    step,
+    clothingType,
+    setClothingType,
+    measurementType,
+    setMeasurementType,
+    goBack,
+    resetForm
+  } = useConverterSteps({
+    calculateSize: () => {}  // Will be properly set in useEffect below
+  });
   
   const calculateSize = useCallback(async () => {
     if (!brand || !bust || isNaN(parseFloat(bust)) || parseFloat(bust) <= 0) {
@@ -86,26 +64,20 @@ export const SizeConverterProvider: React.FC<{ children: ReactNode }> = ({ child
     } finally {
       setLoading(false);
     }
-  }, [brand, bust, clothingType, measurementType, units, isOfflineMode, toast]);
+  }, [brand, bust, clothingType, measurementType, units, toast]);
   
-  const goBack = useCallback(() => {
-    if (step === 3) {
-      setBust('');
-      setResult(null);
-      setStep(2);
-    } else if (step === 2) {
-      setBrand('');
-      setStep(1);
+  // Update the calculateSize reference in useConverterSteps
+  useEffect(() => {
+    useConverterSteps({ calculateSize });
+  }, [calculateSize]);
+  
+  const handleConnectionChange = useCallback((isOffline: boolean) => {
+    if (!isOffline && result && brand && bust) {
+      calculateSize();
     }
-  }, [step]);
+  }, [result, brand, bust, calculateSize]);
   
-  const resetForm = useCallback(() => {
-    setClothingType('');
-    setBrand('');
-    setBust('');
-    setResult(null);
-    setStep(1);
-  }, []);
+  const { isOfflineMode } = useConnectionStatus(handleConnectionChange);
   
   const shareResults = useCallback(() => {
     share(result, brand, clothingType);
