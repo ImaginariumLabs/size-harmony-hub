@@ -4,10 +4,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles } from 'lucide-react';
 
 interface LoadingIndicatorProps {
-  loading: boolean;
+  loading?: boolean;
 }
 
-const LoadingIndicator: React.FC<LoadingIndicatorProps> = ({ loading }) => {
+const LoadingIndicator: React.FC<LoadingIndicatorProps> = ({ loading = true }) => {
   if (!loading) return null;
   
   return (

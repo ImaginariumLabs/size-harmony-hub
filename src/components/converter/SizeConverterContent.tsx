@@ -2,16 +2,16 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { useSizeConverter } from '@/contexts/SizeConverterContext';
-import { StepContent } from './StepContent';
+import StepContent from './StepContent';
 import ClothingTypeSelector from '../ClothingTypeSelector';
 import BrandSelector from '../BrandSelector';
-import { BackButton } from './BackButton';
-import { ResetButton } from './ResetButton';
-import { ProgressIndicator } from './ProgressIndicator';
+import BackButton from './BackButton';
+import ResetButton from './ResetButton';
+import ProgressIndicator from './ProgressIndicator';
 import SizeResult from '../SizeResult';
-import { LoadingIndicator } from './LoadingIndicator';
-import { OfflineModeIndicator } from './OfflineModeIndicator';
-import { AdSpace } from './AdSpace';
+import LoadingIndicator from './LoadingIndicator';
+import OfflineModeIndicator from './OfflineModeIndicator';
+import AdSpace from './AdSpace';
 import MeasurementForm from './MeasurementForm';
 import SizeComparison from '../SizeComparison';
 import { useAuth } from '@/contexts/AuthContext';
@@ -87,7 +87,7 @@ const SizeConverterContent: React.FC = () => {
           <h2 className="text-xl font-medium mb-6">Select Clothing Type</h2>
           <ClothingTypeSelector
             selectedType={clothingType}
-            onSelectType={setClothingType}
+            onTypeChange={setClothingType}
           />
         </motion.div>
       </StepContent>
@@ -100,7 +100,10 @@ const SizeConverterContent: React.FC = () => {
           transition={{ duration: 0.3 }}
         >
           <h2 className="text-xl font-medium mb-6">Select Brand</h2>
-          <BrandSelector selectedBrand={brand} onSelectBrand={setBrand} />
+          <BrandSelector 
+            selectedBrand={brand} 
+            onBrandChange={setBrand} 
+          />
         </motion.div>
       </StepContent>
       

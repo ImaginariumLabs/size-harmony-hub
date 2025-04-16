@@ -5,9 +5,10 @@ import { HelpCircle } from 'lucide-react';
 
 interface MeasurementLabelProps {
   measurementType: string;
+  clothingType: string;
 }
 
-const MeasurementLabel: React.FC<MeasurementLabelProps> = ({ measurementType }) => {
+const MeasurementLabel: React.FC<MeasurementLabelProps> = ({ measurementType, clothingType }) => {
   const [showTooltip, setShowTooltip] = useState(false);
   
   const getMeasurementLabel = () => {

@@ -5,13 +5,13 @@ import { motion } from 'framer-motion';
 interface MeasurementValueInputProps {
   value: string;
   onChange: (value: string) => void;
-  measurementType: string;
+  unit?: string;
 }
 
 const MeasurementValueInput: React.FC<MeasurementValueInputProps> = ({ 
   value, 
   onChange,
-  measurementType
+  unit
 }) => {
   return (
     <motion.div
@@ -24,7 +24,7 @@ const MeasurementValueInput: React.FC<MeasurementValueInputProps> = ({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         className="input-clean text-lg w-full px-4 py-3 rounded-md bg-white/70 hover:bg-white transition-colors border-b-2 border-accent/30 focus:border-primary"
-        placeholder={`Enter your ${measurementType} measurement`}
+        placeholder="Enter your measurement"
         min="0"
         step="0.1"
       />

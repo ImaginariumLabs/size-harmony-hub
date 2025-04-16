@@ -5,13 +5,16 @@ import { ArrowLeft } from 'lucide-react';
 
 interface BackButtonProps {
   onClick: () => void;
+  visible?: boolean;
 }
 
-const BackButton: React.FC<BackButtonProps> = ({ onClick }) => {
+const BackButton: React.FC<BackButtonProps> = ({ onClick, visible = true }) => {
+  if (!visible) return null;
+
   return (
     <motion.button
       onClick={onClick}
-      className="flex items-center text-sm text-muted-foreground hover:text-primary transition-colors mb-4"
+      className="flex items-center text-sm text-muted-foreground hover:text-primary transition-colors"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.3 }}

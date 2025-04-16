@@ -3,14 +3,14 @@ import React from 'react';
 import { motion } from 'framer-motion';
 
 interface MeasurementTypeSelectorProps {
-  measurementType: string;
-  onMeasurementTypeChange: (type: string) => void;
+  selectedType: string;
+  onChange: (type: string) => void;
   clothingType: string;
 }
 
 const MeasurementTypeSelector: React.FC<MeasurementTypeSelectorProps> = ({
-  measurementType,
-  onMeasurementTypeChange,
+  selectedType,
+  onChange,
   clothingType
 }) => {
   if (clothingType !== 'dresses') {
@@ -23,27 +23,27 @@ const MeasurementTypeSelector: React.FC<MeasurementTypeSelectorProps> = ({
       <div className="flex flex-wrap gap-2">
         <button
           type="button"
-          onClick={() => onMeasurementTypeChange('bust')}
+          onClick={() => onChange('bust')}
           className={`px-3 py-2 rounded-lg text-sm transition-all ${
-            measurementType === 'bust' ? 'bg-primary text-white' : 'bg-gray-100 hover:bg-gray-200'
+            selectedType === 'bust' ? 'bg-primary text-white' : 'bg-gray-100 hover:bg-gray-200'
           }`}
         >
           Bust
         </button>
         <button
           type="button"
-          onClick={() => onMeasurementTypeChange('waist')}
+          onClick={() => onChange('waist')}
           className={`px-3 py-2 rounded-lg text-sm transition-all ${
-            measurementType === 'waist' ? 'bg-primary text-white' : 'bg-gray-100 hover:bg-gray-200'
+            selectedType === 'waist' ? 'bg-primary text-white' : 'bg-gray-100 hover:bg-gray-200'
           }`}
         >
           Waist
         </button>
         <button
           type="button"
-          onClick={() => onMeasurementTypeChange('hips')}
+          onClick={() => onChange('hips')}
           className={`px-3 py-2 rounded-lg text-sm transition-all ${
-            measurementType === 'hips' ? 'bg-primary text-white' : 'bg-gray-100 hover:bg-gray-200'
+            selectedType === 'hips' ? 'bg-primary text-white' : 'bg-gray-100 hover:bg-gray-200'
           }`}
         >
           Hips

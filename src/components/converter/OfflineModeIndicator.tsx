@@ -4,10 +4,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Info } from 'lucide-react';
 
 interface OfflineModeIndicatorProps {
-  isOfflineMode: boolean;
+  isOfflineMode?: boolean;
 }
 
-const OfflineModeIndicator: React.FC<OfflineModeIndicatorProps> = ({ isOfflineMode }) => {
+const OfflineModeIndicator: React.FC<OfflineModeIndicatorProps> = ({ isOfflineMode = true }) => {
   if (!isOfflineMode) return null;
   
   return (

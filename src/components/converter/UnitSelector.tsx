@@ -2,18 +2,18 @@
 import React from 'react';
 
 interface UnitSelectorProps {
-  units: string;
-  onUnitsChange: (units: string) => void;
+  selectedUnit: string;
+  onChange: (units: string) => void;
 }
 
-const UnitSelector: React.FC<UnitSelectorProps> = ({ units, onUnitsChange }) => {
+const UnitSelector: React.FC<UnitSelectorProps> = ({ selectedUnit, onChange }) => {
   return (
     <div className="flex shrink-0 h-full border-l border-gray-100">
       <button
         type="button"
-        onClick={() => onUnitsChange('inches')}
+        onClick={() => onChange('inches')}
         className={`px-4 py-3 transition-all duration-300 text-sm font-medium ${
-          units === 'inches'
+          selectedUnit === 'inches'
             ? 'bg-primary text-white'
             : 'hover:bg-gray-50'
         }`}
@@ -23,9 +23,9 @@ const UnitSelector: React.FC<UnitSelectorProps> = ({ units, onUnitsChange }) => 
       
       <button
         type="button"
-        onClick={() => onUnitsChange('cm')}
+        onClick={() => onChange('cm')}
         className={`px-4 py-3 transition-all duration-300 text-sm font-medium ${
-          units === 'cm'
+          selectedUnit === 'cm'
             ? 'bg-primary text-white'
             : 'hover:bg-gray-50'
         } rounded-r-xl`}

@@ -1,9 +1,9 @@
 
 import React from 'react';
-import { MeasurementValueInput } from './MeasurementValueInput';
-import { UnitSelector } from './UnitSelector';
-import { MeasurementTypeSelector } from './MeasurementTypeSelector';
-import { MeasurementLabel } from './MeasurementLabel';
+import MeasurementValueInput from './MeasurementValueInput';
+import UnitSelector from './UnitSelector';
+import MeasurementTypeSelector from './MeasurementTypeSelector';
+import MeasurementLabel from './MeasurementLabel';
 import MeasurementGuide from '@/components/MeasurementGuide';
 
 interface MeasurementFormProps {
