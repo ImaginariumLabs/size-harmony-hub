@@ -1,18 +1,30 @@
+
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Link } from 'react-router-dom';
-import { ChevronRight, Clock, Tag, Calendar } from 'lucide-react';
+import { Link, useLocation } from 'react-router-dom';
+import { ChevronRight, Clock, Tag, Calendar, ArrowRight } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { fetchBlogPosts, fetchBlogTags } from '@/services/blog/publicBlogService';
 import { BlogPost, BlogTag } from '@/services/blog/types';
 import { format } from 'date-fns';
+import { Helmet } from 'react-helmet-async';
 
 const Blog: React.FC = () => {
   const [posts, setPosts] = useState<BlogPost[]>([]);
   const [tags, setTags] = useState<BlogTag[]>([]);
   const [activeTag, setActiveTag] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const location = useLocation();
+  
+  useEffect(() => {
+    // Check if there's a tag parameter in the URL
+    const params = new URLSearchParams(location.search);
+    const tagParam = params.get('tag');
+    if (tagParam) {
+      setActiveTag(tagParam);
+    }
+  }, [location]);
   
   useEffect(() => {
     const loadData = async () => {
@@ -38,8 +50,44 @@ const Blog: React.FC = () => {
     ? posts.filter(post => post.tags.includes(activeTag))
     : posts;
   
+  // Generate proper page title based on active tag
+  const pageTitle = activeTag 
+    ? `${activeTag} - Size Harmony Blog` 
+    : 'Size Harmony Blog | Clothing Sizing & Fashion Tips';
+  
+  // Generate proper page description based on active tag
+  const pageDescription = activeTag
+    ? `Browse our articles about ${activeTag.toLowerCase()} including sizing guides, fashion tips, and shopping advice.`
+    : 'Discover helpful articles about clothing sizes, fashion trends, and shopping tips to enhance your wardrobe and shopping experience.';
+  
   return (
     <div className="min-h-screen overflow-hidden">
+      <Helmet>
+        <title>{pageTitle}</title>
+        <meta name="description" content={pageDescription} />
+        <meta name="keywords" content={`clothing sizes, fashion blog, size guide, ${activeTag ? activeTag.toLowerCase() + ', ' : ''}fashion tips, size conversion`} />
+        <link rel="canonical" href="https://sizeharmony.com/blog" />
+        
+        {/* Structured data for blog */}
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "Blog",
+            "name": "Size Harmony Blog",
+            "description": "Articles about clothing sizes, fashion trends, and shopping tips",
+            "url": "https://sizeharmony.com/blog",
+            "publisher": {
+              "@type": "Organization",
+              "name": "Size Harmony",
+              "logo": {
+                "@type": "ImageObject",
+                "url": "https://sizeharmony.com/logo.png"
+              }
+            }
+          })}
+        </script>
+      </Helmet>
+      
       <div className="fixed inset-0 bg-gradient-to-b from-purple-50 to-pink-50 -z-10" />
       
       <Navbar />
@@ -55,9 +103,25 @@ const Blog: React.FC = () => {
               className="mb-8"
             >
               <h1 className="text-4xl font-display font-bold mb-4">Size Harmony Blog</h1>
-              <p className="text-muted-foreground">
-                Discover the latest insights on sizing, fashion trends, and shopping tips.
-              </p>
+              {activeTag ? (
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <span>Showing articles tagged with:</span>
+                  <span className="bg-primary/10 text-primary px-2 py-1 rounded-full text-sm flex items-center">
+                    <Tag className="h-3 w-3 mr-1" />
+                    {activeTag}
+                  </span>
+                  <button 
+                    onClick={() => setActiveTag(null)}
+                    className="text-primary hover:underline text-sm ml-2"
+                  >
+                    (Clear filter)
+                  </button>
+                </div>
+              ) : (
+                <p className="text-muted-foreground">
+                  Discover the latest insights on sizing, fashion trends, and shopping tips.
+                </p>
+              )}
             </motion.div>
             
             {isLoading ? (
@@ -134,10 +198,10 @@ const Blog: React.FC = () => {
                       <div className="pt-4 border-t border-gray-100">
                         <Link 
                           to={`/blog/${post.slug}`}
-                          className="text-sm text-primary font-medium hover:underline flex items-center"
+                          className="text-sm text-primary font-medium hover:underline flex items-center group"
                         >
                           Read more
-                          <ChevronRight className="h-4 w-4 ml-1" />
+                          <ArrowRight className="h-4 w-4 ml-1 group-hover:translate-x-1 transition-transform" />
                         </Link>
                       </div>
                     </div>

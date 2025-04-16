@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { motion } from 'framer-motion';
 import { useSizeConverter } from '@/contexts/SizeConverterContext';
@@ -17,6 +18,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { saveToHistory } from '@/services/sizing/historyService';
 import { useToast } from '@/hooks/use-toast';
+import { ArrowLeftRight } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 const SizeConverterContent: React.FC = () => {
   
@@ -151,7 +154,12 @@ const SizeConverterContent: React.FC = () => {
               />
               
               <div className="mt-4">
-                <SizeComparison />
+                <motion.div
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <SizeComparison />
+                </motion.div>
               </div>
             </motion.div>
           )}

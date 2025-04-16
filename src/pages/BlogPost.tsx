@@ -10,6 +10,7 @@ import { BlogPost as BlogPostType } from '@/services/blog/types';
 import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
+import { Helmet } from 'react-helmet-async';
 
 const BlogPost: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -95,6 +96,55 @@ const BlogPost: React.FC = () => {
   
   return (
     <div className="min-h-screen overflow-hidden">
+      <Helmet>
+        <title>{post.seo_title || post.title} | Size Harmony Blog</title>
+        <meta name="description" content={post.seo_description || post.excerpt} />
+        <meta name="keywords" content={post.seo_keywords || post.tags.join(', ') + ', size conversion, fashion, clothing sizing'} />
+        <link rel="canonical" href={`https://sizeharmony.com/blog/${post.slug}`} />
+        
+        {/* Open Graph tags for social sharing */}
+        <meta property="og:title" content={post.title} />
+        <meta property="og:description" content={post.excerpt} />
+        <meta property="og:type" content="article" />
+        <meta property="og:url" content={`https://sizeharmony.com/blog/${post.slug}`} />
+        {post.featured_image && <meta property="og:image" content={post.featured_image} />}
+        
+        {/* Twitter card tags */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={post.title} />
+        <meta name="twitter:description" content={post.excerpt} />
+        {post.featured_image && <meta name="twitter:image" content={post.featured_image} />}
+        
+        {/* Structured data for the blog post */}
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "BlogPosting",
+            "mainEntityOfPage": {
+              "@type": "WebPage",
+              "@id": `https://sizeharmony.com/blog/${post.slug}`
+            },
+            "headline": post.title,
+            "description": post.excerpt,
+            "image": post.featured_image || "https://sizeharmony.com/logo.png",
+            "author": {
+              "@type": "Person",
+              "name": post.author_name
+            },
+            "publisher": {
+              "@type": "Organization",
+              "name": "Size Harmony",
+              "logo": {
+                "@type": "ImageObject",
+                "url": "https://sizeharmony.com/logo.png"
+              }
+            },
+            "datePublished": post.published_at,
+            "dateModified": post.updated_at
+          })}
+        </script>
+      </Helmet>
+      
       <div className="fixed inset-0 bg-gradient-to-b from-purple-50 to-pink-50 -z-10" />
       
       <Navbar />
@@ -115,7 +165,7 @@ const BlogPost: React.FC = () => {
             </Link>
             
             {post.featured_image && (
-              <div className="mb-8 rounded-xl overflow-hidden">
+              <div className="mb-8 rounded-xl overflow-hidden shadow-lg">
                 <img 
                   src={post.featured_image} 
                   alt={post.title} 
@@ -205,7 +255,10 @@ const BlogPost: React.FC = () => {
                       <p className="text-sm text-muted-foreground line-clamp-2">
                         {related.excerpt}
                       </p>
-                      <div className="mt-3 text-primary text-sm font-medium">Read more</div>
+                      <div className="mt-3 text-primary text-sm font-medium flex items-center group">
+                        Read more
+                        <ArrowRight className="h-4 w-4 ml-1 group-hover:translate-x-1 transition-transform" />
+                      </div>
                     </Link>
                   ))}
                 </div>

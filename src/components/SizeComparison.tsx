@@ -1,6 +1,5 @@
 
 import React, { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
 import { Search, ArrowLeftRight, X } from 'lucide-react';
 import {
   Dialog,
@@ -15,6 +14,8 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { findSizeByMeasurement } from '@/services/sizing';
 import { supabase } from '@/lib/supabase';
+import { Button } from '@/components/ui/button';
+import { motion } from 'framer-motion';
 
 type Brand = {
   id: string;
@@ -123,11 +124,11 @@ const SizeComparison: React.FC = () => {
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
         <Button 
-          variant="outline" 
-          className="flex items-center gap-2"
+          variant="gradient" 
+          className="w-full flex items-center gap-2 shadow-lg hover:shadow-xl transition-all duration-300 bg-gradient-to-r from-primary to-purple-600 text-white font-medium"
         >
           <ArrowLeftRight className="h-4 w-4" />
-          Compare Sizes
+          <span className="animate-pulse">Compare Sizes Across Brands</span>
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[600px]">
@@ -257,7 +258,7 @@ const SizeComparison: React.FC = () => {
             <Button 
               onClick={handleCompare} 
               disabled={loading || !measurementValue || selectedBrands.length === 0}
-              className="w-full"
+              className="w-full bg-gradient-to-r from-primary to-purple-600 text-white"
             >
               {loading ? 'Comparing...' : 'Compare Sizes'}
             </Button>
