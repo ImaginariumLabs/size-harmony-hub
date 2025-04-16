@@ -12,6 +12,7 @@ import Guide from "./pages/Guide";
 import Blog from "./pages/Blog";
 import BlogPost from "./pages/BlogPost";
 import Auth from "./pages/Auth";
+import Profile from "./pages/Profile";
 import ConnectionStatus from "./components/ConnectionStatus";
 import { AuthProvider } from "./contexts/AuthContext";
 
@@ -32,6 +33,7 @@ const App = () => (
             <Route path="/blog" element={<Blog />} />
             <Route path="/blog/:slug" element={<BlogPost />} />
             <Route path="/auth" element={<Auth />} />
+            <Route path="/profile" element={<Profile />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

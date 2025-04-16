@@ -1,6 +1,6 @@
 
-import React from 'react';
-import { ShareIcon } from 'lucide-react';
+import React, { useState } from 'react';
+import { ShareIcon, UserCircle, Save, Check, LogIn } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useShare } from '@/contexts/converter/useShare';
 import { SizeResultType } from '@/contexts/converter/types';
@@ -13,6 +13,9 @@ interface SizeResultProps {
   bust: string;
   measurementType: string;
   units: string;
+  onSaveToHistory?: () => Promise<void>;
+  showLoginPrompt?: () => void;
+  isLoggedIn?: boolean;
 }
 
 const SizeResult: React.FC<SizeResultProps> = ({ 
@@ -21,11 +24,34 @@ const SizeResult: React.FC<SizeResultProps> = ({
   clothingType,
   bust,
   measurementType,
-  units
+  units,
+  onSaveToHistory,
+  showLoginPrompt,
+  isLoggedIn = false
 }) => {
   const { shareResults } = useShare();
+  const [isSaving, setIsSaving] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
 
   if (!result) return null;
+
+  const handleSaveHistory = async () => {
+    if (!isLoggedIn && showLoginPrompt) {
+      showLoginPrompt();
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      if (onSaveToHistory) {
+        await onSaveToHistory();
+        setIsSaved(true);
+        setTimeout(() => setIsSaved(false), 3000);
+      }
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   return (
     <div className="space-y-4">
@@ -55,6 +81,35 @@ const SizeResult: React.FC<SizeResultProps> = ({
         >
           <ShareIcon className="h-4 w-4" />
           Share Result
+        </Button>
+
+        <Button 
+          onClick={handleSaveHistory}
+          variant="outline"
+          disabled={isSaving || isSaved}
+          className={`w-full flex items-center gap-2 ${isSaved ? 'bg-green-50 text-green-700 border-green-200' : ''}`}
+        >
+          {isSaving ? (
+            <>
+              <Save className="h-4 w-4 animate-pulse" />
+              Saving...
+            </>
+          ) : isSaved ? (
+            <>
+              <Check className="h-4 w-4" />
+              Saved to History
+            </>
+          ) : isLoggedIn ? (
+            <>
+              <Save className="h-4 w-4" />
+              Save to History
+            </>
+          ) : (
+            <>
+              <LogIn className="h-4 w-4" />
+              Sign In to Save
+            </>
+          )}
         </Button>
 
         <SaveMeasurements 

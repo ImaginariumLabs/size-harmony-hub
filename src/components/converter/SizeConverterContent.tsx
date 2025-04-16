@@ -1,19 +1,23 @@
 
 import React from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import BrandSelector from '../BrandSelector';
-import MeasurementInput from '../MeasurementInput';
-import SizeResult from '../SizeResult';
-import ClothingTypeSelector from '../ClothingTypeSelector';
+import { motion } from 'framer-motion';
 import { useSizeConverter } from '@/contexts/SizeConverterContext';
-import ProgressIndicator from './ProgressIndicator';
-import BackButton from './BackButton';
-import MeasurementInstructions from './MeasurementInstructions';
-import ResetButton from './ResetButton';
-import AdSpace from './AdSpace';
-import OfflineModeIndicator from './OfflineModeIndicator';
-import LoadingIndicator from './LoadingIndicator';
-import StepContent from './StepContent';
+import { StepContent } from './StepContent';
+import ClothingTypeSelector from '../ClothingTypeSelector';
+import BrandSelector from '../BrandSelector';
+import { BackButton } from './BackButton';
+import { ResetButton } from './ResetButton';
+import { ProgressIndicator } from './ProgressIndicator';
+import SizeResult from '../SizeResult';
+import { LoadingIndicator } from './LoadingIndicator';
+import { OfflineModeIndicator } from './OfflineModeIndicator';
+import { AdSpace } from './AdSpace';
+import MeasurementForm from './MeasurementForm';
+import SizeComparison from '../SizeComparison';
+import { useAuth } from '@/contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
+import { saveToHistory } from '@/services/sizing/historyService';
+import { useToast } from '@/hooks/use-toast';
 
 const SizeConverterContent: React.FC = () => {
   const {
@@ -36,63 +40,121 @@ const SizeConverterContent: React.FC = () => {
     shareResults
   } = useSizeConverter();
   
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const { toast } = useToast();
+
+  const handleSaveHistoryAndGetResult = async () => {
+    if (!user || !result || !brand || !bust) return;
+    
+    try {
+      await saveToHistory(
+        user.id,
+        brand,
+        clothingType,
+        measurementType,
+        parseFloat(bust),
+        units,
+        result
+      );
+      
+      toast({
+        title: "Size conversion saved",
+        description: "This conversion has been added to your history.",
+      });
+    } catch (error) {
+      console.error('Error saving to history:', error);
+    }
+  };
+
   return (
-    <div className="w-full max-w-2xl mx-auto">
-      <div className="glass-card p-8 shadow-lg relative overflow-hidden">
-        {/* Decorative elements */}
-        <div className="absolute -top-10 -right-10 w-20 h-20 rounded-full bg-gradient-to-br from-primary/10 to-purple-300/10 blur-xl"></div>
-        <div className="absolute -bottom-10 -left-10 w-20 h-20 rounded-full bg-gradient-to-br from-primary/10 to-purple-300/10 blur-xl"></div>
-        
-        <OfflineModeIndicator isOfflineMode={isOfflineMode} />
-        <ProgressIndicator currentStep={step} hasResult={!!result} />
-        
-        <AnimatePresence>
-          {step > 1 && <BackButton onClick={goBack} />}
-        </AnimatePresence>
-        
-        <StepContent
-          step={step}
-          clothingType={clothingType}
-          brand={brand}
-          bust={bust}
-          units={units}
-          measurementType={measurementType}
-          onTypeChange={setClothingType}
-          onBrandChange={setBrand}
-          onBustChange={setBust}
-          onUnitsChange={setUnits}
-          onMeasurementTypeChange={setMeasurementType}
-        />
-        
-        <LoadingIndicator loading={loading} />
-        
-        <AnimatePresence>
-          {result && (
+    <div className="relative">
+      {isOfflineMode && <OfflineModeIndicator />}
+      
+      <div className="flex items-center justify-between mb-8">
+        <BackButton visible={step > 1} onClick={goBack} />
+        <ProgressIndicator currentStep={step} totalSteps={3} />
+        <ResetButton visible={step > 1} onClick={resetForm} />
+      </div>
+      
+      <StepContent visible={step === 1}>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -20 }}
+          transition={{ duration: 0.3 }}
+        >
+          <h2 className="text-xl font-medium mb-6">Select Clothing Type</h2>
+          <ClothingTypeSelector
+            selectedType={clothingType}
+            onSelectType={setClothingType}
+          />
+        </motion.div>
+      </StepContent>
+      
+      <StepContent visible={step === 2}>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -20 }}
+          transition={{ duration: 0.3 }}
+        >
+          <h2 className="text-xl font-medium mb-6">Select Brand</h2>
+          <BrandSelector selectedBrand={brand} onSelectBrand={setBrand} />
+        </motion.div>
+      </StepContent>
+      
+      <StepContent visible={step === 3}>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -20 }}
+          transition={{ duration: 0.3 }}
+          className="space-y-8"
+        >
+          <div>
+            <h2 className="text-xl font-medium mb-6">Enter Your Measurements</h2>
+            <MeasurementForm 
+              measurementType={measurementType}
+              measurementValue={bust}
+              measurementUnit={units}
+              onMeasurementTypeChange={setMeasurementType}
+              onMeasurementValueChange={setBust}
+              onMeasurementUnitChange={setUnits}
+              clothingType={clothingType}
+            />
+          </div>
+          
+          {loading && <LoadingIndicator />}
+          
+          {result && !loading && (
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 20 }}
-              transition={{ delay: 0.2, duration: 0.4 }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.5 }}
             >
-              <SizeResult 
-                result={result} 
+              <SizeResult
+                result={result}
                 brand={brand}
                 clothingType={clothingType}
                 bust={bust}
                 measurementType={measurementType}
                 units={units}
+                onSaveToHistory={handleSaveHistoryAndGetResult}
+                showLoginPrompt={() => navigate('/auth')}
+                isLoggedIn={!!user}
               />
+              
+              <div className="mt-4">
+                <SizeComparison />
+              </div>
             </motion.div>
           )}
-        </AnimatePresence>
-        
-        <AnimatePresence>
-          {result && <ResetButton onClick={resetForm} />}
-        </AnimatePresence>
-        
-        <AnimatePresence>
-          {result && <AdSpace />}
-        </AnimatePresence>
+        </motion.div>
+      </StepContent>
+      
+      <div className="mt-8">
+        <AdSpace />
       </div>
     </div>
   );
