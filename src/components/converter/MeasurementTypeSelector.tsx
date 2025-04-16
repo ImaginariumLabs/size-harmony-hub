@@ -6,12 +6,14 @@ interface MeasurementTypeSelectorProps {
   selectedType: string;
   onChange: (type: string) => void;
   clothingType: string;
+  measurementType?: string; // Added this prop
 }
 
 const MeasurementTypeSelector: React.FC<MeasurementTypeSelectorProps> = ({
   selectedType,
   onChange,
-  clothingType
+  clothingType,
+  measurementType
 }) => {
   if (clothingType !== 'dresses') {
     return null;

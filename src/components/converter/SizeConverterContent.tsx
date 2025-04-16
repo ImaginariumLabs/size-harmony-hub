@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { motion } from 'framer-motion';
 import { useSizeConverter } from '@/contexts/SizeConverterContext';
@@ -20,6 +19,7 @@ import { saveToHistory } from '@/services/sizing/historyService';
 import { useToast } from '@/hooks/use-toast';
 
 const SizeConverterContent: React.FC = () => {
+  
   const {
     step,
     clothingType,
@@ -88,9 +88,11 @@ const SizeConverterContent: React.FC = () => {
           <ClothingTypeSelector
             selectedType={clothingType}
             onTypeChange={setClothingType}
+            visible={true}
           />
         </motion.div>
       </StepContent>
+      
       
       <StepContent visible={step === 2}>
         <motion.div

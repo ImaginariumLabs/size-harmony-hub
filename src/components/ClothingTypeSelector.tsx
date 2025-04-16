@@ -6,13 +6,13 @@ import { Shirt, Scissors, ShoppingBag } from 'lucide-react';
 interface ClothingTypeSelectorProps {
   selectedType: string;
   onTypeChange: (type: string) => void;
-  visible: boolean;
+  visible?: boolean;  // Made optional
 }
 
 const ClothingTypeSelector: React.FC<ClothingTypeSelectorProps> = ({
   selectedType,
   onTypeChange,
-  visible
+  visible = true  // Default value
 }) => {
   if (!visible) return null;
   

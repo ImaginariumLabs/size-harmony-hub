@@ -33,12 +33,16 @@ const MeasurementInput: React.FC<MeasurementInputProps> = ({
       transition={{ duration: 0.5, ease: "easeOut", delay: 0.1 }}
     >
       <MeasurementTypeSelector 
-        measurementType={measurementType}
-        onMeasurementTypeChange={onMeasurementTypeChange}
+        selectedType={measurementType}
+        onChange={onMeasurementTypeChange}
         clothingType={clothingType}
+        measurementType={measurementType}
       />
       
-      <MeasurementLabel measurementType={measurementType} />
+      <MeasurementLabel 
+        measurementType={measurementType} 
+        clothingType={clothingType}
+      />
       
       <div className="flex items-center glass-card">
         <MeasurementValueInput 
@@ -47,7 +51,10 @@ const MeasurementInput: React.FC<MeasurementInputProps> = ({
           measurementType={measurementType}
         />
         
-        <UnitSelector units={units} onUnitsChange={onUnitsChange} />
+        <UnitSelector 
+          units={units} 
+          onChange={onUnitsChange} 
+        />
       </div>
     </motion.div>
   );
