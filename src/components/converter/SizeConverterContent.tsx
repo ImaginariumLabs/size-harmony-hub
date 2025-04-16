@@ -1,7 +1,6 @@
 
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles } from 'lucide-react';
 import BrandSelector from '../BrandSelector';
 import MeasurementInput from '../MeasurementInput';
 import SizeResult from '../SizeResult';
@@ -77,13 +76,11 @@ const SizeConverterContent: React.FC = () => {
             >
               <SizeResult 
                 result={result} 
-                brandName={brand}
-                onShare={shareResults}
+                brand={brand}
                 clothingType={clothingType}
+                bust={bust}
                 measurementType={measurementType}
-                measurementValue={bust}
-                measurementUnit={units}
-                isOfflineMode={isOfflineMode}
+                units={units}
               />
             </motion.div>
           )}
