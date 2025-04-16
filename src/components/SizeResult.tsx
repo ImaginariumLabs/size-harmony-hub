@@ -1,10 +1,10 @@
-
 import React, { useState } from 'react';
-import { ShareIcon, UserCircle, Save, Check, LogIn } from 'lucide-react';
+import { ShareIcon, UserCircle, Save, Check, LogIn, ArrowLeftRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useShare } from '@/contexts/converter/useShare';
 import { SizeResultType } from '@/contexts/converter/types';
 import SaveMeasurements from './SaveMeasurements';
+import { motion } from 'framer-motion';
 
 interface SizeResultProps {
   result: SizeResultType;
@@ -32,6 +32,7 @@ const SizeResult: React.FC<SizeResultProps> = ({
   const { shareResults } = useShare();
   const [isSaving, setIsSaving] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
+  const [isCompareModalOpen, setIsCompareModalOpen] = useState(false);
 
   if (!result) return null;
 
@@ -83,45 +84,53 @@ const SizeResult: React.FC<SizeResultProps> = ({
           Share Result
         </Button>
 
-        <Button 
-          onClick={handleSaveHistory}
-          variant="outline"
-          disabled={isSaving || isSaved}
-          className={`w-full flex items-center gap-2 ${isSaved ? 'bg-green-50 text-green-700 border-green-200' : ''}`}
-        >
-          {isSaving ? (
-            <>
-              <Save className="h-4 w-4 animate-pulse" />
-              Saving...
-            </>
-          ) : isSaved ? (
-            <>
-              <Check className="h-4 w-4" />
-              Saved to History
-            </>
-          ) : isLoggedIn ? (
-            <>
+        {!isLoggedIn ? (
+          <Button 
+            onClick={showLoginPrompt}
+            variant="outline"
+            className="w-full flex items-center gap-2"
+          >
+            <LogIn className="h-4 w-4" />
+            Sign In to Save
+          </Button>
+        ) : (
+          <>
+            <Button 
+              onClick={handleSaveHistory}
+              variant="outline"
+              className="w-full flex items-center gap-2 bg-primary/5 hover:bg-primary/10"
+            >
               <Save className="h-4 w-4" />
               Save to History
-            </>
-          ) : (
-            <>
-              <LogIn className="h-4 w-4" />
-              Sign In to Save
-            </>
-          )}
-        </Button>
+            </Button>
 
-        <SaveMeasurements 
-          bust={bust}
-          measurementType={measurementType}
-          units={units}
-        />
+            <SaveMeasurements 
+              bust={bust}
+              measurementType={measurementType}
+              units={units}
+            />
+          </>
+        )}
       </div>
 
       <div className="text-xs text-gray-500 mt-2 italic text-center">
         Note: Sizes may vary slightly between different styles.
       </div>
+
+      <motion.div
+        whileHover={{ scale: 1.02 }}
+        whileTap={{ scale: 0.98 }}
+        className="pt-4"
+      >
+        <Button 
+          onClick={() => setIsCompareModalOpen(true)}
+          variant="gradient"
+          className="w-full flex items-center gap-2 shadow-lg hover:shadow-xl transition-all duration-300"
+        >
+          <ArrowLeftRight className="h-4 w-4" />
+          Compare Sizes
+        </Button>
+      </motion.div>
     </div>
   );
 };
