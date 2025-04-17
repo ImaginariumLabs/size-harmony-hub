@@ -18,7 +18,7 @@ async function executeSupabaseQuery<T>(
       throw error;
     }
     
-    if (!data || (Array.isArray(data) && data.length === 0)) {
+    if (!data) {
       throw new Error('No data returned from query');
     }
     
@@ -33,32 +33,52 @@ async function executeSupabaseQuery<T>(
  * Fetch brand ID from brand name
  */
 async function getBrandId(brandName: string): Promise<string> {
-  const brands = await executeSupabaseQuery(
-    () => supabase.from('brands').select('id').eq('name', brandName),
-    `Error fetching brand "${brandName}"`
-  );
-  
-  if (!brands || brands.length === 0) {
-    throw new Error(`Brand ${brandName} not found`);
+  try {
+    const { data, error } = await supabase
+      .from('brands')
+      .select('id')
+      .eq('name', brandName)
+      .limit(1);
+    
+    if (error) {
+      throw error;
+    }
+    
+    if (!data || data.length === 0) {
+      throw new Error(`Brand ${brandName} not found`);
+    }
+    
+    return data[0].id;
+  } catch (error) {
+    console.error(`Error fetching brand "${brandName}":`, error);
+    throw error;
   }
-  
-  return brands[0].id;
 }
 
 /**
  * Fetch garment ID from garment type
  */
 async function getGarmentId(garmentType: string): Promise<string> {
-  const garments = await executeSupabaseQuery(
-    () => supabase.from('garments').select('id').eq('name', garmentType),
-    `Error fetching garment "${garmentType}"`
-  );
-  
-  if (!garments || garments.length === 0) {
-    throw new Error(`Garment type ${garmentType} not found`);
+  try {
+    const { data, error } = await supabase
+      .from('garments')
+      .select('id')
+      .eq('name', garmentType)
+      .limit(1);
+    
+    if (error) {
+      throw error;
+    }
+    
+    if (!data || data.length === 0) {
+      throw new Error(`Garment type ${garmentType} not found`);
+    }
+    
+    return data[0].id;
+  } catch (error) {
+    console.error(`Error fetching garment "${garmentType}":`, error);
+    throw error;
   }
-  
-  return garments[0].id;
 }
 
 /**
@@ -71,26 +91,36 @@ async function getSizeRanges(
   measurementType: string,
   valueInInches: number
 ): Promise<string | null> {
-  const ranges = await executeSupabaseQuery(
-    () => supabase
+  try {
+    const { data, error } = await supabase
       .from('size_ranges')
       .select('*')
       .eq('brand_id', brandId)
       .eq('garment_id', garmentId)
       .eq('region', region)
       .eq('measurement_type', measurementType)
-      .eq('unit', 'inches'),
-    `Error fetching ${region} size ranges`
-  );
-  
-  // Find the right size range
-  for (const range of ranges) {
-    if (valueInInches >= range.min_value && valueInInches <= range.max_value) {
-      return range.size_label;
+      .eq('unit', 'inches');
+    
+    if (error) {
+      throw error;
     }
+    
+    if (!data || data.length === 0) {
+      return null;
+    }
+    
+    // Find the right size range
+    for (const range of data) {
+      if (valueInInches >= range.min_value && valueInInches <= range.max_value) {
+        return range.size_label;
+      }
+    }
+    
+    return null;
+  } catch (error) {
+    console.error(`Error fetching ${region} size ranges:`, error);
+    return null;
   }
-  
-  return null;
 }
 
 /**
