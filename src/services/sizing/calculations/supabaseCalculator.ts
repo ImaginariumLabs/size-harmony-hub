@@ -4,6 +4,96 @@ import { SizeResult } from '../types';
 import { calculateOfflineSizeFromData } from './offlineCalculator';
 
 /**
+ * Generic function to safely execute Supabase queries with error handling
+ */
+async function executeSupabaseQuery<T>(
+  queryFn: () => Promise<{ data: T | null, error: any }>,
+  errorMessage: string
+): Promise<T> {
+  try {
+    const { data, error } = await queryFn();
+    
+    if (error) {
+      console.error(`${errorMessage}:`, error);
+      throw error;
+    }
+    
+    if (!data || (Array.isArray(data) && data.length === 0)) {
+      throw new Error('No data returned from query');
+    }
+    
+    return data;
+  } catch (error) {
+    console.error(`${errorMessage}:`, error);
+    throw error;
+  }
+}
+
+/**
+ * Fetch brand ID from brand name
+ */
+async function getBrandId(brandName: string): Promise<string> {
+  const brands = await executeSupabaseQuery(
+    () => supabase.from('brands').select('id').eq('name', brandName),
+    `Error fetching brand "${brandName}"`
+  );
+  
+  if (!brands || brands.length === 0) {
+    throw new Error(`Brand ${brandName} not found`);
+  }
+  
+  return brands[0].id;
+}
+
+/**
+ * Fetch garment ID from garment type
+ */
+async function getGarmentId(garmentType: string): Promise<string> {
+  const garments = await executeSupabaseQuery(
+    () => supabase.from('garments').select('id').eq('name', garmentType),
+    `Error fetching garment "${garmentType}"`
+  );
+  
+  if (!garments || garments.length === 0) {
+    throw new Error(`Garment type ${garmentType} not found`);
+  }
+  
+  return garments[0].id;
+}
+
+/**
+ * Fetch size ranges for a specific region
+ */
+async function getSizeRanges(
+  brandId: string,
+  garmentId: string,
+  region: string,
+  measurementType: string,
+  valueInInches: number
+): Promise<string | null> {
+  const ranges = await executeSupabaseQuery(
+    () => supabase
+      .from('size_ranges')
+      .select('*')
+      .eq('brand_id', brandId)
+      .eq('garment_id', garmentId)
+      .eq('region', region)
+      .eq('measurement_type', measurementType)
+      .eq('unit', 'inches'),
+    `Error fetching ${region} size ranges`
+  );
+  
+  // Find the right size range
+  for (const range of ranges) {
+    if (valueInInches >= range.min_value && valueInInches <= range.max_value) {
+      return range.size_label;
+    }
+  }
+  
+  return null;
+}
+
+/**
  * Fetch size data from Supabase for a specific measurement
  */
 export const fetchSizeDataFromSupabase = async (
@@ -12,7 +102,7 @@ export const fetchSizeDataFromSupabase = async (
   measurementType: string,
   valueInInches: number
 ): Promise<SizeResult> => {
-  // Initialize with the correct property structure
+  // Initialize with default values
   const sizes: SizeResult = {
     usSize: 'No exact match found',
     ukSize: 'No exact match found',
@@ -20,90 +110,28 @@ export const fetchSizeDataFromSupabase = async (
   };
   
   try {
-    // First get the brand ID
-    const { data: brands } = await supabase
-      .from('brands')
-      .select('id')
-      .eq('name', brandName);
-      
-    if (!brands || brands.length === 0) {
-      console.log(`Brand ${brandName} not found, using fallback calculation`);
-      return calculateOfflineSizeFromData(brandName, measurementType, valueInInches, 'inches');
+    // Get brand and garment IDs
+    const brandId = await getBrandId(brandName);
+    const garmentId = await getGarmentId(garmentType);
+    
+    // Get size ranges for each region in parallel for better performance
+    const [usSize, ukSize, euSize] = await Promise.allSettled([
+      getSizeRanges(brandId, garmentId, 'US', measurementType, valueInInches),
+      getSizeRanges(brandId, garmentId, 'UK', measurementType, valueInInches),
+      getSizeRanges(brandId, garmentId, 'EU', measurementType, valueInInches)
+    ]);
+    
+    // Set the size values from results
+    if (usSize.status === 'fulfilled' && usSize.value) {
+      sizes.usSize = usSize.value;
     }
     
-    const brandId = brands[0].id;
-    
-    // Then get the garment ID
-    const { data: garments } = await supabase
-      .from('garments')
-      .select('id')
-      .eq('name', garmentType);
-      
-    if (!garments || garments.length === 0) {
-      console.log(`Garment type ${garmentType} not found, using fallback calculation`);
-      return calculateOfflineSizeFromData(brandName, measurementType, valueInInches, 'inches');
+    if (ukSize.status === 'fulfilled' && ukSize.value) {
+      sizes.ukSize = ukSize.value;
     }
     
-    const garmentId = garments[0].id;
-    
-    // Query size ranges for US region
-    const { data: usRanges } = await supabase
-      .from('size_ranges')
-      .select('*')
-      .eq('brand_id', brandId)
-      .eq('garment_id', garmentId)
-      .eq('region', 'US')
-      .eq('measurement_type', measurementType)
-      .eq('unit', 'inches');
-    
-    if (usRanges && usRanges.length > 0) {
-      // Find the right size range
-      for (const range of usRanges) {
-        if (valueInInches >= range.min_value && valueInInches <= range.max_value) {
-          sizes.usSize = range.size_label;
-          break;
-        }
-      }
-    }
-    
-    // Query size ranges for UK region
-    const { data: ukRanges } = await supabase
-      .from('size_ranges')
-      .select('*')
-      .eq('brand_id', brandId)
-      .eq('garment_id', garmentId)
-      .eq('region', 'UK')
-      .eq('measurement_type', measurementType)
-      .eq('unit', 'inches');
-    
-    if (ukRanges && ukRanges.length > 0) {
-      // Find the right size range
-      for (const range of ukRanges) {
-        if (valueInInches >= range.min_value && valueInInches <= range.max_value) {
-          sizes.ukSize = range.size_label;
-          break;
-        }
-      }
-    }
-    
-    // Query size ranges for EU region
-    const { data: euRanges } = await supabase
-      .from('size_ranges')
-      .select('*')
-      .eq('brand_id', brandId)
-      .eq('garment_id', garmentId)
-      .eq('region', 'EU')
-      .eq('measurement_type', measurementType)
-      .eq('unit', 'inches');
-    
-    if (euRanges && euRanges.length > 0) {
-      // Find the right size range
-      for (const range of euRanges) {
-        if (valueInInches >= range.min_value && valueInInches <= range.max_value) {
-          sizes.euSize = range.size_label;
-          break;
-        }
-      }
+    if (euSize.status === 'fulfilled' && euSize.value) {
+      sizes.euSize = euSize.value;
     }
     
     return sizes;
