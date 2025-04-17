@@ -1,11 +1,12 @@
 
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Lock, Mail, User, ArrowLeft } from 'lucide-react';
+import { Lock, Mail, User, ArrowLeft, AlertTriangle } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useAuth } from '@/contexts/AuthContext';
 
 const Auth = () => {
   const [email, setEmail] = useState('');
@@ -13,26 +14,35 @@ const Auth = () => {
   const [fullName, setFullName] = useState('');
   const [isSignUp, setIsSignUp] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const location = useLocation();
 
   useEffect(() => {
-    // Check if user is already logged in
-    const checkSession = async () => {
-      const { data } = await supabase.auth.getSession();
-      if (data.session) {
-        navigate('/');
-      }
-    };
+    // Check URL params for mode (signup or signin)
+    const params = new URLSearchParams(location.search);
+    const mode = params.get('mode');
+    setIsSignUp(mode === 'signup');
     
-    checkSession();
-  }, [navigate]);
+    // Check if user is already logged in
+    if (user) {
+      navigate('/');
+    }
+  }, [user, navigate, location]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setError(null);
     
     try {
       if (isSignUp) {
+        if (!fullName.trim()) {
+          setError('Please enter your full name');
+          return;
+        }
+        
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
@@ -46,6 +56,9 @@ const Auth = () => {
         if (error) throw error;
         
         toast.success('Account created successfully! Please check your email for confirmation.');
+        setTimeout(() => {
+          setIsSignUp(false);
+        }, 2000);
       } else {
         const { data, error } = await supabase.auth.signInWithPassword({
           email,
@@ -58,6 +71,8 @@ const Auth = () => {
         navigate('/');
       }
     } catch (error: any) {
+      console.error('Authentication error:', error);
+      setError(error.message || 'An error occurred during authentication');
       toast.error(error.message || 'An error occurred during authentication');
     } finally {
       setIsLoading(false);
@@ -86,6 +101,13 @@ const Auth = () => {
           <Lock className="h-8 w-8 text-primary mr-2" />
           <h1 className="text-2xl font-display">{isSignUp ? 'Create Account' : 'Welcome Back'}</h1>
         </div>
+        
+        {error && (
+          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2">
+            <AlertTriangle className="h-5 w-5 text-red-500 mt-0.5 flex-shrink-0" />
+            <p className="text-sm text-red-600">{error}</p>
+          </div>
+        )}
         
         <form onSubmit={handleSubmit} className="space-y-4">
           {isSignUp && (

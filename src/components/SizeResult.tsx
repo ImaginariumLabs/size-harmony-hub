@@ -6,6 +6,10 @@ import { useShare } from '@/contexts/converter/useShare';
 import { SizeResultType } from '@/contexts/converter/types';
 import SaveMeasurements from './SaveMeasurements';
 import { motion } from 'framer-motion';
+import { useAuth } from '@/contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
+import { saveToHistory } from '@/services/sizing/historyService';
 
 interface SizeResultProps {
   result: SizeResultType;
@@ -14,9 +18,6 @@ interface SizeResultProps {
   bust: string;
   measurementType: string;
   units: string;
-  onSaveToHistory?: () => Promise<void>;
-  showLoginPrompt?: () => void;
-  isLoggedIn?: boolean;
 }
 
 const SizeResult: React.FC<SizeResultProps> = ({ 
@@ -25,33 +26,58 @@ const SizeResult: React.FC<SizeResultProps> = ({
   clothingType,
   bust,
   measurementType,
-  units,
-  onSaveToHistory,
-  showLoginPrompt,
-  isLoggedIn = false
+  units
 }) => {
   const { shareResults } = useShare();
   const [isSaving, setIsSaving] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
+  const { user } = useAuth();
+  const navigate = useNavigate();
 
   if (!result) return null;
 
   const handleSaveHistory = async () => {
-    if (!isLoggedIn && showLoginPrompt) {
-      showLoginPrompt();
+    if (!user) {
+      toast.error('Please sign in to save your size history');
+      navigate('/auth');
+      return;
+    }
+
+    if (!bust || isNaN(parseFloat(bust))) {
+      toast.error('Invalid measurement value');
       return;
     }
 
     setIsSaving(true);
     try {
-      if (onSaveToHistory) {
-        await onSaveToHistory();
-        setIsSaved(true);
-        setTimeout(() => setIsSaved(false), 3000);
+      const saveResult = await saveToHistory(
+        user.id,
+        brand,
+        clothingType,
+        measurementType,
+        parseFloat(bust),
+        units,
+        result
+      );
+
+      if (saveResult.error) {
+        throw new Error(saveResult.error);
       }
+
+      setIsSaved(true);
+      toast.success('Size information saved to your history');
+      setTimeout(() => setIsSaved(false), 3000);
+    } catch (error) {
+      console.error('Error saving to history:', error);
+      toast.error('Failed to save to history. Please try again.');
     } finally {
       setIsSaving(false);
     }
+  };
+
+  const showLoginPrompt = () => {
+    toast.error('Please sign in to save your measurements');
+    navigate('/auth');
   };
 
   return (
@@ -84,7 +110,7 @@ const SizeResult: React.FC<SizeResultProps> = ({
           Share Result
         </Button>
 
-        {!isLoggedIn ? (
+        {!user ? (
           <Button 
             onClick={showLoginPrompt}
             variant="outline"

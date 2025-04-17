@@ -1,10 +1,11 @@
 
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/lib/supabase';
+import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 import { UserCircle, Save, Check } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 interface SaveMeasurementsProps {
   bust: string;
@@ -14,26 +15,19 @@ interface SaveMeasurementsProps {
 
 const SaveMeasurements = ({ bust, measurementType, units }: SaveMeasurementsProps) => {
   const { user } = useAuth();
-  const { toast } = useToast();
+  const navigate = useNavigate();
   const [isSaving, setIsSaving] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
 
   const handleSave = async () => {
     if (!user) {
-      toast({
-        title: "Sign in required",
-        description: "Please sign in to save your measurements",
-        variant: "destructive",
-      });
+      toast.error('Please sign in to save your measurements');
+      navigate('/auth');
       return;
     }
 
     if (!bust || isNaN(parseFloat(bust))) {
-      toast({
-        title: "Invalid measurement",
-        description: "Please enter a valid measurement value",
-        variant: "destructive",
-      });
+      toast.error('Please enter a valid measurement value');
       return;
     }
 
@@ -41,12 +35,14 @@ const SaveMeasurements = ({ bust, measurementType, units }: SaveMeasurementsProp
     
     try {
       // First check if we already have a measurement of this type
-      const { data: existingMeasurement } = await supabase
+      const { data: existingMeasurement, error: checkError } = await supabase
         .from('user_measurements')
         .select('id')
         .eq('user_id', user.id)
         .eq('measurement_type', measurementType)
         .maybeSingle();
+      
+      if (checkError) throw checkError;
       
       // Determine if we need to insert or update
       if (existingMeasurement) {
@@ -75,20 +71,13 @@ const SaveMeasurements = ({ bust, measurementType, units }: SaveMeasurementsProp
         if (error) throw error;
       }
 
-      toast({
-        title: "Measurements saved",
-        description: "Your measurements have been saved to your profile",
-      });
+      toast.success('Measurements saved to your profile');
       
       setIsSaved(true);
       setTimeout(() => setIsSaved(false), 3000); // Reset after 3 seconds
     } catch (error) {
       console.error('Error saving measurements:', error);
-      toast({
-        title: "Error saving measurements",
-        description: "Please try again later",
-        variant: "destructive",
-      });
+      toast.error('Error saving measurements. Please try again later.');
     } finally {
       setIsSaving(false);
     }

@@ -167,6 +167,7 @@ export const fetchSizeDataFromSupabase = async (
     return sizes;
   } catch (error) {
     console.error('Error fetching size data from Supabase:', error);
-    throw error;
+    // Fallback to offline calculator if there's an error
+    return calculateOfflineSizeFromData(brandName, garmentType, measurementType, valueInInches);
   }
 };

@@ -3,10 +3,10 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from './ui/button';
-import { LogOut, User } from 'lucide-react';
+import { LogOut, User, Shield } from 'lucide-react';
 
 const Navbar = () => {
-  const { user, signOut } = useAuth();
+  const { user, signOut, isAdmin } = useAuth();
   
   return (
     <nav className="fixed top-0 left-0 right-0 bg-white/80 backdrop-blur-sm border-b z-50">
@@ -43,11 +43,12 @@ const Navbar = () => {
                 <LogOut className="h-4 w-4 mr-2" />
                 Sign Out
               </Button>
-              {user.email?.endsWith('@sizeharmonyhub.com') && (
+              {isAdmin && (
                 <Link 
                   to="/admin" 
-                  className="text-primary hover:text-primary/80"
+                  className="text-primary hover:text-primary/80 flex items-center gap-1"
                 >
+                  <Shield className="h-4 w-4" />
                   Admin
                 </Link>
               )}
