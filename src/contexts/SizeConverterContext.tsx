@@ -15,7 +15,47 @@ export const SizeConverterProvider: React.FC<{ children: ReactNode }> = ({ child
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<SizeResultType>(null);
   
-  // Use the converter steps hook for managing form state and steps
+  // First create the calculateSize function without using the hook values
+  const calculateSizeImpl = useCallback(async (
+    currentBrand: string,
+    currentBust: string,
+    currentClothingType: string,
+    currentMeasurementType: string,
+    currentUnits: string,
+    isOffline: boolean
+  ) => {
+    if (!currentBrand || !currentBust || isNaN(parseFloat(currentBust)) || parseFloat(currentBust) <= 0) {
+      setResult(null);
+      return;
+    }
+    
+    try {
+      setLoading(true);
+      const sizingResult = await findSizeByMeasurement(
+        currentBrand,
+        currentClothingType,
+        currentMeasurementType,
+        parseFloat(currentBust),
+        currentUnits
+      );
+      setResult(sizingResult);
+      
+      if (isOffline) {
+        console.log("Using estimated sizes (offline mode)");
+      }
+    } catch (error) {
+      console.error('Error calculating size:', error);
+      toast({
+        title: "Size calculation issue",
+        description: "We're having trouble with precise calculations. Showing estimated sizes.",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  }, [toast]);
+  
+  // Use the converter steps hook
   const {
     brand,
     setBrand,
@@ -30,46 +70,12 @@ export const SizeConverterProvider: React.FC<{ children: ReactNode }> = ({ child
     setMeasurementType,
     goBack,
     resetForm
-  } = useConverterSteps({
-    calculateSize: () => {}  // Will be properly set in useEffect below
-  });
+  } = useConverterSteps();
   
-  const calculateSize = useCallback(async () => {
-    if (!brand || !bust || isNaN(parseFloat(bust)) || parseFloat(bust) <= 0) {
-      setResult(null);
-      return;
-    }
-    
-    try {
-      setLoading(true);
-      const sizingResult = await findSizeByMeasurement(
-        brand,
-        clothingType,
-        measurementType,
-        parseFloat(bust),
-        units
-      );
-      setResult(sizingResult);
-      
-      if (isOfflineMode) {
-        console.log("Using estimated sizes (offline mode)");
-      }
-    } catch (error) {
-      console.error('Error calculating size:', error);
-      toast({
-        title: "Size calculation issue",
-        description: "We're having trouble with precise calculations. Showing estimated sizes.",
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
-    }
-  }, [brand, bust, clothingType, measurementType, units, toast]);
-  
-  // Update the calculateSize reference in useConverterSteps
-  useEffect(() => {
-    useConverterSteps({ calculateSize });
-  }, [calculateSize]);
+  // Now wire up the calculateSize function that uses the hook values
+  const calculateSize = useCallback(() => {
+    return calculateSizeImpl(brand, bust, clothingType, measurementType, units, isOfflineMode);
+  }, [brand, bust, clothingType, measurementType, units, calculateSizeImpl]);
   
   const handleConnectionChange = useCallback((isOffline: boolean) => {
     if (!isOffline && result && brand && bust) {
@@ -78,6 +84,13 @@ export const SizeConverterProvider: React.FC<{ children: ReactNode }> = ({ child
   }, [result, brand, bust, calculateSize]);
   
   const { isOfflineMode } = useConnectionStatus(handleConnectionChange);
+  
+  // Recalculate size when inputs change
+  useEffect(() => {
+    if (brand && bust && parseFloat(bust) > 0) {
+      calculateSize();
+    }
+  }, [brand, bust, units, measurementType, calculateSize]);
   
   const shareResults = useCallback(() => {
     share(result, brand, clothingType);

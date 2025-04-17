@@ -7,11 +7,7 @@ export type ConversionResult = {
   euSize: string;
 } | null;
 
-interface UseConverterStepsProps {
-  calculateSize: () => void;
-}
-
-export function useConverterSteps({ calculateSize }: UseConverterStepsProps) {
+export function useConverterSteps() {
   const [brand, setBrand] = useState('');
   const [bust, setBust] = useState('');
   const [units, setUnits] = useState('inches');
@@ -38,15 +34,6 @@ export function useConverterSteps({ calculateSize }: UseConverterStepsProps) {
       setStep(3);
     }
   }, [brand]);
-  
-  // Calculate size whenever inputs change
-  useEffect(() => {
-    if (brand && bust && !isNaN(parseFloat(bust)) && parseFloat(bust) > 0) {
-      calculateSize();
-    } else {
-      setResult(null);
-    }
-  }, [brand, bust, units, measurementType, calculateSize]);
   
   const goBack = () => {
     if (step === 3) {
