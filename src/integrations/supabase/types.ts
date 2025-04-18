@@ -238,6 +238,7 @@ export type Database = {
       size_ranges: {
         Row: {
           brand_id: string
+          confidence_score: number | null
           created_at: string
           garment_id: string
           id: string
@@ -250,6 +251,7 @@ export type Database = {
         }
         Insert: {
           brand_id: string
+          confidence_score?: number | null
           created_at?: string
           garment_id: string
           id?: string
@@ -262,6 +264,7 @@ export type Database = {
         }
         Update: {
           brand_id?: string
+          confidence_score?: number | null
           created_at?: string
           garment_id?: string
           id?: string

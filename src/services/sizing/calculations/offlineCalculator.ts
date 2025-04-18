@@ -1,4 +1,3 @@
-
 import { SizeResult } from '../types';
 import { normalizeToInches } from './converters';
 
@@ -15,7 +14,7 @@ export const calculateOfflineSizeFromData = (
   measurementType: string,
   measurementValue: number,
   unit: string,
-  garmentType?: string // Make garmentType optional
+  garmentType?: string
 ): SizeResult => {
   // Normalize to inches for consistent calculations
   const valueInInches = normalizeToInches(measurementValue, unit);
@@ -27,35 +26,8 @@ export const calculateOfflineSizeFromData = (
     euSize: 'No exact match found'
   };
   
-  // Define size ranges for popular brands (simplified for demo)
+  // Define size ranges for brands (now including new brands)
   const brandSizeRanges: Record<string, Record<string, Record<string, { min: number, max: number }>>> = {
-    'Zara': {
-      bust: {
-        XS: { min: 31, max: 32.5 },
-        S: { min: 32.5, max: 34 },
-        M: { min: 34, max: 36 },
-        L: { min: 36, max: 38 },
-        XL: { min: 38, max: 40 }
-      }
-    },
-    'H&M': {
-      bust: {
-        XS: { min: 31, max: 32 },
-        S: { min: 32, max: 34 },
-        M: { min: 34, max: 36 },
-        L: { min: 36, max: 38 },
-        XL: { min: 38, max: 41 }
-      }
-    },
-    'Nike': {
-      bust: {
-        XS: { min: 30, max: 32 },
-        S: { min: 32, max: 34 },
-        M: { min: 34, max: 36 },
-        L: { min: 36, max: 39 },
-        XL: { min: 39, max: 42 }
-      }
-    },
     'UNIQLO': {
       bust: {
         XS: { min: 31, max: 33 },
@@ -82,6 +54,24 @@ export const calculateOfflineSizeFromData = (
         L: { min: 36, max: 38 },
         XL: { min: 38, max: 41 }
       }
+    },
+    'Calvin Klein': {
+      bust: {
+        XS: { min: 30.5, max: 32.5 },
+        S: { min: 32.5, max: 34.5 },
+        M: { min: 34.5, max: 36.5 },
+        L: { min: 36.5, max: 39 },
+        XL: { min: 39, max: 42 }
+      }
+    },
+    'Tommy Hilfiger': {
+      bust: {
+        XS: { min: 31, max: 33 },
+        S: { min: 33, max: 35 },
+        M: { min: 35, max: 37 },
+        L: { min: 37, max: 39.5 },
+        XL: { min: 39.5, max: 42.5 }
+      }
     }
   };
   
@@ -91,39 +81,33 @@ export const calculateOfflineSizeFromData = (
     const sizes = brand[measurementType];
     for (const [sizeLabel, range] of Object.entries(sizes)) {
       if (valueInInches >= range.min && valueInInches <= range.max) {
-        // Convert to regional sizing
         sizeResult.usSize = sizeLabel;
-        sizeResult.ukSize = sizeLabel;
-        sizeResult.euSize = sizeLabel;
+        
+        // Convert to regional sizing based on the US size
+        switch (sizeLabel) {
+          case 'XS':
+            sizeResult.ukSize = '6';
+            sizeResult.euSize = '34';
+            break;
+          case 'S':
+            sizeResult.ukSize = '8';
+            sizeResult.euSize = '36';
+            break;
+          case 'M':
+            sizeResult.ukSize = '10';
+            sizeResult.euSize = '38';
+            break;
+          case 'L':
+            sizeResult.ukSize = '12';
+            sizeResult.euSize = '40';
+            break;
+          case 'XL':
+            sizeResult.ukSize = '14';
+            sizeResult.euSize = '42';
+            break;
+        }
         break;
       }
-    }
-  }
-  
-  // US to UK/EU size conversion (simplified)
-  if (sizeResult.usSize !== 'No exact match found') {
-    // Simple size conversion (could be more detailed in a real app)
-    switch (sizeResult.usSize) {
-      case 'XS':
-        sizeResult.ukSize = '6';
-        sizeResult.euSize = '34';
-        break;
-      case 'S':
-        sizeResult.ukSize = '8';
-        sizeResult.euSize = '36';
-        break;
-      case 'M':
-        sizeResult.ukSize = '10';
-        sizeResult.euSize = '38';
-        break;
-      case 'L':
-        sizeResult.ukSize = '12';
-        sizeResult.euSize = '40';
-        break;
-      case 'XL':
-        sizeResult.ukSize = '14';
-        sizeResult.euSize = '42';
-        break;
     }
   }
   
