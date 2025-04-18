@@ -28,7 +28,7 @@ export const calculateOfflineSizeFromData = (
   };
   
   // Define size ranges for popular brands (simplified for demo)
-  const brandSizeRanges: Record<string, any> = {
+  const brandSizeRanges: Record<string, Record<string, Record<string, { min: number, max: number }>>> = {
     'Zara': {
       bust: {
         XS: { min: 31, max: 32.5 },
