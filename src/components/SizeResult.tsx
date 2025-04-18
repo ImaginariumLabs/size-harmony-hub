@@ -18,6 +18,9 @@ interface SizeResultProps {
   bust: string;
   measurementType: string;
   units: string;
+  onSaveToHistory?: () => Promise<void>;
+  showLoginPrompt?: () => void;
+  isLoggedIn?: boolean;
 }
 
 const SizeResult: React.FC<SizeResultProps> = ({ 
@@ -26,7 +29,10 @@ const SizeResult: React.FC<SizeResultProps> = ({
   clothingType,
   bust,
   measurementType,
-  units
+  units,
+  onSaveToHistory,
+  showLoginPrompt,
+  isLoggedIn
 }) => {
   const { shareResults } = useShare();
   const [isSaving, setIsSaving] = useState(false);
@@ -39,7 +45,8 @@ const SizeResult: React.FC<SizeResultProps> = ({
   const handleSaveHistory = async () => {
     if (!user) {
       toast.error('Please sign in to save your size history');
-      navigate('/auth');
+      if (showLoginPrompt) showLoginPrompt();
+      else navigate('/auth');
       return;
     }
 
@@ -50,18 +57,22 @@ const SizeResult: React.FC<SizeResultProps> = ({
 
     setIsSaving(true);
     try {
-      const saveResult = await saveToHistory(
-        user.id,
-        brand,
-        clothingType,
-        measurementType,
-        parseFloat(bust),
-        units,
-        result
-      );
+      if (onSaveToHistory) {
+        await onSaveToHistory();
+      } else {
+        const saveResult = await saveToHistory(
+          user.id,
+          brand,
+          clothingType,
+          measurementType,
+          parseFloat(bust),
+          units,
+          result
+        );
 
-      if (saveResult.error) {
-        throw new Error(saveResult.error);
+        if (saveResult && 'error' in saveResult) {
+          throw new Error(saveResult.error as string);
+        }
       }
 
       setIsSaved(true);
@@ -75,9 +86,12 @@ const SizeResult: React.FC<SizeResultProps> = ({
     }
   };
 
-  const showLoginPrompt = () => {
-    toast.error('Please sign in to save your measurements');
-    navigate('/auth');
+  const handleLoginPrompt = () => {
+    if (showLoginPrompt) showLoginPrompt();
+    else {
+      toast.error('Please sign in to save your measurements');
+      navigate('/auth');
+    }
   };
 
   return (
@@ -110,9 +124,9 @@ const SizeResult: React.FC<SizeResultProps> = ({
           Share Result
         </Button>
 
-        {!user ? (
+        {!isLoggedIn && !user ? (
           <Button 
-            onClick={showLoginPrompt}
+            onClick={handleLoginPrompt}
             variant="outline"
             className="w-full flex items-center gap-2"
           >

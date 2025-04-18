@@ -52,7 +52,7 @@ const SaveMeasurements = ({ bust, measurementType, units }: SaveMeasurementsProp
           .update({
             value: parseFloat(bust),
             unit: units,
-            updated_at: new Date()
+            updated_at: new Date().toISOString() // Convert Date to string using toISOString()
           })
           .eq('id', existingMeasurement.id);
 

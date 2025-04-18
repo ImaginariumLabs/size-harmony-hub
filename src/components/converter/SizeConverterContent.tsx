@@ -148,9 +148,8 @@ const SizeConverterContent: React.FC = () => {
                 bust={bust}
                 measurementType={measurementType}
                 units={units}
-                onSaveToHistory={handleSaveHistoryAndGetResult}
-                showLoginPrompt={() => navigate('/auth')}
                 isLoggedIn={!!user}
+                showLoginPrompt={() => navigate('/auth')}
               />
               
               <div className="mt-4">
