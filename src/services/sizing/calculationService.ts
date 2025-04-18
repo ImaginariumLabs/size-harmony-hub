@@ -19,7 +19,7 @@ export const findSizeByMeasurement = async (
     if (!brandName || !garmentType || !measurementType || 
         isNaN(measurementValue) || measurementValue <= 0) {
       console.log('Invalid inputs for size calculation');
-      // Return a null/empty result instead of empty strings
+      // Return a null/empty result for invalid inputs
       return null;
     }
     
@@ -43,8 +43,8 @@ export const findSizeByMeasurement = async (
         valueInInches
       );
       
-      // If no exact matches, return null instead of "No exact match found" strings
-      if (sizes.usSize === 'No exact match found') {
+      // If no exact matches or error strings returned, use null
+      if (!sizes || sizes.usSize === 'No exact match found') {
         console.log(`No exact match found for ${brandName}, using offline calculation`);
         const offlineResult = calculateOfflineSizeFromData(brandName, measurementType, measurementValue, unit, garmentType);
         

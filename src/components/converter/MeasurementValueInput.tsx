@@ -24,9 +24,11 @@ const MeasurementValueInput: React.FC<MeasurementValueInputProps> = ({
   }, [value, onChange]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    // Prevent invalid inputs like negative numbers
+    // Get the raw input value
     const newValue = e.target.value;
-    if (newValue === '' || (parseFloat(newValue) >= 0)) {
+    
+    // Allow empty values or valid positive numbers
+    if (newValue === '' || (!isNaN(parseFloat(newValue)) && parseFloat(newValue) >= 0)) {
       onChange(newValue);
     }
   };

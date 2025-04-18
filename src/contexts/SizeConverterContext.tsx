@@ -1,5 +1,5 @@
 
-import React, { createContext, useContext, ReactNode, useState, useCallback, useEffect } from 'react';
+import React, { createContext, useContext, ReactNode, useState, useCallback, useEffect, useRef } from 'react';
 import { findSizeByMeasurement } from '../services/sizing';
 import { useToast } from '@/hooks/use-toast';
 import { SizeConverterContextType, SizeResultType } from './converter/types';
@@ -14,6 +14,7 @@ export const SizeConverterProvider: React.FC<{ children: ReactNode }> = ({ child
   const { shareResults: share } = useShare();
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<SizeResultType>(null);
+  const calculationInProgress = useRef(false);
   
   // First create the calculateSize function without using the hook values
   const calculateSizeImpl = useCallback(async (
@@ -31,16 +32,31 @@ export const SizeConverterProvider: React.FC<{ children: ReactNode }> = ({ child
       return;
     }
     
+    // Prevent multiple calculations running at the same time
+    if (calculationInProgress.current) {
+      return;
+    }
+    
     try {
+      calculationInProgress.current = true;
       setLoading(true);
+      
       // Add a small delay to prevent too rapid recalculations
       await new Promise(resolve => setTimeout(resolve, 300));
+      
+      const bustValue = parseFloat(currentBust);
+      
+      // Early check to avoid calculations with invalid values
+      if (isNaN(bustValue) || bustValue <= 0) {
+        setResult(null);
+        return;
+      }
       
       const sizingResult = await findSizeByMeasurement(
         currentBrand,
         currentClothingType,
         currentMeasurementType,
-        parseFloat(currentBust),
+        bustValue,
         currentUnits
       );
       
@@ -63,6 +79,7 @@ export const SizeConverterProvider: React.FC<{ children: ReactNode }> = ({ child
       setResult(null);
     } finally {
       setLoading(false);
+      calculationInProgress.current = false;
     }
   }, [toast]);
   
@@ -106,23 +123,34 @@ export const SizeConverterProvider: React.FC<{ children: ReactNode }> = ({ child
     }
   };
   
-  // Recalculate size when inputs change
+  // Use a more stable approach to recalculate sizes when inputs change
   useEffect(() => {
-    if (brand) {
-      // Only calculate if bust has a valid value
-      if (bust && parseFloat(bust) > 0) {
-        // Cancel any pending calculation if bust changes quickly
-        const timer = setTimeout(() => {
+    // Don't do anything if there's no brand selected yet
+    if (!brand) return;
+    
+    // Clear the previous timer if it exists
+    let debounceTimer: NodeJS.Timeout;
+    
+    // If bust has a valid value, debounce the calculation
+    if (bust && parseFloat(bust) > 0) {
+      debounceTimer = setTimeout(() => {
+        // Only calculate if we're not already calculating
+        if (!calculationInProgress.current) {
           calculateSize();
-        }, 500);
-        
-        return () => clearTimeout(timer);
-      } else {
-        // Clear result if bust is empty or invalid
-        setResult(null);
-        setLoading(false);
-      }
+        }
+      }, 500);
+    } else {
+      // Clear result if bust is empty or invalid
+      setResult(null);
+      setLoading(false);
     }
+    
+    // Clean up the timer when inputs change or component unmounts
+    return () => {
+      if (debounceTimer) {
+        clearTimeout(debounceTimer);
+      }
+    };
   }, [brand, bust, units, measurementType, calculateSize]);
   
   const shareResults = useCallback(() => {
