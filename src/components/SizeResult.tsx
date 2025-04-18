@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ShareIcon, UserCircle, Save, Check, LogIn, ArrowLeftRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useShare } from '@/contexts/converter/useShare';
@@ -40,7 +39,9 @@ const SizeResult: React.FC<SizeResultProps> = ({
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  if (!result) return null;
+  if (!result || (result.usSize === '' && result.ukSize === '' && result.euSize === '')) {
+    return null;
+  }
 
   const handleSaveHistory = async () => {
     if (!user) {

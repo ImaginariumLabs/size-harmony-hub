@@ -1,12 +1,12 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { motion } from 'framer-motion';
 
 interface MeasurementValueInputProps {
   value: string;
   onChange: (value: string) => void;
   unit?: string;
-  measurementType?: string; // Added this prop
+  measurementType?: string;
 }
 
 const MeasurementValueInput: React.FC<MeasurementValueInputProps> = ({ 
@@ -15,6 +15,14 @@ const MeasurementValueInput: React.FC<MeasurementValueInputProps> = ({
   unit,
   measurementType
 }) => {
+  // Clear previous results when input is cleared
+  useEffect(() => {
+    if (value === '') {
+      // This helps ensure the result state is properly reset
+      onChange('');
+    }
+  }, [value, onChange]);
+
   return (
     <motion.div
       className="relative"

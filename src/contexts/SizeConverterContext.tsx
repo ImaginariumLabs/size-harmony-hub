@@ -24,8 +24,10 @@ export const SizeConverterProvider: React.FC<{ children: ReactNode }> = ({ child
     currentUnits: string,
     isOffline: boolean
   ) => {
+    // If any required field is empty or bust is not a valid number, reset result
     if (!currentBrand || !currentBust || isNaN(parseFloat(currentBust)) || parseFloat(currentBust) <= 0) {
       setResult(null);
+      setLoading(false);
       return;
     }
     
@@ -50,6 +52,7 @@ export const SizeConverterProvider: React.FC<{ children: ReactNode }> = ({ child
         description: "We're having trouble with precise calculations. Showing estimated sizes.",
         variant: "destructive"
       });
+      setResult(null);
     } finally {
       setLoading(false);
     }
@@ -87,8 +90,15 @@ export const SizeConverterProvider: React.FC<{ children: ReactNode }> = ({ child
   
   // Recalculate size when inputs change
   useEffect(() => {
-    if (brand && bust && parseFloat(bust) > 0) {
-      calculateSize();
+    if (brand) {
+      // Only calculate if bust has a valid value
+      if (bust && parseFloat(bust) > 0) {
+        calculateSize();
+      } else {
+        // Clear result if bust is empty or invalid
+        setResult(null);
+        setLoading(false);
+      }
     }
   }, [brand, bust, units, measurementType, calculateSize]);
   

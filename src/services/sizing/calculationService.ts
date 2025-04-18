@@ -15,6 +15,18 @@ export const findSizeByMeasurement = async (
   unit: string
 ): Promise<SizeResult> => {
   try {
+    // Validate input parameters
+    if (!brandName || !garmentType || !measurementType || 
+        isNaN(measurementValue) || measurementValue <= 0) {
+      console.log('Invalid inputs for size calculation');
+      // Return a null/empty result
+      return {
+        usSize: '',
+        ukSize: '',
+        euSize: ''
+      };
+    }
+    
     // Check if Supabase is connected
     const connected = await isSupabaseConnected();
     
