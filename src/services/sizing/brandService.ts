@@ -9,14 +9,14 @@ export type Brand = {
   created_at: string;
 };
 
-// Mock data for when Supabase is not connected
+// Enhanced mock data for when Supabase is not connected
 const mockBrands: Brand[] = [
   { id: '1', name: 'H&M', logo_url: null, created_at: new Date().toISOString() },
   { id: '2', name: 'Zara', logo_url: null, created_at: new Date().toISOString() },
   { id: '3', name: 'Nike', logo_url: null, created_at: new Date().toISOString() },
   { id: '4', name: 'Adidas', logo_url: null, created_at: new Date().toISOString() },
-  { id: '5', name: 'Uniqlo', logo_url: null, created_at: new Date().toISOString() },
-  { id: '6', name: 'Gap', logo_url: null, created_at: new Date().toISOString() },
+  { id: '5', name: 'UNIQLO', logo_url: null, created_at: new Date().toISOString() },
+  { id: '6', name: 'GAP', logo_url: null, created_at: new Date().toISOString() },
   { id: '7', name: 'Levi\'s', logo_url: null, created_at: new Date().toISOString() },
   { id: '8', name: 'Calvin Klein', logo_url: null, created_at: new Date().toISOString() },
   { id: '9', name: 'Tommy Hilfiger', logo_url: null, created_at: new Date().toISOString() },

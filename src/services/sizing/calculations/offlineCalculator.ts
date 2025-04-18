@@ -56,7 +56,33 @@ export const calculateOfflineSizeFromData = (
         XL: { min: 39, max: 42 }
       }
     },
-    // Add more brands as needed
+    'UNIQLO': {
+      bust: {
+        XS: { min: 31, max: 33 },
+        S: { min: 33, max: 35 },
+        M: { min: 35, max: 37 },
+        L: { min: 37, max: 40 },
+        XL: { min: 40, max: 43 }
+      }
+    },
+    'GAP': {
+      bust: {
+        XS: { min: 31, max: 33 },
+        S: { min: 33, max: 35 },
+        M: { min: 35, max: 37 },
+        L: { min: 37, max: 39 },
+        XL: { min: 39, max: 42 }
+      }
+    },
+    'Levi\'s': {
+      bust: {
+        XS: { min: 30, max: 32 },
+        S: { min: 32, max: 34 },
+        M: { min: 34, max: 36 },
+        L: { min: 36, max: 38 },
+        XL: { min: 38, max: 41 }
+      }
+    }
   };
   
   // Find the size in the brand's size ranges
