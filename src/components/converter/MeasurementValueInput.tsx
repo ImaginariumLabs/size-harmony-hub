@@ -15,13 +15,21 @@ const MeasurementValueInput: React.FC<MeasurementValueInputProps> = ({
   unit,
   measurementType
 }) => {
-  // Clear previous results when input is cleared
+  // Reset state when input is cleared
   useEffect(() => {
     if (value === '') {
-      // This helps ensure the result state is properly reset
+      // Ensure the parent component knows the input is cleared
       onChange('');
     }
   }, [value, onChange]);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // Prevent invalid inputs like negative numbers
+    const newValue = e.target.value;
+    if (newValue === '' || (parseFloat(newValue) >= 0)) {
+      onChange(newValue);
+    }
+  };
 
   return (
     <motion.div
@@ -32,7 +40,7 @@ const MeasurementValueInput: React.FC<MeasurementValueInputProps> = ({
       <input
         type="number"
         value={value}
-        onChange={(e) => onChange(e.target.value)}
+        onChange={handleChange}
         className="input-clean text-lg w-full px-4 py-3 rounded-md bg-white/70 hover:bg-white transition-colors border-b-2 border-accent/30 focus:border-primary"
         placeholder={`Enter your ${measurementType || 'measurement'}`}
         min="0"

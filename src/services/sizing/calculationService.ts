@@ -19,12 +19,8 @@ export const findSizeByMeasurement = async (
     if (!brandName || !garmentType || !measurementType || 
         isNaN(measurementValue) || measurementValue <= 0) {
       console.log('Invalid inputs for size calculation');
-      // Return a null/empty result
-      return {
-        usSize: '',
-        ukSize: '',
-        euSize: ''
-      };
+      // Return a null/empty result instead of empty strings
+      return null;
     }
     
     // Check if Supabase is connected
@@ -47,20 +43,29 @@ export const findSizeByMeasurement = async (
         valueInInches
       );
       
-      // If no exact matches in database, use offline calculation
+      // If no exact matches, return null instead of "No exact match found" strings
       if (sizes.usSize === 'No exact match found') {
         console.log(`No exact match found for ${brandName}, using offline calculation`);
-        return calculateOfflineSizeFromData(brandName, measurementType, measurementValue, unit, garmentType);
+        const offlineResult = calculateOfflineSizeFromData(brandName, measurementType, measurementValue, unit, garmentType);
+        
+        // If even offline calculation fails, return null
+        if (!offlineResult || (offlineResult.usSize === '' && offlineResult.ukSize === '' && offlineResult.euSize === '')) {
+          return null;
+        }
+        
+        return offlineResult;
       }
       
       return sizes;
     } catch (supabaseError) {
       console.error('Error fetching from Supabase:', supabaseError);
-      return calculateOfflineSizeFromData(brandName, measurementType, measurementValue, unit, garmentType);
+      const fallbackResult = calculateOfflineSizeFromData(brandName, measurementType, measurementValue, unit, garmentType);
+      return fallbackResult || null;
     }
   } catch (e) {
     console.error('Error in size calculation service:', e);
-    return calculateFallbackSize(measurementType, measurementValue, unit);
+    const fallbackResult = calculateFallbackSize(measurementType, measurementValue, unit);
+    return fallbackResult || null;
   }
 };
 

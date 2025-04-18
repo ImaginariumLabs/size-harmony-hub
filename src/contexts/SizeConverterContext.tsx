@@ -33,6 +33,9 @@ export const SizeConverterProvider: React.FC<{ children: ReactNode }> = ({ child
     
     try {
       setLoading(true);
+      // Add a small delay to prevent too rapid recalculations
+      await new Promise(resolve => setTimeout(resolve, 300));
+      
       const sizingResult = await findSizeByMeasurement(
         currentBrand,
         currentClothingType,
@@ -40,7 +43,12 @@ export const SizeConverterProvider: React.FC<{ children: ReactNode }> = ({ child
         parseFloat(currentBust),
         currentUnits
       );
-      setResult(sizingResult);
+      
+      // Check if we got an empty result
+      const isEmpty = !sizingResult || 
+        (sizingResult.usSize === '' && sizingResult.ukSize === '' && sizingResult.euSize === '');
+      
+      setResult(isEmpty ? null : sizingResult);
       
       if (isOffline) {
         console.log("Using estimated sizes (offline mode)");
@@ -88,12 +96,27 @@ export const SizeConverterProvider: React.FC<{ children: ReactNode }> = ({ child
   
   const { isOfflineMode } = useConnectionStatus(handleConnectionChange);
   
+  // Update the bust setter to properly handle clearing
+  const handleBustChange = (newValue: string) => {
+    setBust(newValue);
+    // Immediately clear results if input is cleared
+    if (newValue === '') {
+      setResult(null);
+      setLoading(false);
+    }
+  };
+  
   // Recalculate size when inputs change
   useEffect(() => {
     if (brand) {
       // Only calculate if bust has a valid value
       if (bust && parseFloat(bust) > 0) {
-        calculateSize();
+        // Cancel any pending calculation if bust changes quickly
+        const timer = setTimeout(() => {
+          calculateSize();
+        }, 500);
+        
+        return () => clearTimeout(timer);
       } else {
         // Clear result if bust is empty or invalid
         setResult(null);
@@ -120,7 +143,7 @@ export const SizeConverterProvider: React.FC<{ children: ReactNode }> = ({ child
         isOfflineMode,
         setClothingType,
         setBrand,
-        setBust,
+        setBust: handleBustChange,  // Use our modified bust setter
         setUnits,
         setMeasurementType,
         goBack,

@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles } from 'lucide-react';
 
@@ -8,7 +8,27 @@ interface LoadingIndicatorProps {
 }
 
 const LoadingIndicator: React.FC<LoadingIndicatorProps> = ({ loading = true }) => {
-  if (!loading) return null;
+  // Add a small delay before showing the loading indicator to prevent flickering
+  const [showLoader, setShowLoader] = useState(false);
+  
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    
+    if (loading) {
+      // Show loader after a small delay
+      timer = setTimeout(() => {
+        setShowLoader(true);
+      }, 300);
+    } else {
+      setShowLoader(false);
+    }
+    
+    return () => {
+      if (timer) clearTimeout(timer);
+    };
+  }, [loading]);
+  
+  if (!showLoader) return null;
   
   return (
     <AnimatePresence>
