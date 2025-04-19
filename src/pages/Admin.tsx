@@ -1,7 +1,6 @@
-
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { LockKeyhole, ArrowLeft, MessageSquare, FileText, Database, PenTool } from 'lucide-react';
+import { LockKeyhole, ArrowLeft, MessageSquare, FileText, Database, PenTool, Layout } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import BrandManagementTab from '../components/admin/BrandManagementTab';
@@ -10,6 +9,7 @@ import ContentManagementTab from '../components/admin/ContentManagementTab';
 import FeedbackStatsTab from '../components/admin/FeedbackStatsTab';
 import ImportExportTab from '../components/admin/ImportExportTab';
 import BlogManagementTab from '../components/admin/BlogManagementTab';
+import HomepageContentTab from '../components/admin/homepage/HomepageContentTab';
 
 const Admin = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -90,8 +90,14 @@ const Admin = () => {
         </motion.div>
         
         <div className="glass-card p-6 mb-6">
-          <Tabs defaultValue="brands">
-            <TabsList className="grid w-full grid-cols-6 mb-6">
+          <Tabs defaultValue="homepage">
+            <TabsList className="grid w-full grid-cols-7 mb-6">
+              <TabsTrigger value="homepage">
+                <div className="flex items-center">
+                  <Layout className="h-4 w-4 mr-2" />
+                  Homepage
+                </div>
+              </TabsTrigger>
               <TabsTrigger value="brands">Brand Management</TabsTrigger>
               <TabsTrigger value="ads">Ad Management</TabsTrigger>
               <TabsTrigger value="content">Content Control</TabsTrigger>
@@ -114,6 +120,10 @@ const Admin = () => {
                 </div>
               </TabsTrigger>
             </TabsList>
+            
+            <TabsContent value="homepage">
+              <HomepageContentTab />
+            </TabsContent>
             
             <TabsContent value="brands">
               <BrandManagementTab />
