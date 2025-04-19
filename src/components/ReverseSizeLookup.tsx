@@ -6,75 +6,35 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeftRight, Ruler } from 'lucide-react';
-
-// Size conversion charts for European to other regions
-const sizeConversions = {
-  women: {
-    tops: {
-      EU: ['32', '34', '36', '38', '40', '42', '44', '46', '48', '50'],
-      US: ['0', '2', '4', '6', '8', '10', '12', '14', '16', '18'],
-      UK: ['4', '6', '8', '10', '12', '14', '16', '18', '20', '22'],
-      bust: ['78-81', '82-85', '86-89', '90-93', '94-97', '98-102', '103-107', '108-113', '114-119', '120-125'],
-      waist: ['58-61', '62-65', '66-69', '70-73', '74-77', '78-81', '82-86', '87-92', '93-98', '99-104']
-    },
-    bottoms: {
-      EU: ['32', '34', '36', '38', '40', '42', '44', '46', '48', '50'],
-      US: ['0', '2', '4', '6', '8', '10', '12', '14', '16', '18'],
-      UK: ['4', '6', '8', '10', '12', '14', '16', '18', '20', '22'],
-      waist: ['58-61', '62-65', '66-69', '70-73', '74-77', '78-81', '82-86', '87-92', '93-98', '99-104'],
-      hip: ['84-87', '88-91', '92-95', '96-99', '100-103', '104-107', '108-112', '113-118', '119-124', '125-130']
-    },
-    dresses: {
-      EU: ['32', '34', '36', '38', '40', '42', '44', '46', '48', '50'],
-      US: ['0', '2', '4', '6', '8', '10', '12', '14', '16', '18'],
-      UK: ['4', '6', '8', '10', '12', '14', '16', '18', '20', '22'],
-      bust: ['78-81', '82-85', '86-89', '90-93', '94-97', '98-102', '103-107', '108-113', '114-119', '120-125'],
-      waist: ['58-61', '62-65', '66-69', '70-73', '74-77', '78-81', '82-86', '87-92', '93-98', '99-104'],
-      hip: ['84-87', '88-91', '92-95', '96-99', '100-103', '104-107', '108-112', '113-118', '119-124', '125-130']
-    }
-  },
-  men: {
-    tops: {
-      EU: ['44', '46', '48', '50', '52', '54', '56', '58', '60'],
-      US: ['34', '36', '38', '40', '42', '44', '46', '48', '50'],
-      UK: ['34', '36', '38', '40', '42', '44', '46', '48', '50'],
-      chest: ['86-89', '90-93', '94-97', '98-101', '102-105', '106-109', '110-113', '114-117', '118-121']
-    },
-    bottoms: {
-      EU: ['44', '46', '48', '50', '52', '54', '56', '58', '60'],
-      US: ['28', '30', '32', '34', '36', '38', '40', '42', '44'],
-      UK: ['28', '30', '32', '34', '36', '38', '40', '42', '44'],
-      waist: ['72-75', '76-79', '80-83', '84-87', '88-91', '92-95', '96-99', '100-103', '104-107']
-    }
-  }
-};
+import { supabase } from '@/integrations/supabase/client';
 
 interface SizeInfo {
-  region: string;
-  size: string;
-  measurements: Record<string, string>;
+  numericSize: string;
+  alphaSize: string;
+  measurements: {
+    bust?: { min: number; max: number };
+    waist?: { min: number; max: number };
+  };
+  equivalents: {
+    US: string;
+    UK: string;
+    EU: string;
+  };
 }
 
 const ReverseSizeLookup: React.FC = () => {
   const [gender, setGender] = useState<'women' | 'men'>('women');
-  const [garmentType, setGarmentType] = useState<'tops' | 'bottoms' | 'dresses'>('tops');
   const [region, setRegion] = useState<'EU' | 'US' | 'UK'>('EU');
   const [sizeInput, setSizeInput] = useState('');
   const [sizeInfo, setSizeInfo] = useState<SizeInfo | null>(null);
   const [error, setError] = useState('');
 
-  // Reset size info when selections change
   useEffect(() => {
     setSizeInfo(null);
     setError('');
-  }, [gender, garmentType, region]);
+  }, [gender, region]);
 
-  // Only show dresses for women
-  const availableGarmentTypes = gender === 'women' 
-    ? ['tops', 'bottoms', 'dresses'] 
-    : ['tops', 'bottoms'];
-
-  const lookupSize = () => {
+  const lookupSize = async () => {
     setError('');
     setSizeInfo(null);
     
@@ -82,33 +42,77 @@ const ReverseSizeLookup: React.FC = () => {
       setError('Please enter a size');
       return;
     }
-    
-    // Find the index of the size in the selected region
-    const sizeChart = sizeConversions[gender][garmentType as keyof typeof sizeConversions[typeof gender]];
-    const sizeIndex = sizeChart[region].findIndex(size => 
-      size.toLowerCase() === sizeInput.toLowerCase());
-    
-    if (sizeIndex === -1) {
-      setError(`Size ${sizeInput} not found for ${region} in ${garmentType}`);
-      return;
-    }
-    
-    // Collect measurements and equivalent sizes
-    const measurements: Record<string, string> = {};
-    const regions = ['EU', 'US', 'UK'];
-    
-    // Add measurement info
-    Object.keys(sizeChart).forEach(key => {
-      if (!regions.includes(key)) {
-        measurements[key] = sizeChart[key as keyof typeof sizeChart][sizeIndex];
+
+    try {
+      // Get size information for the input size
+      const { data: sizeData, error: sizeError } = await supabase
+        .from('standard_size_mappings')
+        .select('*')
+        .eq('region', region)
+        .eq('numeric_size', sizeInput)
+        .eq('measurement_type', 'bust');
+
+      if (sizeError) throw sizeError;
+      if (!sizeData?.length) {
+        setError(`Size ${sizeInput} not found for ${region}`);
+        return;
       }
-    });
-    
-    setSizeInfo({
-      region,
-      size: sizeInput,
-      measurements
-    });
+
+      const currentSize = sizeData[0];
+      
+      // Get measurements for this size
+      const measurements: SizeInfo['measurements'] = {};
+      const { data: measurementsData } = await supabase
+        .from('standard_size_mappings')
+        .select('*')
+        .eq('region', region)
+        .eq('numeric_size', sizeInput);
+
+      if (measurementsData) {
+        measurementsData.forEach(m => {
+          if (m.measurement_type === 'bust') {
+            measurements.bust = { min: m.min_value, max: m.max_value };
+          } else if (m.measurement_type === 'waist') {
+            measurements.waist = { min: m.min_value, max: m.max_value };
+          }
+        });
+      }
+
+      // Get equivalent sizes in other regions
+      const equivalents: SizeInfo['equivalents'] = { US: '', UK: '', EU: '' };
+      const regions = ['US', 'UK', 'EU'];
+      
+      await Promise.all(regions.map(async r => {
+        if (r === region) {
+          equivalents[r as keyof typeof equivalents] = sizeInput;
+          return;
+        }
+
+        const { data: equivData } = await supabase
+          .from('standard_size_mappings')
+          .select('numeric_size')
+          .eq('measurement_type', 'bust')
+          .gte('min_value', currentSize.min_value)
+          .lte('max_value', currentSize.max_value)
+          .eq('region', r)
+          .limit(1);
+
+        if (equivData?.[0]) {
+          equivalents[r as keyof typeof equivalents] = equivData[0].numeric_size;
+        }
+      }));
+
+      setSizeInfo({
+        numericSize: currentSize.numeric_size,
+        alphaSize: currentSize.alpha_size,
+        measurements,
+        equivalents
+      });
+
+    } catch (err) {
+      console.error('Error looking up size:', err);
+      setError('Failed to look up size information');
+    }
   };
 
   return (
@@ -120,48 +124,11 @@ const ReverseSizeLookup: React.FC = () => {
             Reverse Size Lookup
           </CardTitle>
           <CardDescription>
-            Enter a clothing size to find approximate measurements
+            Enter a clothing size to find equivalent sizes and measurements
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Gender</label>
-                <Select 
-                  value={gender} 
-                  onValueChange={(value) => setGender(value as 'women' | 'men')}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select gender" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="women">Women</SelectItem>
-                    <SelectItem value="men">Men</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Garment Type</label>
-                <Select 
-                  value={garmentType} 
-                  onValueChange={(value) => setGarmentType(value as 'tops' | 'bottoms' | 'dresses')}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {availableGarmentTypes.map(type => (
-                      <SelectItem key={type} value={type}>
-                        {type.charAt(0).toUpperCase() + type.slice(1)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label className="text-sm font-medium">Region</label>
@@ -192,7 +159,7 @@ const ReverseSizeLookup: React.FC = () => {
               className="w-full flex items-center gap-2"
             >
               <ArrowLeftRight className="h-4 w-4" />
-              Find Measurements
+              Find Size Information
             </Button>
             
             {error && (
@@ -207,35 +174,39 @@ const ReverseSizeLookup: React.FC = () => {
               >
                 <h3 className="text-lg font-medium mb-2">Size Information</h3>
                 
-                <div className="grid grid-cols-2 gap-y-2 text-sm">
-                  <p className="font-medium">Region:</p>
-                  <p>{sizeInfo.region}</p>
+                <div className="grid gap-y-2 text-sm">
+                  <div className="flex justify-between items-center">
+                    <span className="font-medium">Size:</span>
+                    <span>{sizeInfo.numericSize} ({sizeInfo.alphaSize})</span>
+                  </div>
                   
-                  <p className="font-medium">Size:</p>
-                  <p>{sizeInfo.size}</p>
+                  {sizeInfo.measurements.bust && (
+                    <div className="flex justify-between items-center">
+                      <span className="font-medium">Bust:</span>
+                      <span>{sizeInfo.measurements.bust.min}-{sizeInfo.measurements.bust.max} cm</span>
+                    </div>
+                  )}
                   
-                  {Object.entries(sizeInfo.measurements).map(([type, value]) => (
-                    <React.Fragment key={type}>
-                      <p className="font-medium capitalize">{type}:</p>
-                      <p>{value} cm</p>
-                    </React.Fragment>
-                  ))}
+                  {sizeInfo.measurements.waist && (
+                    <div className="flex justify-between items-center">
+                      <span className="font-medium">Waist:</span>
+                      <span>{sizeInfo.measurements.waist.min}-{sizeInfo.measurements.waist.max} cm</span>
+                    </div>
+                  )}
                   
-                  {/* Show equivalent sizes */}
-                  <p className="font-medium col-span-2 mt-2">Equivalent sizes:</p>
-                  
-                  {['EU', 'US', 'UK'].filter(r => r !== sizeInfo.region).map(r => {
-                    const chart = sizeConversions[gender][garmentType as keyof typeof sizeConversions[typeof gender]];
-                    const idx = chart[sizeInfo.region as keyof typeof chart].findIndex(
-                      size => size.toLowerCase() === sizeInfo.size.toLowerCase()
-                    );
-                    return (
-                      <React.Fragment key={r}>
-                        <p className="font-medium">{r}:</p>
-                        <p>{idx !== -1 ? chart[r as keyof typeof chart][idx] : 'N/A'}</p>
-                      </React.Fragment>
-                    );
-                  })}
+                  <div className="mt-2 pt-2 border-t">
+                    <p className="font-medium mb-1">Equivalent sizes:</p>
+                    <div className="grid grid-cols-3 gap-2">
+                      {Object.entries(sizeInfo.equivalents)
+                        .filter(([r]) => r !== region)
+                        .map(([r, size]) => (
+                          <div key={r} className="text-center p-1 bg-primary/10 rounded">
+                            <div className="font-medium text-xs text-primary/70">{r}</div>
+                            <div>{size}</div>
+                          </div>
+                        ))}
+                    </div>
+                  </div>
                 </div>
               </motion.div>
             )}

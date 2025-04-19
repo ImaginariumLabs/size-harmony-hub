@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
-import { MenuIcon, UserCircle } from 'lucide-react';
+import { MenuIcon } from 'lucide-react';
 
 const Navbar: React.FC = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -44,8 +44,9 @@ const Navbar: React.FC = () => {
   };
 
   // Get user display information safely
-  const userAvatar = user?.profile?.avatar_url || "";
-  const userName = user?.profile?.full_name || user?.email || "";
+  const userProfile = user?.profile as { avatar_url?: string; full_name?: string } | undefined;
+  const userAvatar = userProfile?.avatar_url || "";
+  const userName = userProfile?.full_name || user?.email || "";
   const userInitial = userName ? userName.charAt(0).toUpperCase() : "U";
 
   return (

@@ -292,6 +292,36 @@ export type Database = {
           },
         ]
       }
+      standard_size_mappings: {
+        Row: {
+          alpha_size: string
+          id: string
+          max_value: number
+          measurement_type: string
+          min_value: number
+          numeric_size: string
+          region: string
+        }
+        Insert: {
+          alpha_size: string
+          id?: string
+          max_value: number
+          measurement_type: string
+          min_value: number
+          numeric_size: string
+          region: string
+        }
+        Update: {
+          alpha_size?: string
+          id?: string
+          max_value?: number
+          measurement_type?: string
+          min_value?: number
+          numeric_size?: string
+          region?: string
+        }
+        Relationships: []
+      }
       user_measurements: {
         Row: {
           created_at: string
