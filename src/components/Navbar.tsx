@@ -1,65 +1,157 @@
-
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { Button } from './ui/button';
-import { LogOut, User, Shield } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Button } from "@/components/ui/button"
+import { MenuIcon, UserCircle } from 'lucide-react';
 
-const Navbar = () => {
-  const { user, signOut, isAdmin } = useAuth();
-  
+const Navbar: React.FC = () => {
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { user, signOut } = useAuth();
+  const navigate = useNavigate();
+  const { toast } = useToast();
+
+  const toggleMobileMenu = () => {
+    setIsMobileMenuOpen(!isMobileMenuOpen);
+  };
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      navigate('/');
+      toast({
+        title: "Signed out",
+        description: "You have been successfully signed out.",
+      });
+    } catch (error) {
+      console.error("Sign out failed:", error);
+      toast({
+        title: "Error",
+        description: "Failed to sign out. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
-    <nav className="fixed top-0 left-0 right-0 bg-white/80 backdrop-blur-sm border-b z-50">
-      <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-        <Link to="/" className="font-display text-xl text-primary">
-          Size Harmony Hub
-        </Link>
-        
-        <div className="flex items-center space-x-6">
-          <Link to="/" className="text-gray-600 hover:text-gray-900">
-            Size Calculator
-          </Link>
-          <Link to="/guide" className="text-gray-600 hover:text-gray-900">
-            Guide
-          </Link>
-          <Link to="/blog" className="text-gray-600 hover:text-gray-900">
-            Blog
-          </Link>
-          <Link to="/about" className="text-gray-600 hover:text-gray-900">
-            About
-          </Link>
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-sm shadow-sm">
+      <div className="container mx-auto px-4">
+        <div className="flex items-center justify-between h-16">
+          <div className="flex items-center">
+            <Link to="/" className="flex items-center">
+              <img src="/logo.png" alt="Size Harmony Logo" className="h-8 w-auto" />
+              <span className="ml-2 font-bold text-lg hidden sm:inline-block">Size Harmony</span>
+            </Link>
+          </div>
           
-          {user ? (
+          <div className="hidden md:block">
             <div className="flex items-center space-x-4">
-              <Link to="/profile" className="text-gray-600 hover:text-gray-900 flex items-center gap-1">
-                <User className="h-4 w-4" />
-                Profile
+              <Link to="/" className="nav-link">
+                Home
               </Link>
-              <Button 
-                variant="ghost" 
-                onClick={signOut}
-                className="flex items-center"
-              >
-                <LogOut className="h-4 w-4 mr-2" />
-                Sign Out
-              </Button>
-              {isAdmin && (
-                <Link 
-                  to="/admin" 
-                  className="text-primary hover:text-primary/80 flex items-center gap-1"
-                >
-                  <Shield className="h-4 w-4" />
-                  Admin
+              <Link to="/reverse-lookup" className="nav-link">
+                Reverse Lookup
+              </Link>
+              <Link to="/about" className="nav-link">
+                About
+              </Link>
+              <Link to="/guide" className="nav-link">
+                Guide
+              </Link>
+              <Link to="/blog" className="nav-link">
+                Blog
+              </Link>
+              {user ? (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                      <Avatar className="h-8 w-8">
+                        <AvatarImage src={user.avatar_url || ""} alt={user.full_name || "User Avatar"} />
+                        <AvatarFallback>{user.full_name?.charAt(0).toUpperCase() || "U"}</AvatarFallback>
+                      </Avatar>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="w-56" align="end" forceMount>
+                    <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                    <DropdownMenuItem onClick={() => navigate('/profile')}>
+                      Profile
+                    </DropdownMenuItem>
+                    {user.role === 'admin' && (
+                      <DropdownMenuItem onClick={() => navigate('/admin')}>
+                        Admin Panel
+                      </DropdownMenuItem>
+                    )}
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={handleSignOut}>
+                      Sign Out
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : (
+                <Link to="/auth" className="nav-link">
+                  Sign In
                 </Link>
               )}
             </div>
-          ) : (
-            <Link to="/auth">
-              <Button variant="default">Sign In</Button>
-            </Link>
-          )}
+          </div>
+          
+          <div className="md:hidden">
+            <Button variant="ghost" onClick={toggleMobileMenu}>
+              <MenuIcon className="h-5 w-5" />
+            </Button>
+          </div>
         </div>
       </div>
+      
+      {isMobileMenuOpen && (
+        <div className="md:hidden bg-white shadow-md py-2">
+          <div className="container mx-auto px-4 flex flex-col space-y-2">
+            <Link to="/" className="block py-2 px-4 text-gray-800 hover:bg-gray-100" onClick={toggleMobileMenu}>
+              Home
+            </Link>
+            <Link to="/reverse-lookup" className="block py-2 px-4 text-gray-800 hover:bg-gray-100" onClick={toggleMobileMenu}>
+              Reverse Lookup
+            </Link>
+            <Link to="/about" className="block py-2 px-4 text-gray-800 hover:bg-gray-100" onClick={toggleMobileMenu}>
+              About
+            </Link>
+            <Link to="/guide" className="block py-2 px-4 text-gray-800 hover:bg-gray-100" onClick={toggleMobileMenu}>
+              Guide
+            </Link>
+            <Link to="/blog" className="block py-2 px-4 text-gray-800 hover:bg-gray-100" onClick={toggleMobileMenu}>
+              Blog
+            </Link>
+            {user ? (
+              <>
+                <Link to="/profile" className="block py-2 px-4 text-gray-800 hover:bg-gray-100" onClick={toggleMobileMenu}>
+                  Profile
+                </Link>
+                {user.role === 'admin' && (
+                  <Link to="/admin" className="block py-2 px-4 text-gray-800 hover:bg-gray-100" onClick={toggleMobileMenu}>
+                    Admin Panel
+                  </Link>
+                )}
+                <Button variant="ghost" className="block py-2 px-4 text-gray-800 hover:bg-gray-100" onClick={() => { toggleMobileMenu(); handleSignOut(); }}>
+                  Sign Out
+                </Button>
+              </>
+            ) : (
+              <Link to="/auth" className="block py-2 px-4 text-gray-800 hover:bg-gray-100" onClick={toggleMobileMenu}>
+                Sign In
+              </Link>
+            )}
+          </div>
+        </div>
+      )}
     </nav>
   );
 };

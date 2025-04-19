@@ -27,8 +27,9 @@ const MeasurementValueInput: React.FC<MeasurementValueInputProps> = ({
     // Get the raw input value
     const newValue = e.target.value;
     
-    // Allow empty values or valid positive numbers
+    // Only allow valid numeric values
     if (newValue === '' || (!isNaN(parseFloat(newValue)) && parseFloat(newValue) >= 0)) {
+      // Immediately notify parent about the change
       onChange(newValue);
     }
   };
@@ -47,6 +48,7 @@ const MeasurementValueInput: React.FC<MeasurementValueInputProps> = ({
         placeholder={`Enter your ${measurementType || 'measurement'}`}
         min="0"
         step="0.1"
+        inputMode="decimal"
       />
       <div className="absolute inset-0 rounded-md pointer-events-none shadow-sm"></div>
     </motion.div>

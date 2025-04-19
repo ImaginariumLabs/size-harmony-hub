@@ -24,7 +24,13 @@ export const findSizeByMeasurement = async (
     }
     
     // Check if Supabase is connected
-    const connected = await isSupabaseConnected();
+    let connected = false;
+    try {
+      connected = await isSupabaseConnected();
+    } catch (error) {
+      console.error('Error checking Supabase connection:', error);
+      connected = false;
+    }
     
     if (!connected) {
       console.log('Using offline size calculation (Supabase not connected)');
@@ -43,29 +49,28 @@ export const findSizeByMeasurement = async (
         valueInInches
       );
       
-      // If no exact matches or error strings returned, use null
-      if (!sizes || sizes.usSize === 'No exact match found') {
+      // If no exact matches or error strings returned, use offline calculation
+      if (!sizes || 
+          (sizes.usSize === 'No exact match found' && 
+           sizes.ukSize === 'No exact match found' && 
+           sizes.euSize === 'No exact match found')) {
         console.log(`No exact match found for ${brandName}, using offline calculation`);
-        const offlineResult = calculateOfflineSizeFromData(brandName, measurementType, measurementValue, unit, garmentType);
-        
-        // If even offline calculation fails, return null
-        if (!offlineResult || (offlineResult.usSize === '' && offlineResult.ukSize === '' && offlineResult.euSize === '')) {
-          return null;
-        }
-        
-        return offlineResult;
+        return calculateOfflineSizeFromData(brandName, measurementType, measurementValue, unit, garmentType);
       }
       
       return sizes;
     } catch (supabaseError) {
       console.error('Error fetching from Supabase:', supabaseError);
-      const fallbackResult = calculateOfflineSizeFromData(brandName, measurementType, measurementValue, unit, garmentType);
-      return fallbackResult || null;
+      return calculateOfflineSizeFromData(brandName, measurementType, measurementValue, unit, garmentType);
     }
   } catch (e) {
     console.error('Error in size calculation service:', e);
-    const fallbackResult = calculateFallbackSize(measurementType, measurementValue, unit);
-    return fallbackResult || null;
+    try {
+      return calculateFallbackSize(measurementType, measurementValue, unit);
+    } catch (fallbackError) {
+      console.error('Even fallback calculation failed:', fallbackError);
+      return null;
+    }
   }
 };
 

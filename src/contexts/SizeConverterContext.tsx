@@ -15,6 +15,13 @@ export const SizeConverterProvider: React.FC<{ children: ReactNode }> = ({ child
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<SizeResultType>(null);
   const calculationInProgress = useRef(false);
+  const lastCalculationInputs = useRef<{
+    brand: string;
+    bust: string;
+    clothingType: string;
+    measurementType: string;
+    units: string;
+  } | null>(null);
   
   // First create the calculateSize function without using the hook values
   const calculateSizeImpl = useCallback(async (
@@ -29,6 +36,26 @@ export const SizeConverterProvider: React.FC<{ children: ReactNode }> = ({ child
     if (!currentBrand || !currentBust || isNaN(parseFloat(currentBust)) || parseFloat(currentBust) <= 0) {
       setResult(null);
       setLoading(false);
+      return;
+    }
+    
+    // Skip calculation if inputs haven't changed since last calculation
+    const currentInputs = {
+      brand: currentBrand,
+      bust: currentBust,
+      clothingType: currentClothingType,
+      measurementType: currentMeasurementType,
+      units: currentUnits
+    };
+    
+    const inputsMatch = lastCalculationInputs.current &&
+      lastCalculationInputs.current.brand === currentInputs.brand &&
+      lastCalculationInputs.current.bust === currentInputs.bust &&
+      lastCalculationInputs.current.clothingType === currentInputs.clothingType &&
+      lastCalculationInputs.current.measurementType === currentInputs.measurementType &&
+      lastCalculationInputs.current.units === currentInputs.units;
+    
+    if (inputsMatch) {
       return;
     }
     
@@ -49,8 +76,12 @@ export const SizeConverterProvider: React.FC<{ children: ReactNode }> = ({ child
       // Early check to avoid calculations with invalid values
       if (isNaN(bustValue) || bustValue <= 0) {
         setResult(null);
+        setLoading(false);
         return;
       }
+      
+      // Store current inputs to prevent duplicate calculations
+      lastCalculationInputs.current = { ...currentInputs };
       
       const sizingResult = await findSizeByMeasurement(
         currentBrand,
@@ -115,6 +146,9 @@ export const SizeConverterProvider: React.FC<{ children: ReactNode }> = ({ child
   
   // Update the bust setter to properly handle clearing
   const handleBustChange = (newValue: string) => {
+    // Clear previous calculation cache when input changes
+    lastCalculationInputs.current = null;
+    
     setBust(newValue);
     // Immediately clear results if input is cleared
     if (newValue === '') {
@@ -138,7 +172,7 @@ export const SizeConverterProvider: React.FC<{ children: ReactNode }> = ({ child
         if (!calculationInProgress.current) {
           calculateSize();
         }
-      }, 500);
+      }, 800);  // Longer debounce to prevent rapid calculations
     } else {
       // Clear result if bust is empty or invalid
       setResult(null);

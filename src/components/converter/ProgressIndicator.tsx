@@ -13,7 +13,7 @@ const ProgressIndicator: React.FC<ProgressIndicatorProps> = ({ currentStep, tota
   
   return (
     <div className="w-full max-w-md mx-auto">
-      <Progress value={progress} className="h-2" />
+      <Progress value={progress} className="h-1.5" />
       
       <div className="flex justify-between mt-2">
         {Array.from({ length: totalSteps }).map((_, index) => {
@@ -23,8 +23,8 @@ const ProgressIndicator: React.FC<ProgressIndicatorProps> = ({ currentStep, tota
           return (
             <div key={`step-${index}`} className="flex flex-col items-center">
               <motion.div
-                className={`h-3 w-3 rounded-full ${isActive ? 'bg-primary' : 'bg-gray-300'}`}
-                animate={{ scale: isActive ? 1.2 : 1 }}
+                className={`h-2.5 w-2.5 rounded-full ${isActive ? 'bg-primary/70' : 'bg-gray-200'}`}
+                animate={{ scale: isActive ? 1.1 : 1 }}
                 transition={{ duration: 0.3 }}
               />
               <span className="text-xs mt-1 text-gray-500">
