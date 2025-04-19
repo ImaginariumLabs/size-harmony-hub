@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -14,6 +13,11 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { MenuIcon } from 'lucide-react';
+
+interface UserProfile {
+  avatar_url?: string;
+  full_name?: string;
+}
 
 const Navbar: React.FC = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -44,9 +48,9 @@ const Navbar: React.FC = () => {
   };
 
   // Get user display information safely
-  const userProfile = user?.profile as { avatar_url?: string; full_name?: string } | undefined;
-  const userAvatar = userProfile?.avatar_url || "";
-  const userName = userProfile?.full_name || user?.email || "";
+  const userProfile = (user?.user_metadata as UserProfile) || {};
+  const userAvatar = userProfile.avatar_url || "";
+  const userName = userProfile.full_name || user?.email || "";
   const userInitial = userName ? userName.charAt(0).toUpperCase() : "U";
 
   return (
