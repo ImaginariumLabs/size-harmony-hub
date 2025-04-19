@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -42,6 +43,11 @@ const Navbar: React.FC = () => {
     }
   };
 
+  // Get user display information safely
+  const userAvatar = user?.profile?.avatar_url || "";
+  const userName = user?.profile?.full_name || user?.email || "";
+  const userInitial = userName ? userName.charAt(0).toUpperCase() : "U";
+
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-sm shadow-sm">
       <div className="container mx-auto px-4">
@@ -75,8 +81,8 @@ const Navbar: React.FC = () => {
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                       <Avatar className="h-8 w-8">
-                        <AvatarImage src={user.avatar_url || ""} alt={user.full_name || "User Avatar"} />
-                        <AvatarFallback>{user.full_name?.charAt(0).toUpperCase() || "U"}</AvatarFallback>
+                        <AvatarImage src={userAvatar} alt={userName} />
+                        <AvatarFallback>{userInitial}</AvatarFallback>
                       </Avatar>
                     </Button>
                   </DropdownMenuTrigger>
