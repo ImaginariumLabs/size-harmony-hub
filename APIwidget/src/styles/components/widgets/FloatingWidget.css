@@ -1,0 +1,88 @@
+.floating-widget {
+  width: 200px;
+  height: 100px;
+  background-color: #1e1e1e;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+  padding: 12px;
+  box-sizing: border-box;
+  position: fixed;
+  z-index: 9999;
+  border: 1px solid #333;
+  user-select: none;
+}
+
+.widget-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.widget-title {
+  color: #90caf9;
+  font-size: 12px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.widget-controls {
+  display: flex;
+  gap: 8px;
+}
+
+.widget-button {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  color: #333;
+}
+
+.widget-button.expand {
+  background-color: #90caf9;
+}
+
+.widget-button.close {
+  background-color: #f48fb1;
+}
+
+.widget-content {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.cost-value {
+  color: white;
+  font-size: 24px;
+  font-weight: 700;
+  margin: 0;
+}
+
+.cost-change {
+  font-size: 12px;
+  margin-top: 4px;
+}
+
+.cost-increase {
+  color: #4caf50;
+}
+
+.cost-decrease {
+  color: #f44336;
+}
+
+.widget-footer {
+  font-size: 10px;
+  color: #666;
+  text-align: right;
+}

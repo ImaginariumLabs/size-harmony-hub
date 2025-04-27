@@ -1,0 +1,263 @@
+/* 
+ * WidgetSettings.css
+ * Styles for the widget settings panel
+ */
+
+.widget-settings-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10000;
+  backdrop-filter: blur(5px);
+}
+
+.widget-settings-panel {
+  width: 400px;
+  max-width: 90vw;
+  max-height: 90vh;
+  background-color: #1e1e1e;
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  animation: settings-appear 0.3s ease;
+}
+
+@keyframes settings-appear {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.widget-settings-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.widget-settings-header h2 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.widget-settings-close {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.widget-settings-close:hover {
+  background: rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.widget-settings-content {
+  flex: 1;
+  padding: 20px;
+  overflow-y: auto;
+}
+
+.settings-section {
+  margin-bottom: 24px;
+}
+
+.settings-section h3 {
+  font-size: 14px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.7);
+  margin: 0 0 12px 0;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.settings-description {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.5);
+  margin: 0 0 12px 0;
+}
+
+.settings-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.settings-row label {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.settings-row select,
+.settings-row input[type="number"] {
+  background-color: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+  padding: 6px 10px;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 14px;
+  width: 120px;
+}
+
+.settings-row input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: #90caf9;
+}
+
+.settings-options {
+  display: flex;
+  gap: 8px;
+}
+
+.theme-option {
+  background-color: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+  padding: 6px 12px;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.theme-option:hover {
+  background-color: rgba(255, 255, 255, 0.15);
+}
+
+.theme-option.active {
+  background-color: #90caf9;
+  color: #121212;
+  border-color: #90caf9;
+}
+
+.widget-settings-footer {
+  display: flex;
+  justify-content: flex-end;
+  padding: 16px 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  gap: 12px;
+}
+
+.settings-button {
+  padding: 8px 16px;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.settings-button.cancel {
+  background-color: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.settings-button.cancel:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.settings-button.save {
+  background-color: #90caf9;
+  border: 1px solid #90caf9;
+  color: #121212;
+}
+
+.settings-button.save:hover {
+  background-color: #64b5f6;
+  border-color: #64b5f6;
+}
+
+/* Light theme */
+.widget-settings-panel.light {
+  background-color: rgba(255, 255, 255, 0.95);
+  border-color: rgba(0, 0, 0, 0.1);
+}
+
+.widget-settings-panel.light .widget-settings-header {
+  border-bottom-color: rgba(0, 0, 0, 0.1);
+}
+
+.widget-settings-panel.light .widget-settings-header h2 {
+  color: rgba(0, 0, 0, 0.9);
+}
+
+.widget-settings-panel.light .widget-settings-close {
+  background: rgba(0, 0, 0, 0.1);
+  color: rgba(0, 0, 0, 0.7);
+}
+
+.widget-settings-panel.light .widget-settings-close:hover {
+  background: rgba(0, 0, 0, 0.2);
+  color: rgba(0, 0, 0, 0.9);
+}
+
+.widget-settings-panel.light .settings-section h3 {
+  color: rgba(0, 0, 0, 0.7);
+  border-bottom-color: rgba(0, 0, 0, 0.1);
+}
+
+.widget-settings-panel.light .settings-description {
+  color: rgba(0, 0, 0, 0.5);
+}
+
+.widget-settings-panel.light .settings-row label {
+  color: rgba(0, 0, 0, 0.8);
+}
+
+.widget-settings-panel.light .settings-row select,
+.widget-settings-panel.light .settings-row input[type="number"] {
+  background-color: rgba(0, 0, 0, 0.05);
+  border-color: rgba(0, 0, 0, 0.1);
+  color: rgba(0, 0, 0, 0.9);
+}
+
+.widget-settings-panel.light .theme-option {
+  background-color: rgba(0, 0, 0, 0.05);
+  border-color: rgba(0, 0, 0, 0.1);
+  color: rgba(0, 0, 0, 0.8);
+}
+
+.widget-settings-panel.light .theme-option:hover {
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
+.widget-settings-panel.light .widget-settings-footer {
+  border-top-color: rgba(0, 0, 0, 0.1);
+}
+
+.widget-settings-panel.light .settings-button.cancel {
+  border-color: rgba(0, 0, 0, 0.2);
+  color: rgba(0, 0, 0, 0.8);
+}
+
+.widget-settings-panel.light .settings-button.cancel:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}

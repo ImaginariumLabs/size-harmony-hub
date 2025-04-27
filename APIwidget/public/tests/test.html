@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Electron Test</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      background-color: #f5f5f5;
+      color: #333;
+    }
+    h1 {
+      color: #2c3e50;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      background-color: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    button {
+      background-color: #3498db;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-top: 20px;
+    }
+    button:hover {
+      background-color: #2980b9;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Electron Test</h1>
+    <p>This is a test page for Electron.</p>
+    <p>If you can see this page, Electron is working correctly!</p>
+    <p>Current time: <span id="time"></span></p>
+    <button id="refresh">Refresh Time</button>
+  </div>
+
+  <script>
+    // Update the time
+    function updateTime() {
+      document.getElementById('time').textContent = new Date().toLocaleTimeString();
+    }
+    
+    // Update time initially
+    updateTime();
+    
+    // Add event listener to the button
+    document.getElementById('refresh').addEventListener('click', updateTime);
+    
+    // Update time every second
+    setInterval(updateTime, 1000);
+  </script>
+</body>
+</html>

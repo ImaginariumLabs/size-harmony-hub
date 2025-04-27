@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>APIwidget</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      background-color: transparent;
+      font-family: 'Inter', 'Roboto', 'Helvetica', 'Arial', sans-serif;
+    }
+
+    #widget-root {
+      width: 100%;
+      height: 100%;
+    }
+  </style>
+</head>
+<body>
+  <div id="widget-root"></div>
+  <!-- In development mode, this will be replaced by Vite -->
+  <script type="module" src="./widget-bundle.js"></script>
+  <!-- In development mode, this will load the React widget -->
+  <script type="module" src="/src/electron/widget.js"></script>
+</body>
+</html>

@@ -1,0 +1,377 @@
+/*
+ * GlassMorphismWidget.css
+ * Modern glass morphism design for the floating widget
+ * Inspired by 2025 UI/UX trends
+ */
+
+.glass-widget {
+  /* Base styling */
+  width: 240px;
+  height: 140px;
+  position: fixed;
+  z-index: 9999;
+  overflow: hidden;
+
+  /* Glass morphism effect */
+  background: rgba(30, 30, 30, 0.7);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+
+  /* Modern rounded corners */
+  border-radius: 16px;
+
+  /* Subtle shadow for depth */
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+
+  /* Smooth transitions */
+  transition: all 0.3s ease;
+
+  /* Prevent text selection */
+  user-select: none;
+}
+
+.glass-widget:hover {
+  /* Subtle hover effect */
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+/* Widget header */
+.glass-widget-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  height: 24px;
+}
+
+.glass-widget-title {
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 11px;
+  font-weight: 600;
+  margin: 0;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 160px;
+}
+
+.glass-widget-controls {
+  display: flex;
+  gap: 8px;
+}
+
+.glass-widget-button {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  color: rgba(0, 0, 0, 0.7);
+  transition: all 0.2s ease;
+  opacity: 0.8;
+}
+
+.glass-widget-button:hover {
+  opacity: 1;
+  transform: scale(1.05);
+}
+
+.glass-widget-button.settings {
+  background: linear-gradient(135deg, #ffb74d, #ff9800);
+}
+
+.glass-widget-button.expand {
+  background: linear-gradient(135deg, #90caf9, #64b5f6);
+}
+
+.glass-widget-button.close {
+  background: linear-gradient(135deg, #f48fb1, #f06292);
+}
+
+/* Widget content */
+.glass-widget-content {
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  height: 60px;
+}
+
+.cost-value {
+  color: white;
+  font-size: 28px;
+  font-weight: 700;
+  margin: 0;
+  line-height: 1.2;
+  background: linear-gradient(90deg, #ffffff, #e0e0e0);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 0 30px rgba(255, 255, 255, 0.2);
+}
+
+.cost-change {
+  font-size: 14px;
+  margin-top: 4px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.cost-change-icon {
+  font-size: 16px;
+}
+
+.cost-percentage {
+  font-size: 12px;
+  opacity: 0.8;
+  margin-left: 4px;
+}
+
+.cost-increase {
+  color: #4caf50;
+  background: linear-gradient(90deg, #4caf50, #81c784);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.cost-decrease {
+  color: #f44336;
+  background: linear-gradient(90deg, #f44336, #e57373);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Widget footer */
+.glass-widget-footer {
+  padding: 0 16px 12px;
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.5);
+  text-align: right;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.provider-indicator {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.provider-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.provider-dot.openai {
+  background: linear-gradient(135deg, #10a37f, #0d8a6f);
+}
+
+.provider-dot.github {
+  background: linear-gradient(135deg, #24292e, #1a1e22);
+}
+
+.provider-dot.aws {
+  background: linear-gradient(135deg, #ff9900, #e88b00);
+}
+
+/* Animation for value changes */
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+.value-changed {
+  animation: pulse 0.5s ease;
+}
+
+/* Resize handle */
+.resize-handle {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 16px;
+  height: 16px;
+  cursor: nwse-resize;
+  background: transparent;
+  opacity: 0.5;
+  z-index: 10;
+}
+
+.resize-handle:focus {
+  outline: 2px solid rgba(255, 255, 255, 0.5);
+  outline-offset: -2px;
+  opacity: 1;
+}
+
+.resize-handle::after {
+  content: '';
+  position: absolute;
+  right: 4px;
+  bottom: 4px;
+  width: 6px;
+  height: 6px;
+  border-right: 2px solid rgba(255, 255, 255, 0.3);
+  border-bottom: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+/* Provider switcher */
+.provider-switcher {
+  position: absolute;
+  bottom: 8px;
+  left: 8px;
+  display: flex;
+  gap: 4px;
+}
+
+.provider-icon {
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  opacity: 0.5;
+  transition: all 0.2s ease;
+  border: none;
+  padding: 0;
+  margin: 0;
+}
+
+.provider-icon:hover, .provider-icon.active {
+  opacity: 1;
+  transform: scale(1.1);
+}
+
+.provider-icon:focus {
+  outline: 2px solid rgba(255, 255, 255, 0.5);
+  outline-offset: 2px;
+}
+
+/* Alert indicator */
+.alert-indicator {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: #f44336;
+  animation: blink 1s infinite;
+  border: none;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+}
+
+.alert-indicator:focus {
+  outline: 2px solid rgba(255, 255, 255, 0.5);
+  outline-offset: 2px;
+}
+
+@keyframes blink {
+  0% { opacity: 0.2; }
+  50% { opacity: 1; }
+  100% { opacity: 0.2; }
+}
+
+/* Keyboard shortcuts hint */
+.keyboard-shortcuts-hint {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.3);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.glass-widget:hover .keyboard-shortcuts-hint {
+  opacity: 1;
+}
+
+/* Theme variations */
+.glass-widget.dark {
+  background: rgba(30, 30, 30, 0.7);
+}
+
+.glass-widget.light {
+  background: rgba(255, 255, 255, 0.7);
+}
+
+.glass-widget.light .glass-widget-title {
+  color: rgba(0, 0, 0, 0.9);
+}
+
+.glass-widget.light .cost-value {
+  background: linear-gradient(90deg, #000000, #333333);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.glass-widget.light .glass-widget-footer {
+  color: rgba(0, 0, 0, 0.5);
+}
+
+/* Size variations */
+.glass-widget.small {
+  width: 180px;
+  height: 100px;
+}
+
+.glass-widget.small .cost-value {
+  font-size: 22px;
+}
+
+.glass-widget.small .cost-change {
+  font-size: 12px;
+}
+
+.glass-widget.large {
+  width: 300px;
+  height: 180px;
+}
+
+.glass-widget.large .cost-value {
+  font-size: 36px;
+}
+
+.glass-widget.large .cost-change {
+  font-size: 16px;
+}
+
+/* Compact mode */
+.glass-widget.compact {
+  width: 120px;
+  height: 60px;
+  border-radius: 12px;
+}
+
+.glass-widget.compact .glass-widget-header {
+  padding: 6px 10px;
+  height: 16px;
+}
+
+.glass-widget.compact .glass-widget-content {
+  padding: 6px 10px;
+  height: 32px;
+}
+
+.glass-widget.compact .cost-value {
+  font-size: 18px;
+}
+
+.glass-widget.compact .cost-change,
+.glass-widget.compact .glass-widget-footer {
+  display: none;
+}
