@@ -2,6 +2,10 @@
 const { app, BrowserWindow, Tray, Menu, ipcMain, screen } = require('electron');
 const path = require('path');
 const fs = require('fs');
+const crypto = require('crypto');
+
+// We'll initialize the store after app is ready
+let Store;
 
 // Log startup information for debugging
 console.log('Starting APIwidget Electron app');
@@ -9,88 +13,134 @@ console.log('Node.js version:', process.version);
 console.log('Electron version:', process.versions.electron);
 console.log('Current directory:', process.cwd());
 
-// Create a simple store implementation that doesn't depend on electron-store
-// This is a temporary solution until we can properly integrate electron-store
-const store = {
-  data: {},
-  get: function(key, defaultValue) {
-    // Handle nested keys like 'widget.size'
-    if (key.includes('.')) {
-      const parts = key.split('.');
-      let current = this.data;
-      for (let i = 0; i < parts.length - 1; i++) {
-        if (!current[parts[i]]) {
-          return defaultValue;
-        }
-        current = current[parts[i]];
-      }
-      return current[parts[parts.length - 1]] || defaultValue;
-    }
-    return this.data[key] || defaultValue;
-  },
-  set: function(key, value) {
-    // Handle nested keys like 'widget.size'
-    if (key.includes('.')) {
-      const parts = key.split('.');
-      let current = this.data;
-      for (let i = 0; i < parts.length - 1; i++) {
-        if (!current[parts[i]]) {
-          current[parts[i]] = {};
-        }
-        current = current[parts[i]];
-      }
-      current[parts[parts.length - 1]] = value;
+// Create a secure store with encryption for API keys
+// Generate a secure encryption key based on the machine ID
+const generateEncryptionKey = () => {
+  try {
+    // In production, use a value derived from the user's machine
+    // This ensures the encryption key is unique per machine but consistent across app restarts
+    if (app.isPackaged) {
+      // Get a unique identifier for the user's machine
+      const machineId = crypto
+        .createHash('sha256')
+        .update(app.getPath('userData'))
+        .digest('hex')
+        .substring(0, 32); // Use first 32 chars (16 bytes) for AES-256
+
+      console.log('Using secure encryption key derived from machine ID');
+      return machineId;
     } else {
-      this.data[key] = value;
+      // For development, use a fixed key
+      console.log('Using development encryption key');
+      return 'dev-encryption-key-apiwidget-secure';
     }
-  },
-  delete: function(key) {
-    // Handle nested keys like 'widget.size'
-    if (key.includes('.')) {
-      const parts = key.split('.');
-      let current = this.data;
-      for (let i = 0; i < parts.length - 1; i++) {
-        if (!current[parts[i]]) {
-          return;
-        }
-        current = current[parts[i]];
+  } catch (error) {
+    console.error('Error generating encryption key:', error);
+    // Fallback to a default key (less secure but better than nothing)
+    return 'apiwidget-fallback-encryption-key';
+  }
+};
+
+// Store configuration
+const storeConfig = {
+  name: 'apiwidget-store', // Name of the file
+  encryptionKey: generateEncryptionKey(), // Secure encryption key
+  clearInvalidConfig: true, // Clear the config if it becomes corrupted
+  schema: {
+    apiKeys: {
+      type: 'object',
+      properties: {
+        openai: { type: 'string' },
+        github: { type: 'string' },
+        aws: { type: 'string' },
+        azure: { type: 'string' },
+        google: { type: 'string' }
+      },
+      default: {
+        openai: '',
+        github: '',
+        aws: '',
+        azure: '',
+        google: ''
       }
-      delete current[parts[parts.length - 1]];
-    } else {
-      delete this.data[key];
+    },
+    widget: {
+      type: 'object',
+      properties: {
+        position: {
+          type: 'array',
+          items: { type: 'number' },
+          minItems: 2,
+          maxItems: 2,
+          default: [800, 100]
+        },
+        visible: { type: 'boolean', default: true },
+        size: { type: 'string', default: 'medium' },
+        theme: { type: 'string', default: 'dark' },
+        customSize: {
+          type: 'array',
+          items: { type: 'number' },
+          minItems: 2,
+          maxItems: 2,
+          default: [240, 140]
+        },
+        refreshInterval: { type: 'number', default: 30 },
+        activeProvider: { type: 'string', default: 'openai' },
+        alertThresholds: {
+          type: 'object',
+          properties: {
+            openai: { type: 'number', default: 50 },
+            github: { type: 'number', default: 10 },
+            aws: { type: 'number', default: 30 },
+            azure: { type: 'number', default: 40 },
+            google: { type: 'number', default: 35 }
+          },
+          default: {
+            openai: 50,
+            github: 10,
+            aws: 30,
+            azure: 40,
+            google: 35
+          }
+        }
+      },
+      default: {
+        position: [800, 100],
+        visible: true,
+        size: 'medium',
+        theme: 'dark',
+        customSize: [240, 140],
+        refreshInterval: 30,
+        activeProvider: 'openai',
+        alertThresholds: {
+          openai: 50,
+          github: 10,
+          aws: 30,
+          azure: 40,
+          google: 35
+        }
+      }
+    },
+    app: {
+      type: 'object',
+      properties: {
+        startWithSystem: { type: 'boolean', default: false },
+        minimizeToTray: { type: 'boolean', default: true },
+        showNotifications: { type: 'boolean', default: true },
+        theme: { type: 'string', default: 'dark' }
+      },
+      default: {
+        startWithSystem: false,
+        minimizeToTray: true,
+        showNotifications: true,
+        theme: 'dark'
+      }
     }
   }
 };
 
-// Initialize default values for the store
-// Set up some default values
-store.data = {
-  apiKeys: {
-    openai: '',
-    github: '',
-    aws: ''
-  },
-  widget: {
-    position: [800, 100],
-    visible: true,
-    size: 'medium',
-    theme: 'dark',
-    customSize: [240, 140],
-    refreshInterval: 30,
-    activeProvider: 'openai',
-    alertThresholds: {
-      openai: 50,
-      github: 10,
-      aws: 30
-    }
-  },
-  app: {
-    startWithSystem: false,
-    minimizeToTray: true,
-    showNotifications: true,
-    theme: 'dark'
-  }
-};
+// We'll initialize the store after app is ready
+let store;
 
 let mainWindow;
 let widgetWindow;
@@ -555,33 +605,48 @@ function createTray() {
 // Add a flag to track if the app is quitting
 app.isQuitting = false;
 
-app.whenReady().then(() => {
-  // We already have properly sized icons in the public/images directory
-  console.log('App is ready, initializing...');
+app.whenReady().then(async () => {
+  try {
+    // Initialize electron-store with dynamic import
+    const StoreModule = await import('electron-store');
+    Store = StoreModule.default;
 
-  // Create tray and widget
-  createTray();
-  createWidgetWindow(); // Start with just the widget
+    // Create the store instance with our config
+    store = new Store(storeConfig);
 
-  // Always create the main window by default
-  createMainWindow();
+    // Log store path for debugging
+    console.log('Store path:', store.path);
 
-  // Log window creation status
-  console.log('Windows created:', {
-    mainWindow: mainWindow ? 'Created' : 'Not created',
-    widgetWindow: widgetWindow ? 'Created' : 'Not created'
-  });
+    // We already have properly sized icons in the public/images directory
+    console.log('App is ready, initializing...');
 
-  app.on('activate', () => {
-    if (BrowserWindow.getAllWindows().length === 0) {
-      createWidgetWindow();
-    }
-  });
+    // Create tray and widget
+    createTray();
+    createWidgetWindow(); // Start with just the widget
 
-  // Handle before-quit event
-  app.on('before-quit', () => {
-    app.isQuitting = true;
-  });
+    // Always create the main window by default
+    createMainWindow();
+
+    // Log window creation status
+    console.log('Windows created:', {
+      mainWindow: mainWindow ? 'Created' : 'Not created',
+      widgetWindow: widgetWindow ? 'Created' : 'Not created'
+    });
+
+    app.on('activate', () => {
+      if (BrowserWindow.getAllWindows().length === 0) {
+        createWidgetWindow();
+      }
+    });
+
+    // Handle before-quit event
+    app.on('before-quit', () => {
+      app.isQuitting = true;
+    });
+  } catch (error) {
+    console.error('Error initializing app:', error);
+    app.quit();
+  }
 });
 
 // Handle window-all-closed event
@@ -625,20 +690,151 @@ ipcMain.handle('close-widget', () => {
   }
 });
 
-// API key management
-ipcMain.handle('get-api-key', (event, provider) => {
-  return store.get(`apiKeys.${provider}`);
+// API key management with validation and error handling
+ipcMain.handle('get-api-key', async (event, provider) => {
+  try {
+    // Validate provider
+    if (!provider || typeof provider !== 'string') {
+      console.error('Invalid provider specified for get-api-key');
+      return null;
+    }
+
+    // Get the API key from the secure store
+    const apiKey = store.get(`apiKeys.${provider}`);
+
+    // Return the key (or empty string if not found)
+    return apiKey || '';
+  } catch (error) {
+    console.error(`Error retrieving API key for ${provider}:`, error);
+    return null;
+  }
 });
 
-ipcMain.handle('save-api-key', (event, provider, key) => {
-  store.set(`apiKeys.${provider}`, key);
-  return true;
+ipcMain.handle('save-api-key', async (event, provider, key) => {
+  try {
+    // Validate inputs
+    if (!provider || typeof provider !== 'string') {
+      console.error('Invalid provider specified for save-api-key');
+      return { success: false, error: 'Invalid provider specified' };
+    }
+
+    if (!key || typeof key !== 'string') {
+      console.error('Invalid API key specified for save-api-key');
+      return { success: false, error: 'Invalid API key specified' };
+    }
+
+    // Basic validation for common API key formats
+    const isValidKey = validateApiKey(provider, key);
+    if (!isValidKey.valid) {
+      console.warn(`Potentially invalid ${provider} API key format:`, isValidKey.message);
+      // We still save it but return a warning
+      store.set(`apiKeys.${provider}`, key);
+      return {
+        success: true,
+        warning: isValidKey.message,
+        message: `API key saved for ${provider} with format warning`
+      };
+    }
+
+    // Save the API key to the secure store
+    store.set(`apiKeys.${provider}`, key);
+
+    console.log(`API key saved successfully for ${provider}`);
+    return {
+      success: true,
+      message: `API key saved successfully for ${provider}`
+    };
+  } catch (error) {
+    console.error(`Error saving API key for ${provider}:`, error);
+    return {
+      success: false,
+      error: `Error saving API key: ${error.message}`
+    };
+  }
 });
 
-ipcMain.handle('delete-api-key', (event, provider) => {
-  store.delete(`apiKeys.${provider}`);
-  return true;
+ipcMain.handle('delete-api-key', async (event, provider) => {
+  try {
+    // Validate provider
+    if (!provider || typeof provider !== 'string') {
+      console.error('Invalid provider specified for delete-api-key');
+      return { success: false, error: 'Invalid provider specified' };
+    }
+
+    // Delete the API key from the secure store
+    store.delete(`apiKeys.${provider}`);
+
+    console.log(`API key deleted successfully for ${provider}`);
+    return {
+      success: true,
+      message: `API key deleted successfully for ${provider}`
+    };
+  } catch (error) {
+    console.error(`Error deleting API key for ${provider}:`, error);
+    return {
+      success: false,
+      error: `Error deleting API key: ${error.message}`
+    };
+  }
 });
+
+// Helper function to validate API key formats
+function validateApiKey(provider, key) {
+  // Skip validation for empty keys (allows clearing keys)
+  if (!key) {
+    return { valid: true };
+  }
+
+  switch (provider) {
+    case 'openai':
+      // OpenAI keys typically start with 'sk-' and are 51 characters long
+      if (!key.startsWith('sk-') || key.length < 30) {
+        return {
+          valid: false,
+          message: 'OpenAI API keys typically start with "sk-" and are longer'
+        };
+      }
+      break;
+    case 'github':
+      // GitHub personal access tokens are 40+ characters
+      if (key.length < 30 || !/^gh[ps]_\w+$/.test(key)) {
+        return {
+          valid: false,
+          message: 'GitHub tokens typically start with "ghp_" or "ghs_" and are at least 30 characters'
+        };
+      }
+      break;
+    case 'aws':
+      // AWS access keys are typically 20 characters
+      if (key.length < 15 || !/^[A-Z0-9]+$/.test(key)) {
+        return {
+          valid: false,
+          message: 'AWS access keys are typically uppercase alphanumeric and at least 15 characters'
+        };
+      }
+      break;
+    case 'azure':
+      // Azure keys are typically long strings
+      if (key.length < 30) {
+        return {
+          valid: false,
+          message: 'Azure API keys are typically at least 30 characters long'
+        };
+      }
+      break;
+    case 'google':
+      // Google API keys are typically 39 characters
+      if (key.length < 30 || !/^[A-Za-z0-9_-]+$/.test(key)) {
+        return {
+          valid: false,
+          message: 'Google API keys are typically alphanumeric and at least 30 characters'
+        };
+      }
+      break;
+  }
+
+  return { valid: true };
+}
 
 // Widget visibility toggle
 ipcMain.handle('toggle-widget-visibility', () => {

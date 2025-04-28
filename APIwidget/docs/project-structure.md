@@ -4,7 +4,7 @@
 
 The APIwidget project has a nested directory structure that's important to understand when working with the codebase:
 
-```
+```plaintext
 APIwidget/                  # Root project directory
 └── APIwidget/              # Main application directory
     ├── .github/            # GitHub configuration files
@@ -72,7 +72,8 @@ APIwidget/                  # Root project directory
 1. **Nested Structure**: The main application code is in the `APIwidget/APIwidget` directory, not in the root `APIwidget` directory.
 
 2. **Running Commands**: When running npm commands, make sure you're in the correct directory:
-   ```
+
+   ```bash
    cd APIwidget/APIwidget
    npm run electron:dev
    ```
@@ -91,9 +92,14 @@ APIwidget/                  # Root project directory
 - `src/widget.tsx`: Widget entry point
 - `src/components/app/ModernElectronApp.tsx`: Modern Electron application component
 - `src/components/widgets/GlassMorphismWidget.tsx`: Glass morphism widget component
+- `src/components/settings/ApiKeyManager.tsx`: API key management component
 - `src/contexts/DashboardWidgetContext.tsx`: Context for managing dashboard widgets
+- `src/contexts/ApiProviderContext.tsx`: Context for managing API providers
+- `src/services/electronService.ts`: Service for Electron integration
+- `src/services/apiIntegrationService.ts`: Service for API integration
 - `src/styles/electron.css`: Electron-specific styles
 - `vite.config.ts`: Vite configuration for building the application
+- `docs/development/SECURE_API_KEY_STORAGE.md`: Documentation for secure API key storage
 
 ## Component Architecture
 
@@ -132,6 +138,16 @@ The application uses a combination of:
 1. **CSS Modules**: Component-specific styles
 2. **Material UI**: UI component library
 3. **Global CSS**: Shared styles across components
+
+## Security Features
+
+The application includes several security features:
+
+1. **Secure API Key Storage**: API keys are stored locally and encrypted using machine-specific encryption keys
+2. **Context Isolation**: Electron's context isolation is enabled to prevent direct access to Node.js APIs
+3. **Content Security Policy**: Strict CSP to prevent XSS attacks
+4. **Input Validation**: All IPC inputs are validated in the main process
+5. **Local-Only Storage**: No sensitive data is transmitted to external servers
 
 ## Running the Application
 

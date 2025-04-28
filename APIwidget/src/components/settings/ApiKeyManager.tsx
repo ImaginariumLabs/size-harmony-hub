@@ -87,25 +87,57 @@ const ApiKeyManager: React.FC = () => {
   // Handle saving API key
   const handleSaveApiKey = async (providerId: string) => {
     try {
-      await saveApiKey(providerId, newApiKey);
-      
-      setApiKeys(prev => ({
-        ...prev,
-        [providerId]: newApiKey
-      }));
-      
-      setEditingProvider(null);
-      setNewApiKey('');
-      
-      // Show success message
-      setSnackbarMessage(`API key for ${providerConfigs[providerId].name} saved successfully`);
-      setSnackbarSeverity('success');
+      const result = await saveApiKey(providerId, newApiKey);
+
+      // Check if the operation was successful
+      if (typeof result === 'object' && result !== null) {
+        // New format with detailed response
+        if (result.success) {
+          setApiKeys(prev => ({
+            ...prev,
+            [providerId]: newApiKey
+          }));
+
+          setEditingProvider(null);
+          setNewApiKey('');
+
+          // Show success message with possible warning
+          if (result.warning) {
+            setSnackbarMessage(`API key saved with warning: ${result.warning}`);
+            setSnackbarSeverity('warning');
+          } else {
+            setSnackbarMessage(result.message ?? `API key for ${providerConfigs[providerId].name} saved successfully`);
+            setSnackbarSeverity('success');
+          }
+        } else {
+          // Operation failed
+          setSnackbarMessage(result.error ?? `Error saving API key for ${providerConfigs[providerId].name}`);
+          setSnackbarSeverity('error');
+        }
+      } else if (result === true) {
+        // Old format for backward compatibility
+        setApiKeys(prev => ({
+          ...prev,
+          [providerId]: newApiKey
+        }));
+
+        setEditingProvider(null);
+        setNewApiKey('');
+
+        // Show success message
+        setSnackbarMessage(`API key for ${providerConfigs[providerId].name} saved successfully`);
+        setSnackbarSeverity('success');
+      } else {
+        // Operation failed
+        throw new Error('Unknown response format');
+      }
+
       setSnackbarOpen(true);
     } catch (error) {
       console.error(`Error saving API key for ${providerId}:`, error);
-      
+
       // Show error message
-      setSnackbarMessage(`Error saving API key for ${providerConfigs[providerId].name}`);
+      setSnackbarMessage(`Error saving API key for ${providerConfigs[providerId].name}: ${error instanceof Error ? error.message : 'Unknown error'}`);
       setSnackbarSeverity('error');
       setSnackbarOpen(true);
     }
@@ -142,27 +174,52 @@ const ApiKeyManager: React.FC = () => {
     if (!providerToDelete) return;
 
     try {
-      await deleteApiKey(providerToDelete);
-      
-      setApiKeys(prev => {
-        const newKeys = { ...prev };
-        delete newKeys[providerToDelete];
-        return newKeys;
-      });
-      
-      // Show success message
-      setSnackbarMessage(`API key for ${providerConfigs[providerToDelete].name} deleted successfully`);
-      setSnackbarSeverity('success');
+      const result = await deleteApiKey(providerToDelete);
+
+      // Check if the operation was successful
+      if (typeof result === 'object' && result !== null) {
+        // New format with detailed response
+        if (result.success) {
+          setApiKeys(prev => {
+            const newKeys = { ...prev };
+            delete newKeys[providerToDelete];
+            return newKeys;
+          });
+
+          // Show success message
+          setSnackbarMessage(result.message ?? `API key for ${providerConfigs[providerToDelete].name} deleted successfully`);
+          setSnackbarSeverity('success');
+        } else {
+          // Operation failed
+          setSnackbarMessage(result.error ?? `Error deleting API key for ${providerConfigs[providerToDelete].name}`);
+          setSnackbarSeverity('error');
+        }
+      } else if (result === true) {
+        // Old format for backward compatibility
+        setApiKeys(prev => {
+          const newKeys = { ...prev };
+          delete newKeys[providerToDelete];
+          return newKeys;
+        });
+
+        // Show success message
+        setSnackbarMessage(`API key for ${providerConfigs[providerToDelete].name} deleted successfully`);
+        setSnackbarSeverity('success');
+      } else {
+        // Operation failed
+        throw new Error('Unknown response format');
+      }
+
       setSnackbarOpen(true);
     } catch (error) {
       console.error(`Error deleting API key for ${providerToDelete}:`, error);
-      
+
       // Show error message
-      setSnackbarMessage(`Error deleting API key for ${providerConfigs[providerToDelete].name}`);
+      setSnackbarMessage(`Error deleting API key for ${providerConfigs[providerToDelete].name}: ${error instanceof Error ? error.message : 'Unknown error'}`);
       setSnackbarSeverity('error');
       setSnackbarOpen(true);
     }
-    
+
     handleCloseDeleteDialog();
   };
 
@@ -177,16 +234,34 @@ const ApiKeyManager: React.FC = () => {
     return key.substring(0, 4) + '••••••••' + key.substring(key.length - 4);
   };
 
+  // Get gradient colors for provider
+  const getProviderGradient = (providerId: string): string => {
+    switch (providerId) {
+      case 'openai':
+        return '#10a37f, #0d8a6f';
+      case 'github':
+        return '#24292e, #1a1e22';
+      case 'aws':
+        return '#ff9900, #e88b00';
+      case 'azure':
+        return '#0078d4, #0063b1';
+      case 'google':
+        return '#4285f4, #3367d6';
+      default:
+        return '#64b5f6, #2196f3';
+    }
+  };
+
   return (
     <Box sx={{ maxWidth: 800, mx: 'auto', p: 2 }}>
       <Typography variant="h5" component="h2" gutterBottom>
         API Key Management
       </Typography>
-      
-      <Typography variant="body1" color="text.secondary" paragraph>
+
+      <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
         Manage your API keys for different providers. These keys are stored securely and used to fetch usage and cost data.
       </Typography>
-      
+
       {loading ? (
         <Box sx={{ display: 'flex', justifyContent: 'center', my: 4 }}>
           <CircularProgress />
@@ -195,10 +270,10 @@ const ApiKeyManager: React.FC = () => {
         <Grid container spacing={3} sx={{ mt: 2 }}>
           {providers.map(provider => (
             <Grid item xs={12} key={provider.id}>
-              <Paper 
-                elevation={3} 
-                sx={{ 
-                  p: 2, 
+              <Paper
+                elevation={3}
+                sx={{
+                  p: 2,
                   borderRadius: 2,
                   background: 'rgba(30, 30, 30, 0.7)',
                   backdropFilter: 'blur(10px)',
@@ -206,18 +281,15 @@ const ApiKeyManager: React.FC = () => {
                 }}
               >
                 <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                  <Box 
-                    sx={{ 
-                      width: 40, 
-                      height: 40, 
-                      borderRadius: '50%', 
-                      display: 'flex', 
-                      alignItems: 'center', 
+                  <Box
+                    sx={{
+                      width: 40,
+                      height: 40,
+                      borderRadius: '50%',
+                      display: 'flex',
+                      alignItems: 'center',
                       justifyContent: 'center',
-                      background: `linear-gradient(135deg, ${provider.id === 'openai' ? '#10a37f, #0d8a6f' : 
-                                                            provider.id === 'github' ? '#24292e, #1a1e22' : 
-                                                            provider.id === 'aws' ? '#ff9900, #e88b00' : 
-                                                            '#64b5f6, #2196f3'}`,
+                      background: `linear-gradient(135deg, ${getProviderGradient(provider.id)})`,
                       mr: 2
                     }}
                   >
@@ -229,8 +301,8 @@ const ApiKeyManager: React.FC = () => {
                     {provider.name}
                   </Typography>
                   <Tooltip title="API Information" arrow>
-                    <IconButton 
-                      size="small" 
+                    <IconButton
+                      size="small"
                       sx={{ ml: 1 }}
                       onClick={() => {
                         setSnackbarMessage(`${provider.name} uses ${provider.authType} authentication. Base URL: ${provider.baseUrl}`);
@@ -242,7 +314,7 @@ const ApiKeyManager: React.FC = () => {
                     </IconButton>
                   </Tooltip>
                 </Box>
-                
+
                 {editingProvider === provider.id ? (
                   <Box sx={{ mt: 2 }}>
                     <TextField
@@ -252,6 +324,14 @@ const ApiKeyManager: React.FC = () => {
                       value={newApiKey}
                       onChange={(e) => setNewApiKey(e.target.value)}
                       type={showApiKey[provider.id] ? 'text' : 'password'}
+                      // Using sx for styling
+                      sx={{
+                        mb: 2,
+                        '& .MuiInputBase-root': {
+                          paddingRight: 0
+                        }
+                      }}
+                      // Note: InputProps is deprecated but still needed for now
                       InputProps={{
                         endAdornment: (
                           <IconButton
@@ -262,7 +342,6 @@ const ApiKeyManager: React.FC = () => {
                           </IconButton>
                         )
                       }}
-                      sx={{ mb: 2 }}
                     />
                     <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
                       <Button
@@ -334,17 +413,20 @@ const ApiKeyManager: React.FC = () => {
           ))}
         </Grid>
       )}
-      
+
       {/* Delete Confirmation Dialog */}
       <Dialog
         open={deleteDialogOpen}
         onClose={handleCloseDeleteDialog}
-        PaperProps={{
-          sx: {
-            background: 'rgba(30, 30, 30, 0.95)',
-            backdropFilter: 'blur(10px)',
-            border: '1px solid rgba(255, 255, 255, 0.1)',
-            borderRadius: 2
+        // Using slotProps instead of deprecated PaperProps
+        slotProps={{
+          paper: {
+            sx: {
+              background: 'rgba(30, 30, 30, 0.95)',
+              backdropFilter: 'blur(10px)',
+              border: '1px solid rgba(255, 255, 255, 0.1)',
+              borderRadius: 2
+            }
           }
         }}
       >
@@ -361,7 +443,7 @@ const ApiKeyManager: React.FC = () => {
           </Button>
         </DialogActions>
       </Dialog>
-      
+
       {/* Snackbar for notifications */}
       <Snackbar
         open={snackbarOpen}
