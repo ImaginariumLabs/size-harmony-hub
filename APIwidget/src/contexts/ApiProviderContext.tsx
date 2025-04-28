@@ -24,47 +24,29 @@ const defaultProviders: ApiProvider[] = [
   {
     id: 'openai',
     name: 'OpenAI',
-    description: 'GPT models and other AI services',
+    description: 'GPT-4o, GPT-4 Turbo, and GPT-3.5 Turbo models',
     icon: 'openai-logo.svg',
     color: '#10a37f',
     isConfigured: false,
     usagePercentage: 65
   },
   {
-    id: 'github',
-    name: 'GitHub',
-    description: 'GitHub API for repositories and more',
-    icon: 'github-logo.svg',
-    color: '#24292e',
+    id: 'claude',
+    name: 'Claude',
+    description: 'Claude 3.5 Sonnet, Claude 3 Opus, and other Anthropic models',
+    icon: 'claude-logo.svg',
+    color: '#7963d2',
     isConfigured: false,
     usagePercentage: 45
   },
   {
-    id: 'aws',
-    name: 'AWS',
-    description: 'Amazon Web Services API',
-    icon: 'aws-logo.svg',
-    color: '#ff9900',
-    isConfigured: false,
-    usagePercentage: 30
-  },
-  {
     id: 'google',
-    name: 'Google Cloud',
-    description: 'Google Cloud Platform services',
-    icon: 'gcp-logo.svg',
+    name: 'Gemini',
+    description: 'Gemini 1.5 Pro, Gemini 1.5 Flash, and other Google AI models',
+    icon: 'gemini-logo.svg',
     color: '#4285f4',
     isConfigured: false,
-    usagePercentage: 20
-  },
-  {
-    id: 'azure',
-    name: 'Azure',
-    description: 'Microsoft Azure cloud services',
-    icon: 'azure-logo.svg',
-    color: '#0089d6',
-    isConfigured: false,
-    usagePercentage: 15
+    usagePercentage: 30
   }
 ];
 

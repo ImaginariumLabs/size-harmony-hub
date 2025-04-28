@@ -98,21 +98,55 @@ const ModernDashboard: React.FC = () => {
     updateWidget(id, { size });
   };
 
+  // State for API cost data
+  const [apiCostData, setApiCostData] = useState<Record<string, any>>({});
+  const [totalCost, setTotalCost] = useState(0);
+  const [totalRequests, setTotalRequests] = useState(0);
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Fetch API cost data
+  const fetchApiCostData = async () => {
+    setIsLoading(true);
+    try {
+      // Import the API integration service
+      const { fetchAllApiData } = await import('../services/apiIntegrationService');
+      const data = await fetchAllApiData();
+
+      setApiCostData(data);
+
+      // Calculate total cost
+      const total = Object.values(data).reduce((sum, item: any) => sum + item.total, 0);
+      setTotalCost(total);
+
+      // Calculate total requests (this is a mock value for now)
+      setTotalRequests(Math.floor(Math.random() * 1000) + 500);
+
+      setLastRefreshed(new Date());
+    } catch (error) {
+      console.error('Error fetching API cost data:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Fetch data on component mount
+  useEffect(() => {
+    fetchApiCostData();
+  }, []);
+
   // Calculate total monthly cost
   const calculateTotalCost = () => {
-    // In a real app, this would come from actual API data
-    return 24.56;
+    return totalCost;
   };
 
   // Calculate total API requests
   const calculateTotalRequests = () => {
-    // In a real app, this would come from actual API data
-    return 1284;
+    return totalRequests;
   };
 
-  const handleRefresh = () => {
-    // In a real app, this would fetch fresh data
-    setLastRefreshed(new Date());
+  const handleRefresh = async () => {
+    // Fetch fresh data
+    await fetchApiCostData();
   };
 
   // Format the last refreshed time
@@ -257,31 +291,44 @@ const ModernDashboard: React.FC = () => {
                 <h3 className="bento-item-title">API Status</h3>
               </div>
               <div className="bento-item-content">
-                {providers.map((provider) => (
-                  <div key={provider.id} style={{ padding: '12px 0', borderBottom: '1px solid rgba(255, 255, 255, 0.05)' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                      <div className="provider-status">
-                        <div
-                          className={`provider-status-indicator ${
-                            provider.usagePercentage > 80 ? 'error' :
-                            provider.usagePercentage > 50 ? 'warning' : 'healthy'
-                          }`}
-                        ></div>
-                        <span className="provider-status-name">{provider.name}</span>
+                {configuredProviders.map((provider) => {
+                  // Get usage data from our API cost data
+                  const providerData = apiCostData[provider.id];
+                  const usagePercentage = providerData?.usagePercentage || 0;
+
+                  return (
+                    <div key={provider.id} style={{ padding: '12px 0', borderBottom: '1px solid rgba(255, 255, 255, 0.05)' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                        <div className="provider-status">
+                          <div
+                            className={`provider-status-indicator ${
+                              usagePercentage > 80 ? 'error' :
+                              usagePercentage > 50 ? 'warning' : 'healthy'
+                            }`}
+                          ></div>
+                          <span className="provider-status-name">{provider.name}</span>
+                        </div>
+                        <span className="provider-status-value">${providerData?.total.toFixed(2) || '0.00'} ({usagePercentage}% Used)</span>
                       </div>
-                      <span className="provider-status-value">{provider.usagePercentage}% Used</span>
+                      <div className="usage-bar">
+                        <div
+                          className={`usage-bar-fill ${
+                            usagePercentage > 80 ? 'high' :
+                            usagePercentage > 50 ? 'medium' : 'low'
+                          }`}
+                          style={{ width: `${usagePercentage}%` }}
+                        ></div>
+                      </div>
                     </div>
-                    <div className="usage-bar">
-                      <div
-                        className={`usage-bar-fill ${
-                          provider.usagePercentage > 80 ? 'high' :
-                          provider.usagePercentage > 50 ? 'medium' : 'low'
-                        }`}
-                        style={{ width: `${provider.usagePercentage}%` }}
-                      ></div>
-                    </div>
+                  );
+                })}
+                {configuredProviders.length === 0 && (
+                  <div style={{ padding: '12px 0', textAlign: 'center' }}>
+                    <Typography variant="body2" color="text.secondary">
+                      No API providers configured
+                    </Typography>
                   </div>
-                ))}
+                )}
               </div>
             </div>
 
@@ -291,21 +338,38 @@ const ModernDashboard: React.FC = () => {
                 <h3 className="bento-item-title">Alerts</h3>
               </div>
               <div className="bento-item-content">
-                <div className="provider-status">
-                  <div className="provider-status-indicator warning"></div>
-                  <span className="provider-status-name">OpenAI API</span>
-                  <span className="provider-status-value">80% used</span>
-                </div>
-                <div className="provider-status">
-                  <div className="provider-status-indicator warning"></div>
-                  <span className="provider-status-name">GitHub API</span>
-                  <span className="provider-status-value">Rate limit</span>
-                </div>
-                <div className="provider-status">
-                  <div className="provider-status-indicator healthy"></div>
-                  <span className="provider-status-name">AWS API</span>
-                  <span className="provider-status-value">Operational</span>
-                </div>
+                {Object.entries(apiCostData).map(([providerId, data]: [string, any]) => {
+                  // Only show alerts for high usage
+                  if (data.usagePercentage > 50) {
+                    const provider = providers.find(p => p.id === providerId);
+                    if (!provider) return null;
+
+                    return (
+                      <div className="provider-status" key={providerId}>
+                        <div className={`provider-status-indicator ${data.usagePercentage > 80 ? 'error' : 'warning'}`}></div>
+                        <span className="provider-status-name">{provider.name}</span>
+                        <span className="provider-status-value">{data.usagePercentage}% used</span>
+                      </div>
+                    );
+                  }
+                  return null;
+                })}
+
+                {Object.values(apiCostData).filter((data: any) => data.usagePercentage > 50).length === 0 && (
+                  <div className="provider-status">
+                    <div className="provider-status-indicator healthy"></div>
+                    <span className="provider-status-name">All APIs</span>
+                    <span className="provider-status-value">Operational</span>
+                  </div>
+                )}
+
+                {Object.keys(apiCostData).length === 0 && (
+                  <div style={{ padding: '12px 0', textAlign: 'center' }}>
+                    <Typography variant="body2" color="text.secondary">
+                      No alerts to display
+                    </Typography>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -315,26 +379,36 @@ const ModernDashboard: React.FC = () => {
                 <h3 className="bento-item-title">Recent Activity</h3>
               </div>
               <div className="bento-item-content">
-                <div className="activity-item">
-                  <div className="activity-time">Today, 10:30 AM</div>
-                  <div className="activity-description">OpenAI API - 150 requests ($1.25)</div>
-                </div>
-                <div className="activity-item">
-                  <div className="activity-time">Today, 9:15 AM</div>
-                  <div className="activity-description">GitHub API - 75 requests ($0.00)</div>
-                </div>
-                <div className="activity-item">
-                  <div className="activity-time">Yesterday, 4:45 PM</div>
-                  <div className="activity-description">AWS API - 230 requests ($0.92)</div>
-                </div>
-                <div className="activity-item">
-                  <div className="activity-time">Yesterday, 2:30 PM</div>
-                  <div className="activity-description">OpenAI API - 85 requests ($0.68)</div>
-                </div>
-                <div className="activity-item">
-                  <div className="activity-time">Yesterday, 11:20 AM</div>
-                  <div className="activity-description">GitHub API - 120 requests ($0.00)</div>
-                </div>
+                {/* Generate activity items based on configured providers */}
+                {configuredProviders.map((provider) => {
+                  const providerData = apiCostData[provider.id];
+                  if (!providerData) return null;
+
+                  // Generate a random time for demo purposes
+                  const hours = new Date().getHours() - Math.floor(Math.random() * 5);
+                  const minutes = Math.floor(Math.random() * 60);
+                  const timeStr = `${hours}:${minutes < 10 ? '0' + minutes : minutes}`;
+
+                  // Generate a random number of requests
+                  const requests = Math.floor(Math.random() * 200) + 50;
+
+                  return (
+                    <div className="activity-item" key={provider.id}>
+                      <div className="activity-time">Today, {timeStr} {hours >= 12 ? 'PM' : 'AM'}</div>
+                      <div className="activity-description">
+                        {provider.name} - {requests} requests (${providerData.total.toFixed(2)})
+                      </div>
+                    </div>
+                  );
+                })}
+
+                {configuredProviders.length === 0 && (
+                  <div style={{ padding: '12px 0', textAlign: 'center' }}>
+                    <Typography variant="body2" color="text.secondary">
+                      No recent activity to display
+                    </Typography>
+                  </div>
+                )}
               </div>
             </div>
           </div>
