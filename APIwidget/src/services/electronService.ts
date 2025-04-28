@@ -2,6 +2,8 @@
  * Service for interacting with Electron APIs
  */
 
+import { ApiCostData } from '../types/api';
+
 // Check if running in Electron
 export const isElectron = (): boolean => {
   // Check for electronAPI in window object

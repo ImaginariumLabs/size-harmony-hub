@@ -3,7 +3,7 @@
  * Generates realistic mock data for API costs
  */
 
-import { ApiCostData } from './electronService';
+import { ApiCostData } from '../types/api';
 
 // Interface for provider data
 export interface ProviderData {
@@ -36,6 +36,13 @@ const PROVIDERS: ProviderData[] = [
     baseRate: 0.0005, // Various AWS services
     usagePattern: 'fluctuating',
     volatility: 0.5
+  },
+  {
+    id: 'google',
+    name: 'Google Cloud',
+    baseRate: 0.0003, // Various Google Cloud services
+    usagePattern: 'steady',
+    volatility: 0.2
   }
 ];
 
@@ -51,7 +58,10 @@ const randomBetween = (min: number, max: number): number => {
 const generateUsage = (provider: ProviderData): number => {
   // Base usage (tokens per day)
   let baseUsage = 0;
-  
+
+  // Calculate days since start for growing pattern
+  const daysSinceStart = Math.floor(Date.now() / 86400000) % 30; // 30-day cycle
+
   switch (provider.usagePattern) {
     case 'steady':
       baseUsage = 500000; // 500K tokens per day
@@ -61,11 +71,10 @@ const generateUsage = (provider: ProviderData): number => {
       break;
     case 'growing':
       // Gradually increases over time
-      const daysSinceStart = Math.floor(Date.now() / 86400000) % 30; // 30-day cycle
       baseUsage = 300000 + (daysSinceStart * 20000); // Starts at 300K, adds 20K per day
       break;
   }
-  
+
   // Add randomness based on volatility
   const randomFactor = 1 + (randomBetween(-provider.volatility, provider.volatility));
   return baseUsage * randomFactor;
@@ -79,52 +88,54 @@ const calculateCost = (provider: ProviderData, usage: number): number => {
 // Generate mock data for a specific provider
 export const getMockProviderData = (providerId: string): ApiCostData => {
   const provider = PROVIDERS.find(p => p.id === providerId);
-  
+
   if (!provider) {
     throw new Error(`Provider ${providerId} not found`);
   }
-  
+
   // Get the current date (to ensure consistent data within the same day)
   const today = new Date().toDateString();
   const cacheKey = `${providerId}_${today}`;
-  
+
   // If we already generated data for this provider today, return it with small variations
   if (lastGeneratedData[cacheKey]) {
     const lastData = lastGeneratedData[cacheKey];
-    
+
     // Add small random variations (±2%)
     const variation = randomBetween(-0.02, 0.02);
     const newTotal = lastData.total * (1 + variation);
-    
+
     // Calculate change from previous value
     const change = Math.abs(newTotal - lastData.total);
     const changeType = newTotal > lastData.total ? 'increase' : 'decrease';
-    
+
     const newData: ApiCostData = {
       total: newTotal,
       change: change,
-      changeType: changeType
+      changeType: changeType,
+      usagePercentage: Math.floor(Math.random() * 60) + 10 // Random usage percentage between 10-70%
     };
-    
+
     lastGeneratedData[cacheKey] = newData;
     return newData;
   }
-  
+
   // Generate new data for this provider
   const usage = generateUsage(provider);
   const cost = calculateCost(provider, usage);
-  
+
   // Generate a realistic change (±10%)
   const changeFactor = randomBetween(-0.1, 0.1);
   const change = Math.abs(cost * changeFactor);
   const changeType = changeFactor >= 0 ? 'increase' : 'decrease';
-  
+
   const data: ApiCostData = {
     total: cost,
     change: change,
-    changeType: changeType
+    changeType: changeType,
+    usagePercentage: Math.floor(Math.random() * 60) + 10 // Random usage percentage between 10-70%
   };
-  
+
   lastGeneratedData[cacheKey] = data;
   return data;
 };
@@ -132,11 +143,11 @@ export const getMockProviderData = (providerId: string): ApiCostData => {
 // Get mock data for all providers
 export const getAllProviderData = (): Record<string, ApiCostData> => {
   const result: Record<string, ApiCostData> = {};
-  
+
   PROVIDERS.forEach(provider => {
     result[provider.id] = getMockProviderData(provider.id);
   });
-  
+
   return result;
 };
 

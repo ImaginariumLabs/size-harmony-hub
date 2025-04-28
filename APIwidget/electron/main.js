@@ -823,11 +823,30 @@ function validateApiKey(provider, key) {
       }
       break;
     case 'google':
-      // Google API keys are typically 39 characters
-      if (key.length < 30 || !/^[A-Za-z0-9_-]+$/.test(key)) {
+      // Google Cloud API keys are typically 39 characters
+      if (key.length < 30) {
         return {
           valid: false,
-          message: 'Google API keys are typically alphanumeric and at least 30 characters'
+          message: 'Google Cloud API keys are typically at least 30 characters long'
+        };
+      }
+
+      // Check if it looks like a service account key (JSON)
+      try {
+        // If it's a JSON string, it might be a service account key
+        const parsed = JSON.parse(key);
+        if (parsed.type === 'service_account') {
+          return { valid: true };
+        }
+      } catch (e) {
+        // Not JSON, continue with regular validation
+      }
+
+      // Regular API key format
+      if (!/^[A-Za-z0-9_-]+$/.test(key)) {
+        return {
+          valid: false,
+          message: 'Google Cloud API keys are typically alphanumeric with underscores or hyphens'
         };
       }
       break;
