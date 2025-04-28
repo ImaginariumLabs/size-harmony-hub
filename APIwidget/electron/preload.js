@@ -1,5 +1,9 @@
 const { contextBridge, ipcRenderer } = require('electron');
 
+// Log that preload script is running
+console.log('Preload script is running');
+
+// Expose Electron APIs to the renderer process
 contextBridge.exposeInMainWorld('electronAPI', {
   // Window management
   toggleMainWindow: () => ipcRenderer.invoke('toggle-main-window'),
@@ -33,5 +37,11 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // Utility
   isElectron: true, // Flag to detect if running in Electron
   getVersion: () => ipcRenderer.invoke('get-version'),
-  openExternal: (url) => ipcRenderer.invoke('open-external', url)
+  openExternal: (url) => ipcRenderer.invoke('open-external', url),
+
+  // Debugging
+  debug: (message) => {
+    console.log('Debug from renderer:', message);
+    return ipcRenderer.invoke('debug', message);
+  }
 });

@@ -54,36 +54,62 @@ const Header: React.FC = () => {
   };
 
   return (
-    <AppBar position="static" color="transparent" elevation={0} sx={{ borderBottom: '1px solid rgba(255, 255, 255, 0.12)' }}>
+    <AppBar
+      position="sticky"
+      elevation={0}
+      sx={{
+        background: 'rgba(30, 30, 30, 0.7)',
+        backdropFilter: 'blur(10px)',
+        borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
+      }}
+    >
       <Toolbar>
         <Typography
           variant="h6"
           noWrap
           component="div"
-          sx={{ display: { xs: 'none', sm: 'block' } }}
+          sx={{
+            display: { xs: 'none', sm: 'block' },
+            fontWeight: 600,
+            background: 'linear-gradient(90deg, #90caf9, #64b5f6)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+          }}
         >
           APIwidget
         </Typography>
 
         <Box sx={{ flexGrow: 1 }} />
 
-        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <Button
             variant="contained"
             color="primary"
             startIcon={<AddIcon />}
-            size="small"
             onClick={handleAddApiKey}
-            sx={{ mr: 2 }}
+            sx={{
+              background: 'linear-gradient(135deg, #64b5f6, #2196f3)',
+              '&:hover': {
+                background: 'linear-gradient(135deg, #2196f3, #1976d2)',
+              },
+              borderRadius: '8px',
+              textTransform: 'none',
+              fontWeight: 500,
+            }}
           >
             Add API Key
           </Button>
 
           <Tooltip title="Notifications">
             <IconButton
-              size="large"
+              size="medium"
               color="inherit"
               onClick={handleNotificationsMenuOpen}
+              sx={{
+                background: 'rgba(255, 255, 255, 0.05)',
+                '&:hover': { background: 'rgba(255, 255, 255, 0.1)' },
+                borderRadius: '8px',
+              }}
             >
               <Badge badgeContent={3} color="error">
                 <NotificationsIcon />
@@ -93,9 +119,14 @@ const Header: React.FC = () => {
 
           <Tooltip title="Settings">
             <IconButton
-              size="large"
+              size="medium"
               color="inherit"
               onClick={() => navigate('/settings')}
+              sx={{
+                background: 'rgba(255, 255, 255, 0.05)',
+                '&:hover': { background: 'rgba(255, 255, 255, 0.1)' },
+                borderRadius: '8px',
+              }}
             >
               <SettingsIcon />
             </IconButton>
@@ -103,15 +134,23 @@ const Header: React.FC = () => {
 
           <Tooltip title="Account">
             <IconButton
-              size="large"
+              size="medium"
               edge="end"
               onClick={handleProfileMenuOpen}
               color="inherit"
+              sx={{
+                background: 'rgba(255, 255, 255, 0.05)',
+                '&:hover': { background: 'rgba(255, 255, 255, 0.1)' },
+                borderRadius: '8px',
+              }}
             >
               <Avatar
-                sx={{ width: 32, height: 32 }}
+                sx={{
+                  width: 32,
+                  height: 32,
+                  background: 'linear-gradient(135deg, #64b5f6, #2196f3)',
+                }}
                 alt={user?.email || 'User'}
-                src="/static/images/avatar/1.jpg"
               >
                 {user?.email?.charAt(0).toUpperCase() || 'U'}
               </Avatar>
@@ -127,14 +166,36 @@ const Header: React.FC = () => {
         onClose={handleMenuClose}
         transformOrigin={{ horizontal: 'right', vertical: 'top' }}
         anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+        PaperProps={{
+          style: {
+            borderRadius: '12px',
+            background: 'rgba(30, 30, 30, 0.95)',
+            backdropFilter: 'blur(10px)',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
+            minWidth: '180px',
+            padding: '8px',
+          }
+        }}
       >
-        <MenuItem onClick={() => { handleMenuClose(); navigate('/profile'); }}>
+        <MenuItem
+          onClick={() => { handleMenuClose(); navigate('/profile'); }}
+          sx={{ borderRadius: '8px', mb: 0.5 }}
+        >
           Profile
         </MenuItem>
-        <MenuItem onClick={() => { handleMenuClose(); navigate('/settings'); }}>
+        <MenuItem
+          onClick={() => { handleMenuClose(); navigate('/settings'); }}
+          sx={{ borderRadius: '8px', mb: 0.5 }}
+        >
           Settings
         </MenuItem>
-        <MenuItem onClick={handleSignOut}>Sign Out</MenuItem>
+        <MenuItem
+          onClick={handleSignOut}
+          sx={{ borderRadius: '8px', color: '#f44336' }}
+        >
+          Sign Out
+        </MenuItem>
       </Menu>
 
       {/* Notifications Menu */}
@@ -144,15 +205,56 @@ const Header: React.FC = () => {
         onClose={handleNotificationsMenuClose}
         transformOrigin={{ horizontal: 'right', vertical: 'top' }}
         anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+        PaperProps={{
+          style: {
+            borderRadius: '12px',
+            background: 'rgba(30, 30, 30, 0.95)',
+            backdropFilter: 'blur(10px)',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
+            minWidth: '280px',
+            padding: '8px',
+          }
+        }}
       >
-        <MenuItem onClick={handleNotificationsMenuClose}>
-          OpenAI API usage at 80% of monthly quota
+        <MenuItem
+          onClick={handleNotificationsMenuClose}
+          sx={{ borderRadius: '8px', mb: 0.5 }}
+        >
+          <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+            <Typography variant="body2" sx={{ fontWeight: 600 }}>
+              OpenAI API Usage Warning
+            </Typography>
+            <Typography variant="caption" color="text.secondary">
+              80% of monthly quota used
+            </Typography>
+          </Box>
         </MenuItem>
-        <MenuItem onClick={handleNotificationsMenuClose}>
-          GitHub API rate limit reset in 30 minutes
+        <MenuItem
+          onClick={handleNotificationsMenuClose}
+          sx={{ borderRadius: '8px', mb: 0.5 }}
+        >
+          <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+            <Typography variant="body2" sx={{ fontWeight: 600 }}>
+              GitHub API Rate Limit
+            </Typography>
+            <Typography variant="caption" color="text.secondary">
+              Reset in 30 minutes
+            </Typography>
+          </Box>
         </MenuItem>
-        <MenuItem onClick={handleNotificationsMenuClose}>
-          New version of APIwidget available
+        <MenuItem
+          onClick={handleNotificationsMenuClose}
+          sx={{ borderRadius: '8px' }}
+        >
+          <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+            <Typography variant="body2" sx={{ fontWeight: 600 }}>
+              New Version Available
+            </Typography>
+            <Typography variant="caption" color="text.secondary">
+              Update to APIwidget v2.1.0
+            </Typography>
+          </Box>
         </MenuItem>
       </Menu>
     </AppBar>

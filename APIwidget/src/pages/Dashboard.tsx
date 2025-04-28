@@ -1,19 +1,31 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
-  Grid,
-  Paper,
   Typography,
   Button,
+  CircularProgress,
+  Fab,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  FormHelperText,
+  IconButton,
+  Tooltip,
   Card,
   CardContent,
+  Grid,
+  Paper,
   CardHeader,
   Divider,
   List,
   ListItem,
   ListItemText,
   ListItemIcon,
-  CircularProgress,
   LinearProgress,
 } from '@mui/material';
 import {
@@ -21,16 +33,73 @@ import {
   Warning as WarningIcon,
   CheckCircle as CheckCircleIcon,
   Api as ApiIcon,
+  Add as AddIcon,
+  Refresh as RefreshIcon,
+  Settings as SettingsIcon,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useApiProviders } from '../contexts/ApiProviderContext';
+import { useDashboardWidgets, DashboardWidget as DashboardWidgetType } from '../contexts/DashboardWidgetContext';
+import DashboardWidget from '../components/widgets/DashboardWidget';
+import '../styles/components/layout/BentoGrid.css';
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
-  const { providers, loading } = useApiProviders();
-  
+  const { providers, loading: providersLoading } = useApiProviders();
+  const { widgets, addWidget, updateWidget, removeWidget, toggleWidgetVisibility, loading: widgetsLoading } = useDashboardWidgets();
+
+  const [addWidgetDialogOpen, setAddWidgetDialogOpen] = useState(false);
+  const [newWidget, setNewWidget] = useState<Omit<DashboardWidgetType, 'id'>>({
+    providerId: '',
+    type: 'cost',
+    size: 'medium',
+    position: { x: 0, y: 0 },
+    isVisible: true
+  });
+
   const configuredProviders = providers.filter(provider => provider.isConfigured);
   const unconfiguredProviders = providers.filter(provider => !provider.isConfigured);
+
+  // Handle opening the add widget dialog
+  const handleOpenAddWidgetDialog = () => {
+    if (configuredProviders.length > 0) {
+      setNewWidget(prev => ({
+        ...prev,
+        providerId: configuredProviders[0].id
+      }));
+    }
+    setAddWidgetDialogOpen(true);
+  };
+
+  // Handle closing the add widget dialog
+  const handleCloseAddWidgetDialog = () => {
+    setAddWidgetDialogOpen(false);
+  };
+
+  // Handle adding a new widget
+  const handleAddWidget = () => {
+    addWidget(newWidget);
+    handleCloseAddWidgetDialog();
+  };
+
+  // Handle widget size change
+  const handleWidgetSizeChange = (id: string, size: 'small' | 'medium' | 'large') => {
+    updateWidget(id, { size });
+  };
+
+  // Calculate total monthly cost
+  const calculateTotalCost = () => {
+    // In a real app, this would come from actual API data
+    return 24.56;
+  };
+
+  // Calculate total API requests
+  const calculateTotalRequests = () => {
+    // In a real app, this would come from actual API data
+    return 1284;
+  };
+
+  const loading = providersLoading || widgetsLoading;
 
   return (
     <Box>
@@ -38,13 +107,23 @@ const Dashboard: React.FC = () => {
         <Typography variant="h4" component="h1">
           Dashboard
         </Typography>
-        <Button
-          variant="contained"
-          color="primary"
-          onClick={() => navigate('/settings/api-keys/new')}
-        >
-          Add New API Key
-        </Button>
+        <Box sx={{ display: 'flex', gap: 2 }}>
+          <Button
+            variant="outlined"
+            color="primary"
+            onClick={handleOpenAddWidgetDialog}
+            disabled={configuredProviders.length === 0}
+          >
+            Add Widget
+          </Button>
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={() => navigate('/settings/api-keys/new')}
+          >
+            Add New API Key
+          </Button>
+        </Box>
       </Box>
 
       {loading ? (
@@ -92,7 +171,7 @@ const Dashboard: React.FC = () => {
                   variant="h4"
                   sx={{ flexGrow: 1, display: 'flex', alignItems: 'center' }}
                 >
-                  $24.56
+                  ${calculateTotalCost().toFixed(2)}
                 </Typography>
                 <Typography
                   variant="body2"
@@ -122,7 +201,7 @@ const Dashboard: React.FC = () => {
                   variant="h4"
                   sx={{ flexGrow: 1, display: 'flex', alignItems: 'center' }}
                 >
-                  1,284
+                  {calculateTotalRequests().toLocaleString()}
                 </Typography>
                 <Typography
                   variant="body2"
@@ -164,6 +243,35 @@ const Dashboard: React.FC = () => {
               </Paper>
             </Grid>
           </Grid>
+
+          {/* Dashboard Widgets */}
+          {widgets.length > 0 && (
+            <>
+              <Box sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Typography variant="h5" component="h2">
+                  Widgets
+                </Typography>
+              </Box>
+              <Grid container spacing={3} sx={{ mb: 4 }}>
+                {widgets.map((widget) => (
+                  <Grid
+                    item
+                    key={widget.id}
+                    xs={12}
+                    sm={widget.size === 'small' ? 6 : 12}
+                    md={widget.size === 'small' ? 4 : widget.size === 'medium' ? 6 : 12}
+                  >
+                    <DashboardWidget
+                      widget={widget}
+                      onRemove={removeWidget}
+                      onSizeChange={handleWidgetSizeChange}
+                      onToggleVisibility={toggleWidgetVisibility}
+                    />
+                  </Grid>
+                ))}
+              </Grid>
+            </>
+          )}
 
           {/* API Status */}
           <Grid container spacing={3}>
@@ -250,6 +358,81 @@ const Dashboard: React.FC = () => {
           </Grid>
         </>
       )}
+
+      {/* Add Widget Dialog */}
+      <Dialog open={addWidgetDialogOpen} onClose={handleCloseAddWidgetDialog}>
+        <DialogTitle>Add New Widget</DialogTitle>
+        <DialogContent>
+          <Box sx={{ mt: 2, minWidth: 300 }}>
+            <FormControl fullWidth sx={{ mb: 2 }}>
+              <InputLabel id="provider-select-label">API Provider</InputLabel>
+              <Select
+                labelId="provider-select-label"
+                value={newWidget.providerId}
+                label="API Provider"
+                onChange={(e) => setNewWidget({ ...newWidget, providerId: e.target.value })}
+              >
+                {configuredProviders.map((provider) => (
+                  <MenuItem key={provider.id} value={provider.id}>
+                    {provider.name}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+
+            <FormControl fullWidth sx={{ mb: 2 }}>
+              <InputLabel id="widget-type-select-label">Widget Type</InputLabel>
+              <Select
+                labelId="widget-type-select-label"
+                value={newWidget.type}
+                label="Widget Type"
+                onChange={(e) => setNewWidget({ ...newWidget, type: e.target.value as any })}
+              >
+                <MenuItem value="cost">Cost</MenuItem>
+                <MenuItem value="usage">Usage</MenuItem>
+                <MenuItem value="quota">Quota</MenuItem>
+                <MenuItem value="history">History</MenuItem>
+              </Select>
+              <FormHelperText>Select the type of data to display</FormHelperText>
+            </FormControl>
+
+            <FormControl fullWidth>
+              <InputLabel id="widget-size-select-label">Widget Size</InputLabel>
+              <Select
+                labelId="widget-size-select-label"
+                value={newWidget.size}
+                label="Widget Size"
+                onChange={(e) => setNewWidget({ ...newWidget, size: e.target.value as any })}
+              >
+                <MenuItem value="small">Small</MenuItem>
+                <MenuItem value="medium">Medium</MenuItem>
+                <MenuItem value="large">Large</MenuItem>
+              </Select>
+            </FormControl>
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseAddWidgetDialog}>Cancel</Button>
+          <Button
+            onClick={handleAddWidget}
+            variant="contained"
+            disabled={!newWidget.providerId}
+          >
+            Add Widget
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Floating Action Button for adding widgets */}
+      <Fab
+        color="primary"
+        aria-label="add widget"
+        sx={{ position: 'fixed', bottom: 16, right: 16 }}
+        onClick={handleOpenAddWidgetDialog}
+        disabled={configuredProviders.length === 0}
+      >
+        <AddIcon />
+      </Fab>
     </Box>
   );
 };

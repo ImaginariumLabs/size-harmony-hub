@@ -112,8 +112,8 @@ function createMainWindow() {
   try {
     console.log('Loading main window...');
     if (process.env.NODE_ENV === 'development') {
-      console.log('Loading main window in development mode from http://localhost:5173');
-      mainWindow.loadURL('http://localhost:5173');
+      console.log('Loading main window in development mode from http://localhost:5175');
+      mainWindow.loadURL('http://localhost:5175');
     } else {
       const indexPath = path.join(__dirname, '../index.html');
       console.log('Loading main window in production mode from', indexPath);
@@ -180,29 +180,53 @@ function createWidgetWindow() {
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
-      preload: path.join(__dirname, 'preload.js')
+      preload: path.join(__dirname, 'preload.js'),
+      // Enable DevTools in development mode
+      devTools: process.env.NODE_ENV === 'development'
     },
     // Modern window styling
     roundedCorners: true,
     thickFrame: false,
-    // Prevent the widget from showing in Alt+Tab
-    focusable: false
+    // Make the widget focusable to allow for better interaction
+    focusable: true
   });
+
+  // Log widget creation
+  console.log(`Creating widget window with size ${widgetWidth}x${widgetHeight} at position ${savedPosition[0]},${savedPosition[1]}`);
+
+  // Enable dragging for frameless window
+  widgetWindow.setMovable(true);
+
+  // Log widget window creation
+  console.log('Widget window created with dimensions:', widgetWidth, 'x', widgetHeight);
+  console.log('Widget position:', savedPosition);
 
   // Load the widget page
   try {
     console.log('Loading widget window...');
     if (process.env.NODE_ENV === 'development') {
-      console.log('Loading widget in development mode from http://localhost:5173/widget.html');
-      widgetWindow.loadURL('http://localhost:5173/widget.html');
+      console.log('Loading widget in development mode from http://localhost:5175/widget.html');
+      widgetWindow.loadURL('http://localhost:5175/widget.html');
+
+      // Open DevTools for debugging in development mode
+      widgetWindow.webContents.openDevTools({ mode: 'detach' });
     } else {
-      const widgetPath = path.join(__dirname, '../public/widget.html');
+      const widgetPath = path.join(__dirname, '../dist/widget.html');
       console.log('Loading widget in production mode from', widgetPath);
       widgetWindow.loadFile(widgetPath);
     }
     console.log('Widget window loaded successfully');
   } catch (error) {
     console.error('Error loading widget window:', error);
+
+    // Fallback to a simple widget if loading fails
+    try {
+      const fallbackPath = path.join(__dirname, '../public/widget.html');
+      console.log('Attempting to load fallback widget from', fallbackPath);
+      widgetWindow.loadFile(fallbackPath);
+    } catch (fallbackError) {
+      console.error('Error loading fallback widget:', fallbackError);
+    }
   }
 
   // Make the window draggable (frameless windows aren't draggable by default)
@@ -453,8 +477,8 @@ function createTray() {
           try {
             console.log('Loading about window...');
             if (process.env.NODE_ENV === 'development') {
-              console.log('Loading about window in development mode from http://localhost:5173/about.html');
-              aboutWindow.loadURL('http://localhost:5173/about.html');
+              console.log('Loading about window in development mode from http://localhost:5175/about.html');
+              aboutWindow.loadURL('http://localhost:5175/about.html');
             } else {
               const aboutPath = path.join(__dirname, '../public/about.html');
               console.log('Loading about window in production mode from', aboutPath);
@@ -511,7 +535,9 @@ app.whenReady().then(() => {
 
   // Check if we should start with the main window open
   const appSettings = store.get('app', {});
-  if (appSettings.openMainWindowOnStartup) {
+  // Check for environment variable to force open main window
+  const forceOpenMainWindow = process.env.OPEN_MAIN_WINDOW === 'true';
+  if (appSettings.openMainWindowOnStartup || forceOpenMainWindow) {
     createMainWindow();
   }
 
@@ -621,6 +647,12 @@ ipcMain.handle('get-api-cost', (event, provider = 'openai') => {
   };
 
   return mockData[provider] || mockData.openai;
+});
+
+// Debug handler
+ipcMain.handle('debug', (event, message) => {
+  console.log('Debug from renderer:', message);
+  return { received: true, message };
 });
 
 // Get all API costs

@@ -1,12 +1,14 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { AuthProvider, useAuth } from './contexts/MockAuthContext';
+import { ApiProviderProvider } from './contexts/ApiProviderContext';
+import { DashboardWidgetProvider } from './contexts/DashboardWidgetContext';
 import AppLayout from './components/layout/AppLayout';
 import Login from './pages/Login';
-import Dashboard from './pages/Dashboard';
+import ModernDashboard from './pages/ModernDashboard';
 import ApiKeySettings from './pages/ApiKeySettings';
 import ProviderDetail from './pages/ProviderDetail';
 import { isElectron } from './services/electronService';
-import ElectronApp from './components/app/ElectronApp';
+import ModernElectronApp from './components/app/ModernElectronApp';
 import './App.css';
 
 // Protected route component
@@ -30,34 +32,38 @@ function App() {
 
   // If running in Electron, use the Electron-specific app
   if (isElectronApp) {
-    return <ElectronApp />;
+    return <ModernElectronApp />;
   }
 
   // Otherwise, use the web app with authentication
   return (
     <AuthProvider>
-      <Router>
-        <Routes>
-          <Route path="/login" element={<Login />} />
+      <ApiProviderProvider>
+        <DashboardWidgetProvider>
+          <Router>
+            <Routes>
+              <Route path="/login" element={<Login />} />
 
-          <Route
-            path="/"
-            element={
-              <ProtectedRoute>
-                <AppLayout />
-              </ProtectedRoute>
-            }
-          >
-            <Route index element={<Dashboard />} />
-            <Route path="settings/api-keys" element={<ApiKeySettings />} />
-            <Route path="settings/api-keys/new" element={<ApiKeySettings />} />
-            <Route path="provider/:providerId" element={<ProviderDetail />} />
+              <Route
+                path="/"
+                element={
+                  <ProtectedRoute>
+                    <AppLayout />
+                  </ProtectedRoute>
+                }
+              >
+                <Route index element={<ModernDashboard />} />
+                <Route path="settings/api-keys" element={<ApiKeySettings />} />
+                <Route path="settings/api-keys/new" element={<ApiKeySettings />} />
+                <Route path="provider/:providerId" element={<ProviderDetail />} />
 
-            {/* Add more routes as needed */}
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Route>
-        </Routes>
-      </Router>
+                {/* Add more routes as needed */}
+                <Route path="*" element={<Navigate to="/" replace />} />
+              </Route>
+            </Routes>
+          </Router>
+        </DashboardWidgetProvider>
+      </ApiProviderProvider>
     </AuthProvider>
   );
 }

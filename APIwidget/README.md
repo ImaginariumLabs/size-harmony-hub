@@ -36,7 +36,7 @@ A modern dashboard for managing and monitoring API usage across multiple provide
 
    ```bash
    git clone https://github.com/yourusername/apiwidget.git
-   cd apiwidget
+   cd apiwidget/APIwidget
    ```
 
 2. Install dependencies:
@@ -44,6 +44,8 @@ A modern dashboard for managing and monitoring API usage across multiple provide
    ```bash
    npm install
    ```
+
+   **Note**: Make sure you're in the nested `APIwidget/APIwidget` directory, not the root directory.
 
 3. Configure environment variables:
    - Copy `.env.example` to `.env`
@@ -80,43 +82,45 @@ A modern dashboard for managing and monitoring API usage across multiple provide
 
 ## Project Structure
 
-The project follows a clean, modular structure:
+**Important Note**: The project has a nested directory structure with the main code in `APIwidget/APIwidget` directory, not in the root `APIwidget` directory.
 
 ```text
-apiwidget/
-├── electron/               # Electron-specific code
-│   ├── main.js             # Main process entry point
-│   ├── preload.js          # Preload script for secure IPC
-│   └── tests/              # Electron tests
-│       └── simple-test.js  # Simple Electron test
-├── src/
-│   ├── components/         # React components
-│   │   └── widgets/        # Widget-related components
-│   │       └── GlassMorphismWidget.tsx  # Glass morphism widget component
-│   ├── contexts/           # React contexts
-│   ├── electron/           # Electron-specific renderer code
-│   │   └── widget.js       # Widget bridge file
-│   ├── hooks/              # Custom React hooks
-│   ├── pages/              # Page components
-│   ├── services/           # Service modules
-│   │   └── keyManager.ts   # API key management service
-│   ├── styles/             # CSS and style files
-│   │   └── global.css      # Global styles
-│   ├── App.tsx             # Main App component
-│   ├── main.tsx            # Entry point
-│   └── widget.tsx          # Widget entry point
-├── public/                 # Static assets
-│   ├── images/             # Image assets
-│   ├── tests/              # Test HTML files
-│   │   └── test.html       # Test HTML file
-│   ├── about.html          # About page
-│   ├── widget.html         # Widget HTML template
-│   └── widget-bundle.js    # Widget bundle for production
-├── docs/                   # Documentation
-│   ├── DOCUMENTATION_INDEX.md         # Documentation index
-│   ├── ELECTRON_DEVELOPMENT_GUIDE.md  # Electron development guide
-│   └── PROJECT_STRUCTURE.md           # Project structure documentation
+APIwidget/                  # Root project directory
+└── APIwidget/              # Main application directory
+    ├── .github/            # GitHub configuration files
+    ├── database/           # Database scripts and migrations
+    ├── docs/               # Project documentation
+    ├── electron/           # Electron-specific code
+    │   ├── main.js         # Main process entry point
+    │   ├── preload.js      # Preload script for secure IPC
+    │   └── tests/          # Electron tests
+    ├── src/
+    │   ├── components/     # React components
+    │   │   ├── app/        # App-specific components
+    │   │   │   └── ElectronApp.tsx  # Electron app component
+    │   │   ├── layout/     # Layout components
+    │   │   └── widgets/    # Widget-related components
+    │   │       └── GlassMorphismWidget.tsx  # Glass morphism widget component
+    │   │       └── DashboardWidget.tsx      # Dashboard widget component
+    │   ├── contexts/       # React contexts
+    │   │   └── DashboardWidgetContext.tsx   # Dashboard widget context
+    │   ├── pages/          # Page components
+    │   │   └── Dashboard.tsx               # Dashboard page
+    │   ├── services/       # Service modules
+    │   │   ├── keyManager/  # API key management
+    │   │   ├── electronService.ts  # Electron service
+    │   │   ├── mockDataService.ts  # Mock data service
+    │   │   └── settingsService.ts  # Settings service
+    │   ├── styles/         # CSS and style files
+    │   ├── App.tsx         # Main App component
+    │   └── main.tsx        # Entry point
+    ├── public/             # Static assets
+    │   └── images/         # Image assets
+    ├── package.json        # Project configuration
+    └── vite.config.ts      # Vite configuration
 ```
+
+For more detailed information about the project structure, please see the [Project Structure Documentation](./docs/project-structure.md).
 
 ## Development Principles
 

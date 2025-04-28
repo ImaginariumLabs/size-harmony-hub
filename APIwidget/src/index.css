@@ -1,11 +1,14 @@
+/* Import all CSS files here to ensure they're loaded in both web and Electron environments */
+@import './styles/components/layout/BentoGrid.css';
+
 :root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  font-family: 'Inter', 'Roboto', 'Helvetica', Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
 
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
+  color-scheme: dark;
+  color: rgba(255, 255, 255, 0.9);
+  background-color: #121212;
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -15,24 +18,60 @@
 
 a {
   font-weight: 500;
-  color: #646cff;
+  color: #90caf9;
   text-decoration: inherit;
+  transition: color 0.2s ease;
 }
 a:hover {
-  color: #535bf2;
+  color: #64b5f6;
 }
 
 body {
   margin: 0;
-  display: flex;
-  place-items: center;
   min-width: 320px;
   min-height: 100vh;
+  background-color: #121212;
+}
+
+/* Reset display: flex and place-items which can break layouts */
+body {
+  display: block;
 }
 
 h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
+  font-size: 2.5rem;
+  line-height: 1.2;
+  font-weight: 600;
+}
+
+h2 {
+  font-size: 2rem;
+  line-height: 1.2;
+  font-weight: 600;
+}
+
+h3 {
+  font-size: 1.5rem;
+  line-height: 1.2;
+  font-weight: 600;
+}
+
+h4 {
+  font-size: 1.25rem;
+  line-height: 1.2;
+  font-weight: 600;
+}
+
+h5 {
+  font-size: 1rem;
+  line-height: 1.2;
+  font-weight: 600;
+}
+
+h6 {
+  font-size: 0.875rem;
+  line-height: 1.2;
+  font-weight: 600;
 }
 
 button {
@@ -44,25 +83,61 @@ button {
   font-family: inherit;
   background-color: #1a1a1a;
   cursor: pointer;
-  transition: border-color 0.25s;
+  transition: all 0.2s ease;
 }
 button:hover {
-  border-color: #646cff;
+  border-color: #90caf9;
+  background-color: #2a2a2a;
 }
 button:focus,
 button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
+  outline: 2px solid #90caf9;
 }
 
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
+/* Ensure proper backdrop-filter support across browsers */
+@supports (-webkit-backdrop-filter: none) or (backdrop-filter: none) {
+  .bento-item,
+  .glass-morphism {
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
   }
-  a:hover {
-    color: #747bff;
+}
+
+/* Fallback for browsers that don't support backdrop-filter */
+@supports not ((-webkit-backdrop-filter: none) or (backdrop-filter: none)) {
+  .bento-item,
+  .glass-morphism {
+    background: rgba(30, 30, 30, 0.9);
   }
-  button {
-    background-color: #f9f9f9;
-  }
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* Electron-specific styles */
+.electron-app {
+  height: 100vh;
+  overflow: hidden;
+}
+
+.electron-app .content-area {
+  overflow-y: auto;
+  height: calc(100vh - 64px);
 }

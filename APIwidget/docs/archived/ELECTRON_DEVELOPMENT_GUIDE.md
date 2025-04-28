@@ -175,7 +175,7 @@ function createWidgetWindow() {
 
   // Load the widget content
   if (process.env.NODE_ENV === 'development') {
-    widgetWindow.loadURL('http://localhost:5173/widget.html');
+    widgetWindow.loadURL('http://localhost:5174/widget.html');
   } else {
     widgetWindow.loadFile(path.join(__dirname, '../public/widget.html'));
   }

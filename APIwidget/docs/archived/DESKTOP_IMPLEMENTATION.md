@@ -61,7 +61,7 @@ function createWindow() {
     );
   } else {
     // Development mode
-    mainWindow.loadURL('http://localhost:5173');
+    mainWindow.loadURL('http://localhost:5174');
     mainWindow.webContents.openDevTools();
   }
 
@@ -88,34 +88,34 @@ function createWindow() {
 function createTray() {
   tray = new Tray(path.join(__dirname, '../build/icon.png'));
   const contextMenu = Menu.buildFromTemplate([
-    { 
-      label: 'Open APIwidget', 
+    {
+      label: 'Open APIwidget',
       click: () => {
         if (mainWindow === null) {
           createWindow();
         } else {
           mainWindow.show();
         }
-      } 
+      }
     },
-    { 
-      label: 'Check for Updates', 
+    {
+      label: 'Check for Updates',
       click: () => {
         autoUpdater.checkForUpdatesAndNotify();
-      } 
+      }
     },
     { type: 'separator' },
-    { 
-      label: 'Quit', 
+    {
+      label: 'Quit',
       click: () => {
         app.quit();
-      } 
+      }
     }
   ]);
-  
+
   tray.setToolTip('APIwidget');
   tray.setContextMenu(contextMenu);
-  
+
   tray.on('click', () => {
     if (mainWindow === null) {
       createWindow();
@@ -128,7 +128,7 @@ function createTray() {
 // App ready event
 app.whenReady().then(() => {
   createWindow();
-  
+
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
       createWindow();
@@ -262,7 +262,7 @@ export const getApiKey = async (provider: string): Promise<string | null> => {
   if (isElectron()) {
     return window.electron.apiKeys.get(provider);
   }
-  
+
   // Fall back to web storage method
   return null;
 };
@@ -271,7 +271,7 @@ export const saveApiKey = async (provider: string, key: string): Promise<boolean
   if (isElectron()) {
     return window.electron.apiKeys.save(provider, key);
   }
-  
+
   // Fall back to web storage method
   return false;
 };
@@ -280,7 +280,7 @@ export const deleteApiKey = async (provider: string): Promise<boolean> => {
   if (isElectron()) {
     return window.electron.apiKeys.delete(provider);
   }
-  
+
   // Fall back to web storage method
   return false;
 };
@@ -404,7 +404,7 @@ Ensure all API requests use HTTPS:
 app.on('web-contents-created', (event, contents) => {
   contents.on('will-navigate', (event, navigationUrl) => {
     const parsedUrl = new URL(navigationUrl);
-    
+
     // Only allow HTTPS URLs or localhost for development
     if (parsedUrl.protocol !== 'https:' && !parsedUrl.hostname.includes('localhost')) {
       event.preventDefault();

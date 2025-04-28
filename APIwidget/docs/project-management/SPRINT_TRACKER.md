@@ -12,9 +12,9 @@ This document tracks the progress of each sprint, including planned tasks, compl
 
 | ID | Task | Description | Priority | Status | Assigned To |
 |----|------|-------------|----------|--------|-------------|
-| S6-1 | Widget Drag-and-Drop | Implement drag-and-drop functionality for the widget | High | To Do | - |
-| S6-2 | Position Memory | Save widget position between sessions | High | To Do | - |
-| S6-3 | Screen Boundary Detection | Ensure widget stays within screen boundaries | Medium | To Do | - |
+| S6-1 | Widget Drag-and-Drop | Implement drag-and-drop functionality for the widget | High | Completed | ImaginariumLabs |
+| S6-2 | Position Memory | Save widget position between sessions | High | Completed | ImaginariumLabs |
+| S6-3 | Screen Boundary Detection | Ensure widget stays within screen boundaries | Medium | Completed | ImaginariumLabs |
 | S6-4 | Widget Size Options | Add small, medium, large size options | Medium | To Do | - |
 | S6-5 | Theme Switching | Implement dark/light theme toggle | Medium | To Do | - |
 | S6-6 | Opacity Controls | Add controls for widget transparency | Low | To Do | - |

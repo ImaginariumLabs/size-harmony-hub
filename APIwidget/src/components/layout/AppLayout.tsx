@@ -5,6 +5,7 @@ import Sidebar from './Sidebar';
 import Header from './Header';
 import { useAuth } from '../../contexts/MockAuthContext';
 import { ApiProviderProvider } from '../../contexts/ApiProviderContext';
+import { DashboardWidgetProvider } from '../../contexts/DashboardWidgetContext';
 
 // Create a dark theme
 const darkTheme = createTheme({
@@ -48,6 +49,9 @@ const darkTheme = createTheme({
       fontWeight: 600,
     },
   },
+  shape: {
+    borderRadius: 16,
+  },
   components: {
     MuiButton: {
       styleOverrides: {
@@ -56,13 +60,49 @@ const darkTheme = createTheme({
           textTransform: 'none',
           fontWeight: 500,
         },
+        contained: {
+          background: 'linear-gradient(135deg, #64b5f6, #2196f3)',
+          '&:hover': {
+            background: 'linear-gradient(135deg, #2196f3, #1976d2)',
+          },
+        },
       },
     },
     MuiCard: {
       styleOverrides: {
         root: {
-          borderRadius: 12,
-          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
+          borderRadius: 16,
+          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)',
+          background: 'rgba(30, 30, 30, 0.7)',
+          backdropFilter: 'blur(10px)',
+          border: '1px solid rgba(255, 255, 255, 0.1)',
+        },
+      },
+    },
+    MuiPaper: {
+      styleOverrides: {
+        root: {
+          backgroundImage: 'none',
+        },
+      },
+    },
+    MuiAppBar: {
+      styleOverrides: {
+        root: {
+          background: 'rgba(30, 30, 30, 0.7)',
+          backdropFilter: 'blur(10px)',
+          boxShadow: 'none',
+          borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
+        },
+      },
+    },
+    MuiDrawer: {
+      styleOverrides: {
+        paper: {
+          background: 'rgba(30, 30, 30, 0.7)',
+          backdropFilter: 'blur(10px)',
+          border: 'none',
+          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)',
         },
       },
     },
@@ -94,23 +134,25 @@ const AppLayout: React.FC = () => {
     <ThemeProvider theme={darkTheme}>
       <CssBaseline />
       <ApiProviderProvider>
-        <Box sx={{ display: 'flex', height: '100vh' }}>
-          <Sidebar />
-          <Box sx={{ flexGrow: 1, overflow: 'auto' }}>
-            <Header />
-            <Box
-              component="main"
-              sx={{
-                flexGrow: 1,
-                p: 3,
-                overflow: 'auto',
-                height: 'calc(100vh - 64px)',
-              }}
-            >
-              <Outlet />
+        <DashboardWidgetProvider>
+          <Box sx={{ display: 'flex', height: '100vh' }}>
+            <Sidebar />
+            <Box sx={{ flexGrow: 1, overflow: 'auto' }}>
+              <Header />
+              <Box
+                component="main"
+                sx={{
+                  flexGrow: 1,
+                  p: 3,
+                  overflow: 'auto',
+                  height: 'calc(100vh - 64px)',
+                }}
+              >
+                <Outlet />
+              </Box>
             </Box>
           </Box>
-        </Box>
+        </DashboardWidgetProvider>
       </ApiProviderProvider>
     </ThemeProvider>
   );

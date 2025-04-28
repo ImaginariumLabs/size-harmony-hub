@@ -1,0 +1,78 @@
+/* 
+ * electron.css
+ * Specific styles for the Electron environment
+ */
+
+/* Ensure the app takes up the full Electron window */
+html, body, #root {
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  background-color: #121212;
+}
+
+/* Fix for Electron-specific display issues */
+.electron-app {
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.electron-app .content-area {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* Ensure proper backdrop-filter support in Electron */
+@supports (-webkit-backdrop-filter: none) or (backdrop-filter: none) {
+  .bento-item,
+  .glass-morphism,
+  .glass-widget {
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+  }
+}
+
+/* Fallback for browsers/Electron versions that don't support backdrop-filter */
+@supports not ((-webkit-backdrop-filter: none) or (backdrop-filter: none)) {
+  .bento-item,
+  .glass-morphism,
+  .glass-widget {
+    background: rgba(30, 30, 30, 0.9);
+  }
+}
+
+/* Fix for draggable regions in Electron */
+.glass-widget-header {
+  -webkit-app-region: drag;
+}
+
+.glass-widget-header .glass-widget-controls,
+.glass-widget-header button {
+  -webkit-app-region: no-drag;
+}
+
+/* Fix for scrollbars in Electron */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}

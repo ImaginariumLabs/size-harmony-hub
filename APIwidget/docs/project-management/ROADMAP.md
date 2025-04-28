@@ -74,10 +74,10 @@ This roadmap outlines the development plan for APIwidget, a desktop application 
   - [x] Basic notification system
 
 #### Sprint 6: Widget Enhancement (1 week) 🔄
-- [ ] Implement widget movement and positioning
-  - [ ] Drag-and-drop functionality
-  - [ ] Position memory
-  - [ ] Screen boundary detection
+- [🔄] Implement widget movement and positioning
+  - [x] Drag-and-drop functionality
+  - [x] Position memory
+  - [x] Screen boundary detection
 - [ ] Add widget customization
   - [ ] Size options (small, medium, large)
   - [ ] Theme switching (dark/light)

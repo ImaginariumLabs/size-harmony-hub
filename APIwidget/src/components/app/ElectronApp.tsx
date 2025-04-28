@@ -1,6 +1,17 @@
 import React, { useState } from 'react';
-import { Box, Typography, Grid, Button, Paper, Switch, FormControlLabel } from '@mui/material';
-import { createTheme, ThemeProvider, CssBaseline } from '@mui/material';
+import {
+  Box,
+  Typography,
+  Grid,
+  Button,
+  Paper,
+  Switch,
+  FormControlLabel,
+  createTheme,
+  ThemeProvider,
+  CssBaseline
+} from '@mui/material';
+import { DashboardWidgetProvider } from '../../contexts/DashboardWidgetContext';
 
 // Create a dark theme
 const darkTheme = createTheme({
@@ -41,7 +52,8 @@ const ElectronApp: React.FC = () => {
   return (
     <ThemeProvider theme={darkTheme}>
       <CssBaseline />
-      {/* Widget is now loaded in a separate window via Electron */}
+      <DashboardWidgetProvider>
+        {/* Widget is now loaded in a separate window via Electron */}
       <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
         {/* Header */}
         <Box sx={{ p: 2, borderBottom: '1px solid rgba(255, 255, 255, 0.12)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -231,6 +243,7 @@ const ElectronApp: React.FC = () => {
           </Box>
         </Box>
       </Box>
+      </DashboardWidgetProvider>
     </ThemeProvider>
   );
 };

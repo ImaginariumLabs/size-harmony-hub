@@ -2,10 +2,11 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import GlassMorphismWidget from './components/widgets/GlassMorphismWidget';
 import './styles/global.css';
+import './styles/electron.css';
 
 ReactDOM.createRoot(document.getElementById('widget-root')!).render(
   <React.StrictMode>
-    <GlassMorphismWidget 
+    <GlassMorphismWidget
       onToggleMainWindow={() => window.electronAPI?.toggleMainWindow()}
       onClose={() => window.electronAPI?.closeWidget()}
     />

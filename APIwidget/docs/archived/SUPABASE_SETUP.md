@@ -113,7 +113,7 @@ All tables have Row Level Security enabled to ensure users can only access their
 
 ## Authentication Configuration
 
-- **Site URL**: http://localhost:5173
+- **Site URL**: http://localhost:5174
 - **Signup**: Enabled
 - **Email Auth**: Enabled
 - **External OAuth Providers**: None currently enabled

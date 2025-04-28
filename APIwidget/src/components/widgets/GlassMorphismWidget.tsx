@@ -47,7 +47,7 @@ const GlassMorphismWidget: React.FC<GlassMorphismWidgetProps> = ({
   const [valueChanged, setValueChanged] = useState(false);
   const [showAlert, setShowAlert] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
-  const [refreshInterval, setRefreshInterval] = useState(storedSettings.refreshInterval || 30);
+  const [refreshInterval] = useState(storedSettings.refreshInterval || 30);
 
   // Refs
   const widgetRef = useRef<HTMLDivElement>(null);
@@ -148,8 +148,55 @@ const GlassMorphismWidget: React.FC<GlassMorphismWidgetProps> = ({
     });
   }, [position, size, theme, activeProvider, refreshInterval]);
 
+  // Get window dimensions for boundary detection
+  const [windowDimensions, setWindowDimensions] = useState({
+    width: window.innerWidth,
+    height: window.innerHeight
+  });
+
+  // Update window dimensions when they change
+  useEffect(() => {
+    const handleResize = () => {
+      setWindowDimensions({
+        width: window.innerWidth,
+        height: window.innerHeight
+      });
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Calculate widget dimensions based on size
+  const getWidgetDimensions = useCallback(() => {
+    switch (size) {
+      case 'compact':
+        return { width: 120, height: 60 };
+      case 'small':
+        return { width: 180, height: 100 };
+      case 'large':
+        return { width: 300, height: 180 };
+      default: // medium
+        return { width: 240, height: 140 };
+    }
+  }, [size]);
+
+  // Ensure position is within screen boundaries
+  const ensureWithinBoundaries = useCallback((pos: { x: number; y: number }) => {
+    const { width, height } = getWidgetDimensions();
+
+    // Add padding to ensure widget is always at least partially visible
+    const padding = 20;
+
+    return {
+      x: Math.max(padding - width / 2, Math.min(windowDimensions.width - width / 2 - padding, pos.x)),
+      y: Math.max(padding, Math.min(windowDimensions.height - padding - height / 2, pos.y))
+    };
+  }, [windowDimensions, getWidgetDimensions]);
+
   // Handle mouse events for dragging
   const handleMouseDown = (e: React.MouseEvent) => {
+    // Ignore if clicking on interactive elements
     if (e.target instanceof HTMLElement &&
         (e.target.className.includes('button') ||
          e.target.className.includes('provider-icon') ||
@@ -157,24 +204,105 @@ const GlassMorphismWidget: React.FC<GlassMorphismWidgetProps> = ({
       return;
     }
 
+    // Start dragging
     setIsDragging(true);
     setDragOffset({
       x: e.clientX - position.x,
       y: e.clientY - position.y
     });
+
+    // Add dragging class to body for cursor changes
+    document.body.classList.add('widget-dragging');
+
+    // Log dragging start for debugging
+    console.log('Dragging started', {
+      clientX: e.clientX,
+      clientY: e.clientY,
+      position,
+      offset: {
+        x: e.clientX - position.x,
+        y: e.clientY - position.y
+      }
+    });
   };
 
   const handleMouseMove = (e: React.MouseEvent) => {
     if (isDragging) {
-      setPosition({
+      // Calculate new position
+      const newPosition = {
         x: e.clientX - dragOffset.x,
         y: e.clientY - dragOffset.y
-      });
+      };
+
+      // Ensure position is within boundaries
+      const boundedPosition = ensureWithinBoundaries(newPosition);
+      setPosition(boundedPosition);
     }
   };
 
   const handleMouseUp = () => {
-    setIsDragging(false);
+    if (isDragging) {
+      setIsDragging(false);
+
+      // Remove dragging class from body
+      document.body.classList.remove('widget-dragging');
+
+      // Save position to settings
+      saveSettings({ position });
+    }
+  };
+
+  // Handle touch events for mobile/tablet
+  const handleTouchStart = (e: React.TouchEvent) => {
+    // Ignore if touching interactive elements
+    if (e.target instanceof HTMLElement &&
+        (e.target.className.includes('button') ||
+         e.target.className.includes('provider-icon') ||
+         e.target.className.includes('resize-handle'))) {
+      return;
+    }
+
+    // Prevent default to avoid scrolling
+    e.preventDefault();
+
+    // Start dragging
+    setIsDragging(true);
+    setDragOffset({
+      x: e.touches[0].clientX - position.x,
+      y: e.touches[0].clientY - position.y
+    });
+
+    // Add dragging class to body
+    document.body.classList.add('widget-dragging');
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (isDragging) {
+      // Prevent default to avoid scrolling
+      e.preventDefault();
+
+      // Calculate new position
+      const newPosition = {
+        x: e.touches[0].clientX - dragOffset.x,
+        y: e.touches[0].clientY - dragOffset.y
+      };
+
+      // Ensure position is within boundaries
+      const boundedPosition = ensureWithinBoundaries(newPosition);
+      setPosition(boundedPosition);
+    }
+  };
+
+  const handleTouchEnd = () => {
+    if (isDragging) {
+      setIsDragging(false);
+
+      // Remove dragging class from body
+      document.body.classList.remove('widget-dragging');
+
+      // Save position to settings
+      saveSettings({ position });
+    }
   };
 
   // Handle resize
@@ -209,9 +337,22 @@ const GlassMorphismWidget: React.FC<GlassMorphismWidgetProps> = ({
   useEffect(() => {
     const onMouseMove = (e: MouseEvent) => {
       if (isDragging) {
-        setPosition({
+        // Calculate new position
+        const newPosition = {
           x: e.clientX - dragOffset.x,
           y: e.clientY - dragOffset.y
+        };
+
+        // Ensure position is within boundaries
+        const boundedPosition = ensureWithinBoundaries(newPosition);
+        setPosition(boundedPosition);
+
+        // Log position updates for debugging
+        console.log('Dragging position update', {
+          clientX: e.clientX,
+          clientY: e.clientY,
+          newPosition,
+          boundedPosition
         });
       } else if (isResizing) {
         handleResize(e);
@@ -219,29 +360,137 @@ const GlassMorphismWidget: React.FC<GlassMorphismWidgetProps> = ({
     };
 
     const onMouseUp = () => {
-      setIsDragging(false);
+      if (isDragging) {
+        setIsDragging(false);
+        document.body.classList.remove('widget-dragging');
+
+        // Save position to settings
+        saveSettings({ position });
+
+        // Log dragging end for debugging
+        console.log('Dragging ended', { finalPosition: position });
+      }
+
       handleResizeEnd();
     };
 
+    // Handle touch events for mobile/tablet
+    const onTouchMove = (e: TouchEvent) => {
+      if (isDragging && e.touches.length > 0) {
+        // Prevent default to avoid scrolling
+        e.preventDefault();
+
+        // Calculate new position
+        const newPosition = {
+          x: e.touches[0].clientX - dragOffset.x,
+          y: e.touches[0].clientY - dragOffset.y
+        };
+
+        // Ensure position is within boundaries
+        const boundedPosition = ensureWithinBoundaries(newPosition);
+        setPosition(boundedPosition);
+      }
+    };
+
+    const onTouchEnd = () => {
+      if (isDragging) {
+        setIsDragging(false);
+        document.body.classList.remove('widget-dragging');
+
+        // Save position to settings
+        saveSettings({ position });
+      }
+    };
+
     if (isDragging || isResizing) {
+      // Mouse events
       document.addEventListener('mousemove', onMouseMove);
       document.addEventListener('mouseup', onMouseUp);
+
+      // Touch events
+      document.addEventListener('touchmove', onTouchMove, { passive: false });
+      document.addEventListener('touchend', onTouchEnd);
+      document.addEventListener('touchcancel', onTouchEnd);
     }
 
     return () => {
+      // Clean up all event listeners
       document.removeEventListener('mousemove', onMouseMove);
       document.removeEventListener('mouseup', onMouseUp);
+      document.removeEventListener('touchmove', onTouchMove);
+      document.removeEventListener('touchend', onTouchEnd);
+      document.removeEventListener('touchcancel', onTouchEnd);
     };
-  }, [isDragging, dragOffset, isResizing]);
+  }, [isDragging, dragOffset, isResizing, ensureWithinBoundaries, position, saveSettings]);
 
-  // Save position and preferences
+  // Initialize widget position within screen boundaries on first load
   useEffect(() => {
-    // In a real app, we would save these to localStorage or Electron store
-    localStorage.setItem('widget_position', JSON.stringify(position));
-    localStorage.setItem('widget_size', size);
-    localStorage.setItem('widget_theme', theme);
-    localStorage.setItem('widget_provider', activeProvider);
-  }, [position, size, theme, activeProvider]);
+    // Check if the widget is outside the screen boundaries
+    const boundedPosition = ensureWithinBoundaries(position);
+
+    // If the position needs adjustment, update it
+    if (boundedPosition.x !== position.x || boundedPosition.y !== position.y) {
+      setPosition(boundedPosition);
+      saveSettings({ position: boundedPosition });
+    }
+
+    // Log widget initialization for debugging
+    console.log('Widget initialized', {
+      position,
+      boundedPosition,
+      size,
+      theme,
+      isElectron: isElectron()
+    });
+
+    // Send debug info to main process if in Electron
+    if (isElectron() && window.electronAPI?.debug) {
+      window.electronAPI.debug({
+        component: 'GlassMorphismWidget',
+        event: 'initialized',
+        data: { position, size, theme }
+      });
+    }
+
+    // Add special handling for Electron environment
+    if (isElectron()) {
+      // Force the widget to be draggable in Electron
+      const handleElectronDrag = (e: MouseEvent) => {
+        // Only handle events on the widget header (for better UX)
+        const target = e.target as HTMLElement;
+        if (target && target.closest('.glass-widget-header')) {
+          console.log('Electron drag detected');
+
+          // Send debug info to main process
+          if (window.electronAPI?.debug) {
+            window.electronAPI.debug({
+              component: 'GlassMorphismWidget',
+              event: 'drag-start',
+              data: { clientX: e.clientX, clientY: e.clientY, position }
+            });
+          }
+
+          // Simulate our own drag start
+          setIsDragging(true);
+          setDragOffset({
+            x: e.clientX - position.x,
+            y: e.clientY - position.y
+          });
+
+          // Add dragging class to body
+          document.body.classList.add('widget-dragging');
+        }
+      };
+
+      // Add the event listener to the document
+      document.addEventListener('mousedown', handleElectronDrag);
+
+      // Clean up
+      return () => {
+        document.removeEventListener('mousedown', handleElectronDrag);
+      };
+    }
+  }, [windowDimensions, ensureWithinBoundaries, position, saveSettings, size, theme]);
 
   // Helper function to get provider color
   const getProviderColor = (providerId: string): string => {
@@ -275,17 +524,17 @@ const GlassMorphismWidget: React.FC<GlassMorphismWidgetProps> = ({
   };
 
   // Toggle theme
-  const toggleTheme = () => {
+  const toggleTheme = useCallback(() => {
     setTheme(theme === 'dark' ? 'light' : 'dark');
-  };
+  }, [theme]);
 
   // Cycle through sizes
-  const cycleSize = () => {
+  const cycleSize = useCallback(() => {
     const sizes: ('small' | 'medium' | 'large' | 'compact')[] = ['compact', 'small', 'medium', 'large'];
     const currentIndex = sizes.indexOf(size);
     const nextIndex = (currentIndex + 1) % sizes.length;
     setSize(sizes[nextIndex]);
-  };
+  }, [size]);
 
   // Dismiss alert
   const dismissAlert = () => {
@@ -325,30 +574,32 @@ const GlassMorphismWidget: React.FC<GlassMorphismWidgetProps> = ({
           // 'c' to cycle size
           cycleSize();
           break;
-        case 'ArrowRight':
+        case 'ArrowRight': {
           // Right arrow to switch to next provider
           const currentIndex = providers.findIndex(p => p.id === activeProvider);
           const nextIndex = (currentIndex + 1) % providers.length;
           setActiveProvider(providers[nextIndex].id);
           break;
-        case 'ArrowLeft':
+        }
+        case 'ArrowLeft': {
           // Left arrow to switch to previous provider
           const currIndex = providers.findIndex(p => p.id === activeProvider);
           const prevIndex = (currIndex - 1 + providers.length) % providers.length;
           setActiveProvider(providers[prevIndex].id);
           break;
+        }
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [providers, activeProvider]);
+  }, [providers, activeProvider, cycleSize, toggleTheme]);
 
   return (
     <>
       <div
         ref={widgetRef}
-        className={`glass-widget ${size} ${theme}`}
+        className={`glass-widget ${size} ${theme} ${isDragging ? 'dragging' : ''}`}
         style={{
           left: `${position.x}px`,
           top: `${position.y}px`,
@@ -357,6 +608,9 @@ const GlassMorphismWidget: React.FC<GlassMorphismWidgetProps> = ({
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
         tabIndex={0} // Make widget focusable for keyboard shortcuts
         role="region"
         aria-label="API usage widget"

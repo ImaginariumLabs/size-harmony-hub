@@ -37,6 +37,21 @@
   border: 1px solid rgba(255, 255, 255, 0.15);
 }
 
+/* Dragging state */
+.glass-widget.dragging {
+  /* Enhanced shadow and border while dragging */
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  opacity: 0.9; /* Slightly transparent while dragging */
+  transition: all 0.1s ease; /* Faster transition during drag */
+  transform: scale(1.02); /* Slightly larger while dragging */
+}
+
+/* Global cursor style when dragging */
+body.widget-dragging {
+  cursor: grabbing !important;
+}
+
 /* Widget header */
 .glass-widget-header {
   display: flex;
@@ -45,6 +60,14 @@
   padding: 12px 16px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
   height: 24px;
+  /* Make the header explicitly draggable */
+  -webkit-app-region: drag;
+  cursor: grab;
+}
+
+/* Ensure buttons in the header are not draggable */
+.glass-widget-header .glass-widget-controls {
+  -webkit-app-region: no-drag;
 }
 
 .glass-widget-title {
