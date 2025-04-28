@@ -4,6 +4,17 @@ import { getApiCost, getAllApiCosts, isElectron } from '../../services/electronS
 import { loadSettings, saveSettings, isAboveThreshold } from '../../services/settingsService';
 import { getAllProviders } from '../../services/mockDataService';
 import WidgetSettings from './WidgetSettings';
+import { Tooltip, Fade, Badge, IconButton } from '@mui/material';
+import {
+  Settings as SettingsIcon,
+  OpenInFull as ExpandIcon,
+  CloseFullscreen as CompressIcon,
+  Close as CloseIcon,
+  Refresh as RefreshIcon,
+  DarkMode as DarkModeIcon,
+  LightMode as LightModeIcon,
+  Warning as WarningIcon
+} from '@mui/icons-material';
 
 interface Provider {
   id: string;
@@ -619,39 +630,80 @@ const GlassMorphismWidget: React.FC<GlassMorphismWidgetProps> = ({
         <div className="glass-widget-header">
           <h1 className="glass-widget-title">{activeProviderData.name} API USAGE</h1>
           <div className="glass-widget-controls">
-            <button
-              className="glass-widget-button settings"
-              onClick={openSettings}
-              title="Settings"
+            <Tooltip title="Settings" placement="top" TransitionComponent={Fade} arrow>
+              <IconButton
+                size="small"
+                className="glass-widget-icon-button settings"
+                onClick={openSettings}
+                sx={{
+                  padding: '4px',
+                  color: 'rgba(255, 255, 255, 0.8)',
+                  background: 'rgba(255, 165, 0, 0.2)',
+                  '&:hover': { background: 'rgba(255, 165, 0, 0.4)' }
+                }}
+              >
+                <SettingsIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+
+            <Tooltip
+              title={isElectron() && onToggleMainWindow ? "Open Dashboard" : "Change Size"}
+              placement="top"
+              TransitionComponent={Fade}
+              arrow
             >
-              ⚙
-            </button>
-            <button
-              className="glass-widget-button expand"
-              onClick={() => {
-                if (isElectron() && onToggleMainWindow) {
-                  onToggleMainWindow();
-                } else {
-                  cycleSize();
+              <IconButton
+                size="small"
+                className="glass-widget-icon-button expand"
+                onClick={() => {
+                  if (isElectron() && onToggleMainWindow) {
+                    onToggleMainWindow();
+                  } else {
+                    cycleSize();
+                  }
+                }}
+                sx={{
+                  padding: '4px',
+                  color: 'rgba(255, 255, 255, 0.8)',
+                  background: 'rgba(33, 150, 243, 0.2)',
+                  '&:hover': { background: 'rgba(33, 150, 243, 0.4)' }
+                }}
+              >
+                {size === 'large' ? <CompressIcon fontSize="small" /> : <ExpandIcon fontSize="small" />}
+              </IconButton>
+            </Tooltip>
+
+            <Tooltip
+              title={isElectron() && onClose ? "Close Widget" : "Toggle Theme"}
+              placement="top"
+              TransitionComponent={Fade}
+              arrow
+            >
+              <IconButton
+                size="small"
+                className="glass-widget-icon-button close"
+                onClick={() => {
+                  if (isElectron() && onClose) {
+                    onClose();
+                  } else {
+                    toggleTheme();
+                  }
+                }}
+                sx={{
+                  padding: '4px',
+                  color: 'rgba(255, 255, 255, 0.8)',
+                  background: isElectron() && onClose ? 'rgba(244, 67, 54, 0.2)' : 'rgba(156, 39, 176, 0.2)',
+                  '&:hover': {
+                    background: isElectron() && onClose ? 'rgba(244, 67, 54, 0.4)' : 'rgba(156, 39, 176, 0.4)'
+                  }
+                }}
+              >
+                {isElectron() && onClose ?
+                  <CloseIcon fontSize="small" /> :
+                  (theme === 'dark' ? <LightModeIcon fontSize="small" /> : <DarkModeIcon fontSize="small" />)
                 }
-              }}
-              title="Expand"
-            >
-              +
-            </button>
-            <button
-              className="glass-widget-button close"
-              onClick={() => {
-                if (isElectron() && onClose) {
-                  onClose();
-                } else {
-                  toggleTheme();
-                }
-              }}
-              title={isElectron() ? "Close" : "Toggle Theme"}
-            >
-              {isElectron() ? "×" : "T"}
-            </button>
+              </IconButton>
+            </Tooltip>
           </div>
         </div>
 
@@ -673,7 +725,23 @@ const GlassMorphismWidget: React.FC<GlassMorphismWidgetProps> = ({
             <div className={`provider-dot ${activeProviderData.id}`}></div>
             <span>{activeProviderData.id}</span>
           </div>
-          <span>Updated {getTimeSinceUpdate()}</span>
+          <div className="update-info">
+            <span>Updated {getTimeSinceUpdate()}</span>
+            <Tooltip title="Refresh data" placement="top">
+              <IconButton
+                onClick={fetchData}
+                size="small"
+                sx={{
+                  padding: '2px',
+                  marginLeft: '4px',
+                  color: 'rgba(255, 255, 255, 0.5)',
+                  '&:hover': { color: 'rgba(255, 255, 255, 0.8)' }
+                }}
+              >
+                <RefreshIcon fontSize="small" sx={{ fontSize: '14px' }} />
+              </IconButton>
+            </Tooltip>
+          </div>
         </div>
 
         {/* Provider switcher */}
@@ -710,12 +778,28 @@ const GlassMorphismWidget: React.FC<GlassMorphismWidgetProps> = ({
 
         {/* Alert indicator */}
         {showAlert && (
-          <button
-            className="alert-indicator"
-            onClick={dismissAlert}
-            title="Cost threshold exceeded"
-            aria-label="Dismiss cost threshold alert"
-          />
+          <Tooltip title="Cost threshold exceeded" placement="left">
+            <IconButton
+              className="alert-indicator"
+              onClick={dismissAlert}
+              aria-label="Dismiss cost threshold alert"
+              size="small"
+              sx={{
+                position: 'absolute',
+                top: '8px',
+                right: '8px',
+                width: '24px',
+                height: '24px',
+                padding: '2px',
+                color: '#fff',
+                background: 'rgba(244, 67, 54, 0.8)',
+                '&:hover': { background: 'rgba(244, 67, 54, 1)' },
+                animation: 'blink 1s infinite'
+              }}
+            >
+              <WarningIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
         )}
 
         {/* Keyboard shortcuts hint (only visible on hover) */}

@@ -32,12 +32,29 @@ import { useNavigate } from 'react-router-dom';
 import { useApiProviders } from '../contexts/ApiProviderContext';
 import { useDashboardWidgets, DashboardWidget as DashboardWidgetType } from '../contexts/DashboardWidgetContext';
 import DashboardWidget from '../components/widgets/DashboardWidget';
+import { isElectron } from '../services/electronService';
 import '../styles/components/layout/BentoGrid.css';
 
 const ModernDashboard: React.FC = () => {
   const navigate = useNavigate();
   const { providers, loading: providersLoading } = useApiProviders();
   const { widgets, addWidget, updateWidget, removeWidget, toggleWidgetVisibility, loading: widgetsLoading } = useDashboardWidgets();
+
+  // Handle navigation in Electron environment
+  const handleNavigation = (path: string) => {
+    try {
+      navigate(path);
+    } catch (error) {
+      console.error('Navigation error:', error);
+      // If navigation fails in Electron, handle it gracefully
+      if (isElectron()) {
+        console.log('Electron environment detected, handling navigation differently');
+        // In a real app, you might use IPC to communicate with the main process
+        // For now, just log the intended navigation
+        console.log('Would navigate to:', path);
+      }
+    }
+  };
 
   const [addWidgetDialogOpen, setAddWidgetDialogOpen] = useState(false);
   const [newWidget, setNewWidget] = useState<Omit<DashboardWidgetType, 'id'>>({
@@ -50,7 +67,7 @@ const ModernDashboard: React.FC = () => {
 
   // Add a refresh function
   const [lastRefreshed, setLastRefreshed] = useState(new Date());
-  
+
   const configuredProviders = providers.filter(provider => provider.isConfigured);
   const unconfiguredProviders = providers.filter(provider => !provider.isConfigured);
 
@@ -102,7 +119,7 @@ const ModernDashboard: React.FC = () => {
   const formatLastRefreshed = () => {
     const now = new Date();
     const diff = now.getTime() - lastRefreshed.getTime();
-    
+
     if (diff < 60000) {
       return 'just now';
     } else if (diff < 3600000) {
@@ -166,7 +183,7 @@ const ModernDashboard: React.FC = () => {
               variant="contained"
               color="primary"
               size="large"
-              onClick={() => navigate('/settings/api-keys/new')}
+              onClick={() => handleNavigation('/settings/api-keys/new')}
               startIcon={<ApiIcon />}
             >
               Add Your First API Key
@@ -192,8 +209,8 @@ const ModernDashboard: React.FC = () => {
                   <span>Budget: $100.00</span>
                 </div>
                 <div className="usage-bar">
-                  <div 
-                    className={`usage-bar-fill ${calculateTotalCost() > 80 ? 'high' : calculateTotalCost() > 50 ? 'medium' : 'low'}`} 
+                  <div
+                    className={`usage-bar-fill ${calculateTotalCost() > 80 ? 'high' : calculateTotalCost() > 50 ? 'medium' : 'low'}`}
                     style={{ width: `${Math.min(calculateTotalCost(), 100)}%` }}
                   ></div>
                 </div>
@@ -225,7 +242,7 @@ const ModernDashboard: React.FC = () => {
                 <div className="value">{configuredProviders.length}</div>
                 <Button
                   size="small"
-                  onClick={() => navigate('/settings/api-keys')}
+                  onClick={() => handleNavigation('/settings/api-keys')}
                   sx={{ mt: 1 }}
                   startIcon={<SettingsIcon />}
                 >
@@ -244,9 +261,9 @@ const ModernDashboard: React.FC = () => {
                   <div key={provider.id} style={{ padding: '12px 0', borderBottom: '1px solid rgba(255, 255, 255, 0.05)' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                       <div className="provider-status">
-                        <div 
+                        <div
                           className={`provider-status-indicator ${
-                            provider.usagePercentage > 80 ? 'error' : 
+                            provider.usagePercentage > 80 ? 'error' :
                             provider.usagePercentage > 50 ? 'warning' : 'healthy'
                           }`}
                         ></div>
@@ -255,11 +272,11 @@ const ModernDashboard: React.FC = () => {
                       <span className="provider-status-value">{provider.usagePercentage}% Used</span>
                     </div>
                     <div className="usage-bar">
-                      <div 
+                      <div
                         className={`usage-bar-fill ${
-                          provider.usagePercentage > 80 ? 'high' : 
+                          provider.usagePercentage > 80 ? 'high' :
                           provider.usagePercentage > 50 ? 'medium' : 'low'
-                        }`} 
+                        }`}
                         style={{ width: `${provider.usagePercentage}%` }}
                       ></div>
                     </div>
@@ -332,8 +349,8 @@ const ModernDashboard: React.FC = () => {
               </Box>
               <div className="bento-grid">
                 {widgets.map((widget) => (
-                  <div 
-                    key={widget.id} 
+                  <div
+                    key={widget.id}
                     className={`bento-item ${widget.size === 'small' ? 'small' : widget.size === 'medium' ? 'medium' : 'large'}`}
                   >
                     <DashboardWidget
@@ -351,13 +368,13 @@ const ModernDashboard: React.FC = () => {
       )}
 
       {/* Add Widget Dialog */}
-      <Dialog open={addWidgetDialogOpen} onClose={handleCloseAddWidgetDialog} PaperProps={{ 
-        style: { 
+      <Dialog open={addWidgetDialogOpen} onClose={handleCloseAddWidgetDialog} PaperProps={{
+        style: {
           borderRadius: '16px',
           background: 'rgba(30, 30, 30, 0.95)',
           backdropFilter: 'blur(10px)',
           border: '1px solid rgba(255, 255, 255, 0.1)'
-        } 
+        }
       }}>
         <DialogTitle sx={{ borderBottom: '1px solid rgba(255, 255, 255, 0.05)' }}>
           Add New Widget
@@ -429,9 +446,9 @@ const ModernDashboard: React.FC = () => {
       <Fab
         color="primary"
         aria-label="add widget"
-        sx={{ 
-          position: 'fixed', 
-          bottom: 16, 
+        sx={{
+          position: 'fixed',
+          bottom: 16,
           right: 16,
           background: 'linear-gradient(135deg, #64b5f6, #2196f3)',
           '&:hover': {

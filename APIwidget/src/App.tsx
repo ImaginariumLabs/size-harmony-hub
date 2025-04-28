@@ -30,8 +30,16 @@ function App() {
   // Check if running in Electron
   const isElectronApp = isElectron();
 
+  // Log detection information
+  console.log('App.tsx - Electron detection:', {
+    isElectronApp,
+    userAgent: navigator.userAgent,
+    windowElectronAPI: window.electronAPI ? 'Available' : 'Not Available'
+  });
+
   // If running in Electron, use the Electron-specific app
   if (isElectronApp) {
+    console.log('Loading ModernElectronApp component');
     return <ModernElectronApp />;
   }
 

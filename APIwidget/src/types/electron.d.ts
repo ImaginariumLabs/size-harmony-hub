@@ -3,6 +3,10 @@ interface ElectronAPI {
   toggleMainWindow: () => Promise<void>;
   closeWidget: () => Promise<void>;
   toggleWidgetVisibility: () => Promise<boolean>;
+  minimizeWindow: () => Promise<boolean>;
+  maximizeWindow: () => Promise<boolean>;
+  closeWindow: () => Promise<boolean>;
+  isWindowMaximized: () => Promise<boolean>;
 
   // API key management
   getApiKey: (provider: string) => Promise<string>;
@@ -32,7 +36,7 @@ interface ElectronAPI {
   isElectron: boolean;
   getVersion: () => Promise<string>;
   openExternal: (url: string) => Promise<boolean>;
-  
+
   // Debugging
   debug: (message: any) => Promise<{ received: boolean; message: any }>;
 }

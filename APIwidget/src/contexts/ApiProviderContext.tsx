@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
 import { listApiKeys, ApiKeyEntry } from '../services/mockKeyManager';
 
 export interface ApiProvider {
@@ -9,6 +9,7 @@ export interface ApiProvider {
   color: string;
   isConfigured: boolean;
   lastUsed?: string;
+  usagePercentage?: number; // Add usage percentage for UI display
 }
 
 interface ApiProviderContextType {
@@ -26,7 +27,8 @@ const defaultProviders: ApiProvider[] = [
     description: 'GPT models and other AI services',
     icon: 'openai-logo.svg',
     color: '#10a37f',
-    isConfigured: false
+    isConfigured: false,
+    usagePercentage: 65
   },
   {
     id: 'github',
@@ -34,7 +36,8 @@ const defaultProviders: ApiProvider[] = [
     description: 'GitHub API for repositories and more',
     icon: 'github-logo.svg',
     color: '#24292e',
-    isConfigured: false
+    isConfigured: false,
+    usagePercentage: 45
   },
   {
     id: 'aws',
@@ -42,7 +45,8 @@ const defaultProviders: ApiProvider[] = [
     description: 'Amazon Web Services API',
     icon: 'aws-logo.svg',
     color: '#ff9900',
-    isConfigured: false
+    isConfigured: false,
+    usagePercentage: 30
   },
   {
     id: 'google',
@@ -50,7 +54,8 @@ const defaultProviders: ApiProvider[] = [
     description: 'Google Cloud Platform services',
     icon: 'gcp-logo.svg',
     color: '#4285f4',
-    isConfigured: false
+    isConfigured: false,
+    usagePercentage: 20
   },
   {
     id: 'azure',
@@ -58,13 +63,14 @@ const defaultProviders: ApiProvider[] = [
     description: 'Microsoft Azure cloud services',
     icon: 'azure-logo.svg',
     color: '#0089d6',
-    isConfigured: false
+    isConfigured: false,
+    usagePercentage: 15
   }
 ];
 
 const ApiProviderContext = createContext<ApiProviderContextType | undefined>(undefined);
 
-export function ApiProviderProvider({ children }: { children: React.ReactNode }) {
+export function ApiProviderProvider({ children }: { readonly children: React.ReactNode }) {
   const [providers, setProviders] = useState<ApiProvider[]>(defaultProviders);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -101,12 +107,13 @@ export function ApiProviderProvider({ children }: { children: React.ReactNode })
     refreshProviders();
   }, []);
 
-  const value = {
+  // Memoize the context value to prevent unnecessary re-renders
+  const value = useMemo(() => ({
     providers,
     loading,
     error,
     refreshProviders
-  };
+  }), [providers, loading, error]);
 
   return <ApiProviderContext.Provider value={value}>{children}</ApiProviderContext.Provider>;
 }

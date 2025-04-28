@@ -100,6 +100,9 @@ function createMainWindow() {
   mainWindow = new BrowserWindow({
     width: 1200,
     height: 800,
+    frame: false, // Use frameless window for custom title bar
+    titleBarStyle: 'hidden',
+    backgroundColor: '#121212',
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
@@ -114,12 +117,38 @@ function createMainWindow() {
     if (process.env.NODE_ENV === 'development') {
       console.log('Loading main window in development mode from http://localhost:5175');
       mainWindow.loadURL('http://localhost:5175');
+
+      // Open DevTools for debugging in development mode
+      mainWindow.webContents.openDevTools({ mode: 'detach' });
     } else {
-      const indexPath = path.join(__dirname, '../index.html');
+      const indexPath = path.join(__dirname, '../dist/index.html');
       console.log('Loading main window in production mode from', indexPath);
-      mainWindow.loadFile(indexPath);
+
+      // Check if the file exists
+      if (fs.existsSync(indexPath)) {
+        mainWindow.loadFile(indexPath);
+      } else {
+        console.error('Index file not found at', indexPath);
+        // Try fallback path
+        const fallbackPath = path.join(__dirname, '../index.html');
+        console.log('Trying fallback path:', fallbackPath);
+        if (fs.existsSync(fallbackPath)) {
+          mainWindow.loadFile(fallbackPath);
+        } else {
+          console.error('Fallback index file not found either');
+          mainWindow.loadURL('about:blank');
+          mainWindow.webContents.executeJavaScript(`
+            document.body.innerHTML = '<h1>Error: Could not load application</h1><p>Please check the console for details.</p>';
+          `);
+        }
+      }
     }
     console.log('Main window loaded successfully');
+
+    // Log when the window is ready
+    mainWindow.webContents.on('did-finish-load', () => {
+      console.log('Main window content loaded');
+    });
   } catch (error) {
     console.error('Error loading main window:', error);
   }
@@ -528,18 +557,20 @@ app.isQuitting = false;
 
 app.whenReady().then(() => {
   // We already have properly sized icons in the public/images directory
+  console.log('App is ready, initializing...');
 
   // Create tray and widget
   createTray();
   createWidgetWindow(); // Start with just the widget
 
-  // Check if we should start with the main window open
-  const appSettings = store.get('app', {});
-  // Check for environment variable to force open main window
-  const forceOpenMainWindow = process.env.OPEN_MAIN_WINDOW === 'true';
-  if (appSettings.openMainWindowOnStartup || forceOpenMainWindow) {
-    createMainWindow();
-  }
+  // Always create the main window by default
+  createMainWindow();
+
+  // Log window creation status
+  console.log('Windows created:', {
+    mainWindow: mainWindow ? 'Created' : 'Not created',
+    widgetWindow: widgetWindow ? 'Created' : 'Not created'
+  });
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
@@ -611,17 +642,26 @@ ipcMain.handle('delete-api-key', (event, provider) => {
 
 // Widget visibility toggle
 ipcMain.handle('toggle-widget-visibility', () => {
-  if (widgetWindow) {
-    const isVisible = widgetWindow.isVisible();
-    if (isVisible) {
-      widgetWindow.hide();
-    } else {
-      widgetWindow.show();
+  try {
+    if (widgetWindow) {
+      const isVisible = widgetWindow.isVisible();
+      if (isVisible) {
+        widgetWindow.hide();
+      } else {
+        widgetWindow.show();
+      }
+      store.set('widget.visible', !isVisible);
+      return !isVisible;
     }
-    store.set('widget.visible', !isVisible);
-    return !isVisible;
+
+    // If widget window doesn't exist, create it
+    console.log('Widget window does not exist, creating it');
+    createWidgetWindow();
+    return true;
+  } catch (error) {
+    console.error('Error toggling widget visibility:', error);
+    return false;
   }
-  return false;
 });
 
 // Mock data update (in a real app, this would fetch from APIs)
@@ -652,7 +692,12 @@ ipcMain.handle('get-api-cost', (event, provider = 'openai') => {
 // Debug handler
 ipcMain.handle('debug', (event, message) => {
   console.log('Debug from renderer:', message);
-  return { received: true, message };
+  try {
+    return { received: true, message };
+  } catch (error) {
+    console.error('Error in debug handler:', error);
+    return { received: false, error: error.message };
+  }
 });
 
 // Get all API costs
@@ -734,4 +779,41 @@ ipcMain.handle('get-version', () => {
 ipcMain.handle('open-external', (event, url) => {
   require('electron').shell.openExternal(url);
   return true;
+});
+
+// Window control handlers
+ipcMain.handle('minimize-window', () => {
+  if (mainWindow) {
+    mainWindow.minimize();
+    return true;
+  }
+  return false;
+});
+
+ipcMain.handle('maximize-window', () => {
+  if (mainWindow) {
+    if (mainWindow.isMaximized()) {
+      mainWindow.unmaximize();
+      return false;
+    } else {
+      mainWindow.maximize();
+      return true;
+    }
+  }
+  return false;
+});
+
+ipcMain.handle('close-window', () => {
+  if (mainWindow) {
+    mainWindow.close();
+    return true;
+  }
+  return false;
+});
+
+ipcMain.handle('is-window-maximized', () => {
+  if (mainWindow) {
+    return mainWindow.isMaximized();
+  }
+  return false;
 });

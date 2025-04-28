@@ -14,7 +14,8 @@
     "electron:preview": "cross-env NODE_ENV=production electron .",
     "electron:start": "electron .",
     "electron:test": "electron electron/tests/simple-test.js",
-    "test:widget": "cross-env NODE_ENV=development concurrently \"npm run dev\" \"electron electron/test-widget.js\""
+    "test:widget": "cross-env NODE_ENV=development concurrently \"npm run dev\" \"electron electron/test-widget.js\"",
+    "test:dashboard": "cross-env NODE_ENV=development concurrently \"npm run dev\" \"electron electron/test-dashboard.js\""
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",

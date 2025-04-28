@@ -3,12 +3,23 @@ const { contextBridge, ipcRenderer } = require('electron');
 // Log that preload script is running
 console.log('Preload script is running');
 
+// Log environment information
+console.log('Preload - Environment:', {
+  nodeVersion: process.versions.node,
+  electronVersion: process.versions.electron,
+  chromiumVersion: process.versions.chrome
+});
+
 // Expose Electron APIs to the renderer process
 contextBridge.exposeInMainWorld('electronAPI', {
   // Window management
   toggleMainWindow: () => ipcRenderer.invoke('toggle-main-window'),
   closeWidget: () => ipcRenderer.invoke('close-widget'),
   toggleWidgetVisibility: () => ipcRenderer.invoke('toggle-widget-visibility'),
+  minimizeWindow: () => ipcRenderer.invoke('minimize-window'),
+  maximizeWindow: () => ipcRenderer.invoke('maximize-window'),
+  closeWindow: () => ipcRenderer.invoke('close-window'),
+  isWindowMaximized: () => ipcRenderer.invoke('is-window-maximized'),
 
   // API key management
   getApiKey: (provider) => ipcRenderer.invoke('get-api-key', provider),

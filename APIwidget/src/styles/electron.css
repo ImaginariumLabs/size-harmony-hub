@@ -1,4 +1,4 @@
-/* 
+/*
  * electron.css
  * Specific styles for the Electron environment
  */
@@ -11,21 +11,86 @@ html, body, #root {
   padding: 0;
   overflow: hidden;
   background-color: #121212;
+  color: #ffffff;
+  font-family: 'Inter', 'Roboto', 'Helvetica', 'Arial', sans-serif;
 }
 
 /* Fix for Electron-specific display issues */
+.electron-environment {
+  background-color: #121212 !important;
+  color: #ffffff !important;
+}
+
 .electron-app {
   height: 100vh;
   width: 100vw;
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  background-color: #121212;
+  color: #ffffff;
 }
 
 .electron-app .content-area {
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
+}
+
+/* Frameless window styles */
+.frameless-window {
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+/* Custom title bar styles */
+.title-bar {
+  -webkit-app-region: drag;
+  user-select: none;
+}
+
+.title-bar-controls {
+  -webkit-app-region: no-drag;
+}
+
+/* Window control buttons */
+.window-control-button {
+  width: 30px;
+  height: 30px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s ease;
+}
+
+.window-control-button:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.window-control-button.close:hover {
+  background-color: rgba(244, 67, 54, 0.8);
+}
+
+/* Electron-specific scrollbar styles */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
 }
 
 /* Ensure proper backdrop-filter support in Electron */
@@ -57,22 +122,4 @@ html, body, #root {
   -webkit-app-region: no-drag;
 }
 
-/* Fix for scrollbars in Electron */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
 
-::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.2);
-  border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.3);
-}
