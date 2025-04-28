@@ -36,6 +36,30 @@ const API_PROVIDERS: Record<string, ApiProviderConfig> = {
       timestamp: ['object', 'created']
     }
   },
+  claude: {
+    id: 'claude',
+    name: 'Claude',
+    baseUrl: 'https://api.anthropic.com/v1',
+    authType: 'key',
+    usageEndpoint: '/models',
+    responseMapping: {
+      usage: ['total_usage'],
+      cost: ['total_cost'],
+      timestamp: ['timestamp']
+    }
+  },
+  google: {
+    id: 'google',
+    name: 'Gemini',
+    baseUrl: 'https://generativelanguage.googleapis.com/v1',
+    authType: 'key',
+    usageEndpoint: '/models',
+    responseMapping: {
+      usage: ['total_usage'],
+      cost: ['total_cost'],
+      timestamp: ['timestamp']
+    }
+  },
   github: {
     id: 'github',
     name: 'GitHub',
@@ -57,18 +81,6 @@ const API_PROVIDERS: Record<string, ApiProviderConfig> = {
     responseMapping: {
       usage: ['ResultsByTime', '0', 'Total', 'Amount'],
       timestamp: ['ResultsByTime', '0', 'TimePeriod', 'End']
-    }
-  },
-  google: {
-    id: 'google',
-    name: 'Google Cloud',
-    baseUrl: 'https://cloudbilling.googleapis.com/v1',
-    authType: 'bearer',
-    usageEndpoint: '/projects/{projectId}/billingInfo',
-    responseMapping: {
-      usage: ['total'],
-      cost: ['total'],
-      timestamp: ['timestamp']
     }
   }
 };
@@ -113,15 +125,29 @@ const historicalData: Record<string, any[]> = {};
 // Function to fetch API data
 export const fetchApiData = async (providerId: string): Promise<ApiCostData> => {
   try {
-    // Special handling for Google Cloud
-    if (providerId === 'google') {
+    // Use specialized services for each provider
+    if (providerId === 'openai') {
       try {
-        const { fetchBillingData } = await import('./googleCloudService');
-        // For demo purposes, we're using a fixed project ID
-        // In a real implementation, you would get this from user input
-        return await fetchBillingData('my-project-id');
-      } catch (googleError) {
-        console.error('Error fetching Google Cloud data:', googleError);
+        const { fetchUsageData } = await import('./openaiService');
+        return await fetchUsageData();
+      } catch (openaiError) {
+        console.error('Error fetching OpenAI data:', openaiError);
+        // Fall through to standard implementation as fallback
+      }
+    } else if (providerId === 'claude') {
+      try {
+        const { fetchUsageData } = await import('./claudeService');
+        return await fetchUsageData();
+      } catch (claudeError) {
+        console.error('Error fetching Claude data:', claudeError);
+        // Fall through to standard implementation as fallback
+      }
+    } else if (providerId === 'google') {
+      try {
+        const { fetchUsageData } = await import('./geminiService');
+        return await fetchUsageData();
+      } catch (geminiError) {
+        console.error('Error fetching Gemini data:', geminiError);
         // Fall through to standard implementation as fallback
       }
     }
@@ -276,6 +302,19 @@ const simulateApiResponse = (providerId: string): any => {
         hard_limit_usd: 100,
         created: Math.floor(now.getTime() / 1000)
       };
+    case 'claude':
+      return {
+        total_usage: (Math.random() * 60 + 15).toFixed(2),
+        total_cost: (Math.random() * 70 + 20).toFixed(2),
+        timestamp: now.toISOString()
+      };
+    case 'google':
+      return {
+        total_usage: (Math.random() * 55 + 12).toFixed(2),
+        total_cost: (Math.random() * 65 + 18).toFixed(2),
+        usagePercentage: Math.floor(Math.random() * 60) + 10,
+        timestamp: now.toISOString()
+      };
     case 'github':
       return {
         resources: {
@@ -310,14 +349,6 @@ const simulateApiResponse = (providerId: string): any => {
             }
           }
         ]
-      };
-    case 'google':
-      // For Google Cloud, we'll use our specialized service
-      // This is just a placeholder for the simulation
-      return {
-        total: (Math.random() * 80 + 15).toFixed(2),
-        usagePercentage: Math.floor(Math.random() * 60) + 10,
-        timestamp: now.getTime()
       };
     default:
       return {

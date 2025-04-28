@@ -24,6 +24,20 @@ const PROVIDERS: ProviderData[] = [
     volatility: 0.3
   },
   {
+    id: 'claude',
+    name: 'Claude',
+    baseRate: 0.003, // $0.003 per 1K tokens
+    usagePattern: 'growing',
+    volatility: 0.25
+  },
+  {
+    id: 'google',
+    name: 'Gemini',
+    baseRate: 0.0001, // $0.0001 per token
+    usagePattern: 'steady',
+    volatility: 0.2
+  },
+  {
     id: 'github',
     name: 'GitHub',
     baseRate: 0.0001, // GitHub API is mostly free with some paid features
@@ -36,13 +50,6 @@ const PROVIDERS: ProviderData[] = [
     baseRate: 0.0005, // Various AWS services
     usagePattern: 'fluctuating',
     volatility: 0.5
-  },
-  {
-    id: 'google',
-    name: 'Google Cloud',
-    baseRate: 0.0003, // Various Google Cloud services
-    usagePattern: 'steady',
-    volatility: 0.2
   }
 ];
 

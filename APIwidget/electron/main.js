@@ -795,6 +795,15 @@ function validateApiKey(provider, key) {
         };
       }
       break;
+    case 'claude':
+      // Claude API keys are typically prefixed with 'sk-ant-' and are long
+      if (!key.startsWith('sk-ant-') || key.length < 30) {
+        return {
+          valid: false,
+          message: 'Claude API keys typically start with "sk-ant-" and are at least 30 characters'
+        };
+      }
+      break;
     case 'github':
       // GitHub personal access tokens are 40+ characters
       if (key.length < 30 || !/^gh[ps]_\w+$/.test(key)) {
@@ -823,11 +832,11 @@ function validateApiKey(provider, key) {
       }
       break;
     case 'google':
-      // Google Cloud API keys are typically 39 characters
+      // Gemini API keys are typically 39 characters
       if (key.length < 30) {
         return {
           valid: false,
-          message: 'Google Cloud API keys are typically at least 30 characters long'
+          message: 'Gemini API keys are typically at least 30 characters long'
         };
       }
 
@@ -846,7 +855,7 @@ function validateApiKey(provider, key) {
       if (!/^[A-Za-z0-9_-]+$/.test(key)) {
         return {
           valid: false,
-          message: 'Google Cloud API keys are typically alphanumeric with underscores or hyphens'
+          message: 'Gemini API keys are typically alphanumeric with underscores or hyphens'
         };
       }
       break;
