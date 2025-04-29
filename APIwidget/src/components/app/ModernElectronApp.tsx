@@ -8,6 +8,8 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { DashboardWidgetProvider } from '../../contexts/DashboardWidgetContext';
 import { ApiProviderProvider } from '../../contexts/ApiProviderContext';
 import { AuthProvider } from '../../contexts/MockAuthContext';
+import ProtectedRoute from '../routing/ProtectedRoute';
+import AdminRoute from '../routing/AdminRoute';
 import ModernDashboard from '../../pages/ModernDashboard';
 import ApiKeySettings from '../../pages/ApiKeySettings';
 import ProviderDetail from '../../pages/ProviderDetail';
@@ -19,12 +21,16 @@ import FloatingWidgetsPage from '../../pages/FloatingWidgetsPage';
 import UsagePage from '../../pages/UsagePage';
 import HistoryPage from '../../pages/HistoryPage';
 import HelpPage from '../../pages/HelpPage';
+import LoginPage from '../../pages/LoginPage';
 // Admin pages
 import AdminDashboard from '../../pages/AdminDashboard';
 import UserManagement from '../../pages/admin/UserManagement';
 import SystemSettings from '../../pages/admin/SystemSettings';
+import ApiProviderManagement from '../../pages/admin/ApiProviderManagement';
+import UsageAnalytics from '../../pages/admin/UsageAnalytics';
 import ElectronAppLayout from '../layout/ElectronAppLayout';
 import { isElectron } from '../../services/electronService';
+import { isPlatform } from '../../utils/platformUtils';
 
 // Create a dark theme
 const darkTheme = createTheme({
@@ -141,25 +147,104 @@ const ModernElectronApp: React.FC = () => {
                 showWidget={showWidget}
               >
                 <Routes>
-                  <Route path="/" element={<ModernDashboard />} />
-                  <Route path="/settings/api-keys" element={<ApiKeySettings />} />
-                  <Route path="/settings/api-keys/:providerId" element={<ApiKeySettings />} />
-                  <Route path="/settings/api-keys/new" element={<ApiKeySettings />} />
-                  <Route path="/provider/:providerId" element={<ProviderDetail />} />
-                  <Route path="/provider/openai" element={<OpenAIProviderDetail />} />
-                  <Route path="/provider/claude" element={<ClaudeProviderDetail />} />
-                  <Route path="/provider/google" element={<GeminiProviderDetail />} />
-                  <Route path="/widgets" element={<WidgetGalleryPage />} />
-                  <Route path="/floating-widgets" element={<FloatingWidgetsPage />} />
-                  <Route path="/usage" element={<UsagePage />} />
-                  <Route path="/history" element={<HistoryPage />} />
-                  <Route path="/help" element={<HelpPage />} />
+                  {/* Public Routes - No authentication required */}
+                  <Route path="/login" element={<LoginPage />} />
 
-                  {/* Admin Routes */}
-                  <Route path="/admin" element={<AdminDashboard />} />
-                  <Route path="/admin/users" element={<UserManagement />} />
-                  <Route path="/admin/settings" element={<SystemSettings />} />
+                  {/* Regular Routes - Protected but available in both platforms */}
+                  <Route path="/" element={
+                    <ProtectedRoute>
+                      <ModernDashboard />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/settings/api-keys" element={
+                    <ProtectedRoute>
+                      <ApiKeySettings />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/settings/api-keys/:providerId" element={
+                    <ProtectedRoute>
+                      <ApiKeySettings />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/settings/api-keys/new" element={
+                    <ProtectedRoute>
+                      <ApiKeySettings />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/provider/:providerId" element={
+                    <ProtectedRoute>
+                      <ProviderDetail />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/provider/openai" element={
+                    <ProtectedRoute>
+                      <OpenAIProviderDetail />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/provider/claude" element={
+                    <ProtectedRoute>
+                      <ClaudeProviderDetail />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/provider/google" element={
+                    <ProtectedRoute>
+                      <GeminiProviderDetail />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/widgets" element={
+                    <ProtectedRoute>
+                      <WidgetGalleryPage />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/floating-widgets" element={
+                    <ProtectedRoute>
+                      <FloatingWidgetsPage />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/usage" element={
+                    <ProtectedRoute>
+                      <UsagePage />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/history" element={
+                    <ProtectedRoute>
+                      <HistoryPage />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/help" element={
+                    <ProtectedRoute>
+                      <HelpPage />
+                    </ProtectedRoute>
+                  } />
 
+                  {/* Admin Routes - Only available in web mode and for admin users */}
+                  <Route path="/admin" element={
+                    <AdminRoute>
+                      <AdminDashboard />
+                    </AdminRoute>
+                  } />
+                  <Route path="/admin/users" element={
+                    <AdminRoute>
+                      <UserManagement />
+                    </AdminRoute>
+                  } />
+                  <Route path="/admin/settings" element={
+                    <AdminRoute>
+                      <SystemSettings />
+                    </AdminRoute>
+                  } />
+                  <Route path="/admin/api-providers" element={
+                    <AdminRoute>
+                      <ApiProviderManagement />
+                    </AdminRoute>
+                  } />
+                  <Route path="/admin/analytics" element={
+                    <AdminRoute>
+                      <UsageAnalytics />
+                    </AdminRoute>
+                  } />
+
+                  {/* Fallback Route */}
                   <Route path="*" element={<Navigate to="/" replace />} />
                 </Routes>
               </ElectronAppLayout>

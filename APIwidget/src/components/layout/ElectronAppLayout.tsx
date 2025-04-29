@@ -38,6 +38,8 @@ import {
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { isElectron } from '../../services/electronService';
+import { useAdminAccess } from '../../contexts/MockAuthContext';
+import { isPlatform } from '../../utils/platformUtils';
 
 interface ElectronAppLayoutProps {
   children: React.ReactNode;
@@ -57,6 +59,8 @@ const ElectronAppLayout: React.FC<ElectronAppLayoutProps> = ({
   const [accountMenuAnchor, setAccountMenuAnchor] = useState<null | HTMLElement>(null);
   const [notificationsMenuAnchor, setNotificationsMenuAnchor] = useState<null | HTMLElement>(null);
   const [isElectronEnv, setIsElectronEnv] = useState(false);
+  const { canAccessAdminFeatures } = useAdminAccess();
+  const isWeb = isPlatform.web();
 
   // Check if running in Electron
   useEffect(() => {
@@ -215,15 +219,20 @@ const ElectronAppLayout: React.FC<ElectronAppLayoutProps> = ({
           >
             <MenuItem onClick={handleAccountMenuClose}>Profile</MenuItem>
             <MenuItem onClick={handleAccountMenuClose}>Settings</MenuItem>
-            <MenuItem onClick={() => {
-              handleAccountMenuClose();
-              navigate('/admin');
-            }}>
-              <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                <AdminPanelSettingsIcon fontSize="small" sx={{ mr: 1 }} />
-                Admin Dashboard
-              </Box>
-            </MenuItem>
+
+            {/* Admin Dashboard link - Only visible in web mode for admin users */}
+            {canAccessAdminFeatures && (
+              <MenuItem onClick={() => {
+                handleAccountMenuClose();
+                navigate('/admin');
+              }}>
+                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                  <AdminPanelSettingsIcon fontSize="small" sx={{ mr: 1 }} />
+                  Admin Dashboard
+                </Box>
+              </MenuItem>
+            )}
+
             <Divider sx={{ my: 1, borderColor: 'rgba(255, 255, 255, 0.1)' }} />
             <MenuItem onClick={handleAccountMenuClose}>Logout</MenuItem>
           </Menu>
@@ -409,34 +418,50 @@ const ElectronAppLayout: React.FC<ElectronAppLayoutProps> = ({
             </ListItem>
           </List>
 
-          {/* Admin Section */}
-          <Divider sx={{ my: 2, borderColor: 'rgba(255, 255, 255, 0.1)' }} />
-          <Typography
-            variant="overline"
-            sx={{ px: 2, color: 'rgba(255, 255, 255, 0.5)', fontSize: '0.75rem' }}
-          >
-            Administration
-          </Typography>
-          <List>
-            <ListItem button onClick={() => navigate('/admin')}>
-              <ListItemIcon>
-                <AdminPanelSettingsIcon />
-              </ListItemIcon>
-              <ListItemText primary="Admin Dashboard" />
-            </ListItem>
-            <ListItem button onClick={() => navigate('/admin/users')}>
-              <ListItemIcon>
-                <PeopleIcon />
-              </ListItemIcon>
-              <ListItemText primary="User Management" />
-            </ListItem>
-            <ListItem button onClick={() => navigate('/admin/settings')}>
-              <ListItemIcon>
-                <SettingsIcon />
-              </ListItemIcon>
-              <ListItemText primary="System Settings" />
-            </ListItem>
-          </List>
+          {/* Admin Section - Only visible in web mode for admin users */}
+          {canAccessAdminFeatures && (
+            <>
+              <Divider sx={{ my: 2, borderColor: 'rgba(255, 255, 255, 0.1)' }} />
+              <Typography
+                variant="overline"
+                sx={{ px: 2, color: 'rgba(255, 255, 255, 0.5)', fontSize: '0.75rem' }}
+              >
+                Administration
+              </Typography>
+              <List>
+                <ListItem button onClick={() => navigate('/admin')}>
+                  <ListItemIcon>
+                    <AdminPanelSettingsIcon />
+                  </ListItemIcon>
+                  <ListItemText primary="Admin Dashboard" />
+                </ListItem>
+                <ListItem button onClick={() => navigate('/admin/users')}>
+                  <ListItemIcon>
+                    <PeopleIcon />
+                  </ListItemIcon>
+                  <ListItemText primary="User Management" />
+                </ListItem>
+                <ListItem button onClick={() => navigate('/admin/settings')}>
+                  <ListItemIcon>
+                    <SettingsIcon />
+                  </ListItemIcon>
+                  <ListItemText primary="System Settings" />
+                </ListItem>
+                <ListItem button onClick={() => navigate('/admin/api-providers')}>
+                  <ListItemIcon>
+                    <StorageIcon />
+                  </ListItemIcon>
+                  <ListItemText primary="API Providers" />
+                </ListItem>
+                <ListItem button onClick={() => navigate('/admin/analytics')}>
+                  <ListItemIcon>
+                    <TrendingUpIcon />
+                  </ListItemIcon>
+                  <ListItemText primary="Usage Analytics" />
+                </ListItem>
+              </List>
+            </>
+          )}
 
           {/* Bottom Menu Items */}
           <Divider sx={{ my: 2, borderColor: 'rgba(255, 255, 255, 0.1)' }} />

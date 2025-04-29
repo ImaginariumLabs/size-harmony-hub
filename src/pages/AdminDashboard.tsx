@@ -372,6 +372,12 @@ const AdminDashboard: React.FC = () => {
                   </ListItemIcon>
                   <ListItemText primary="Manage API Providers" />
                 </ListItem>
+                <ListItem button onClick={() => navigate('/admin/analytics')}>
+                  <ListItemIcon>
+                    <TrendingUpIcon />
+                  </ListItemIcon>
+                  <ListItemText primary="Usage Analytics" />
+                </ListItem>
                 <ListItem button onClick={() => navigate('/admin/settings')}>
                   <ListItemIcon>
                     <SettingsIcon />
@@ -509,13 +515,13 @@ const AdminDashboard: React.FC = () => {
 // Helper component for linear progress with label
 const LinearProgressWithLabel: React.FC<{ value: number }> = ({ value }) => {
   const theme = useTheme();
-  
+
   const getColor = (value: number) => {
     if (value < 60) return theme.palette.success.main;
     if (value < 80) return theme.palette.warning.main;
     return theme.palette.error.main;
   };
-  
+
   return (
     <Box sx={{ display: 'flex', alignItems: 'center', width: '100%' }}>
       <Box sx={{ width: '100%', mr: 1 }}>
