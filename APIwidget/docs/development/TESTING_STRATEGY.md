@@ -57,16 +57,16 @@ describe('FloatingWidget', () => {
   test('handles drag events', () => {
     render(<FloatingWidget />);
     const widget = screen.getByTestId('floating-widget');
-    
+
     // Initial position
     expect(widget).toHaveStyle('left: 20px');
     expect(widget).toHaveStyle('top: 20px');
-    
+
     // Simulate drag
     fireEvent.mouseDown(widget, { clientX: 20, clientY: 20 });
     fireEvent.mouseMove(document, { clientX: 100, clientY: 100 });
     fireEvent.mouseUp(document);
-    
+
     // New position
     expect(widget).toHaveStyle('left: 100px');
     expect(widget).toHaveStyle('top: 100px');
@@ -84,16 +84,19 @@ Integration tests verify that different parts of the application work together c
   - Parent-child communication
   - Context providers with consumers
   - Form submissions
+  - Widget manager with individual widgets
 
 - **Service Integrations**
   - API service with components
   - Storage service with state management
   - Authentication flows
+  - API provider integrations (OpenAI, Claude, Gemini)
 
 - **Electron IPC**
   - Main to renderer communication
   - Renderer to main communication
   - Preload script functionality
+  - Widget window management
 
 #### Tools
 
@@ -130,19 +133,19 @@ describe('Widget Integration', () => {
     // Get widget window
     const windows = await app.client.getWindowHandles();
     expect(windows.length).toBe(2); // Main window and widget window
-    
+
     await app.client.switchToWindow(windows[1]); // Switch to widget window
-    
+
     // Trigger IPC call from widget
     await app.client.execute(() => {
       window.electronAPI.updateWidgetPosition(100, 100);
     });
-    
+
     // Verify position was saved in main process
     const position = await app.client.execute(() => {
       return window.electronAPI.getWidgetPosition();
     });
-    
+
     expect(position).toEqual([100, 100]);
   });
 });
@@ -156,20 +159,24 @@ End-to-end tests verify that the entire application works correctly from a user'
 
 - **User Flows**
   - Onboarding
-  - API key management
+  - API key management for all providers
   - Dashboard navigation
   - Widget interaction
+  - Multiple widget management
+  - Widget configuration presets
 
 - **System Integration**
   - Installation process
   - Auto-updates
   - System tray integration
   - Notifications
+  - Multiple monitor support
 
 - **Cross-Platform Behavior**
   - Windows-specific features
   - macOS-specific features
   - Linux-specific features
+  - High-DPI display support
 
 #### Tools
 
@@ -186,11 +193,11 @@ const { test, expect } = require('@playwright/test');
 test('floating widget persists between sessions', async ({ page }) => {
   // Start application
   await page.goto('app://localhost');
-  
+
   // Find and move widget
   const widget = await page.locator('[data-testid="floating-widget"]');
   await widget.dragTo({ x: 300, y: 200 });
-  
+
   // Verify position
   const position = await widget.evaluate(el => {
     const style = window.getComputedStyle(el);
@@ -199,14 +206,14 @@ test('floating widget persists between sessions', async ({ page }) => {
       top: parseInt(style.top)
     };
   });
-  
+
   expect(position.left).toBe(300);
   expect(position.top).toBe(200);
-  
+
   // Restart application
   await page.evaluate(() => window.electronAPI.restartApp());
   await page.waitForLoadState('domcontentloaded');
-  
+
   // Check if widget position was restored
   const newWidget = await page.locator('[data-testid="floating-widget"]');
   const newPosition = await newWidget.evaluate(el => {
@@ -216,7 +223,7 @@ test('floating widget persists between sessions', async ({ page }) => {
       top: parseInt(style.top)
     };
   });
-  
+
   expect(newPosition.left).toBe(300);
   expect(newPosition.top).toBe(200);
 });
@@ -245,24 +252,50 @@ Manual testing covers aspects that are difficult to automate or require human ju
 
 #### Test Cases
 
-1. **Widget Dragging**
+1. **Widget Dragging and Resizing**
    - Drag widget to different screen positions
    - Drag widget to screen edges
    - Drag widget between multiple monitors
    - Verify widget stays within visible area
+   - Resize widget using the resize handle
+   - Verify minimum and maximum size constraints
+   - Test resizing behavior with different content
 
-2. **Widget Persistence**
-   - Move widget, close application, reopen
-   - Move widget, restart computer, open application
-   - Verify widget appears in the same position
+2. **Multiple Widgets**
+   - Create multiple widgets for different API providers
+   - Test different layout modes (free, grid, line)
+   - Verify widgets don't overlap in grid and line layouts
+   - Test adding and removing widgets
+   - Verify each widget displays correct data for its provider
 
-3. **System Tray**
+3. **Widget Configuration Presets**
+   - Save widget configuration as preset
+   - Load widget configuration from preset
+   - Delete widget configuration preset
+   - Verify all widget properties are correctly saved and restored
+   - Test preset management with multiple presets
+
+4. **Widget Persistence**
+   - Move and resize widgets, close application, reopen
+   - Move and resize widgets, restart computer, open application
+   - Verify widgets appear in the same positions and sizes
+   - Test persistence of multiple widgets
+
+5. **System Tray**
    - Verify tray icon appears
    - Test context menu options
    - Check tray icon tooltip
    - Test click behavior
+   - Verify widget visibility toggle
 
-4. **Notifications**
+6. **API Integration**
+   - Test API key validation for all providers (OpenAI, Claude, Gemini)
+   - Verify token counting accuracy
+   - Test cost calculation
+   - Verify usage tracking
+   - Test error handling for invalid API keys
+
+7. **Notifications**
    - Verify notifications appear
    - Test notification interaction
    - Check notification styling
@@ -306,6 +339,9 @@ Manual testing covers aspects that are difficult to automate or require human ju
 - Simulated usage patterns
 - Edge cases and error conditions
 - Different provider configurations
+- Mock data for all API providers (OpenAI, Claude, Gemini)
+- Simulated token usage and cost data
+- Widget configuration presets
 
 ### Test Accounts
 
@@ -334,14 +370,15 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
-        node-version: [16.x]
+        node-version: [18.x]
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v2
+      uses: actions/setup-node@v3
       with:
         node-version: ${{ matrix.node-version }}
+        cache: 'npm'
     - name: Install dependencies
       run: npm ci
     - name: Run unit tests
@@ -352,6 +389,8 @@ jobs:
       run: npm run electron:build
     - name: Run E2E tests
       run: npm run test:e2e
+    - name: Test widget
+      run: npm run widget:test
 ```
 
 ### Test Reports
@@ -464,3 +503,6 @@ jobs:
 - **Test Pass Rate**: 100% pass rate for all tests in CI
 - **Bug Density**: Less than 0.5 bugs per 1000 lines of code
 - **User Satisfaction**: >90% positive feedback on widget functionality
+- **API Integration**: 100% accuracy in token counting and cost calculation
+- **Widget Performance**: <100ms response time for widget interactions
+- **Cross-Platform**: Consistent behavior across Windows, macOS, and Linux

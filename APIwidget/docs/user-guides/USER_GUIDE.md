@@ -4,9 +4,10 @@
 
 ### Installation
 
-1. Download the latest installer from the [releases page](https://github.com/your-org/apiwidget/releases)
+1. Download the latest installer from the [releases page](https://github.com/ImaginariumLabs/APIwidget/releases)
 2. Run the installer and follow the on-screen instructions
 3. Launch APIwidget from your Start menu or desktop shortcut
+4. Alternatively, use the `run-widget.bat` script in the root directory to run the application in development mode
 
 ### First Launch
 
@@ -17,24 +18,52 @@ When you first launch APIwidget, you'll be guided through a quick setup process:
 3. Add your API keys for the selected providers
 4. Configure widget appearance and position
 
-## Using the Widget
+### System Requirements
+
+- **Operating System**: Windows 10 or later
+- **Memory**: 4GB RAM minimum, 8GB recommended
+- **Disk Space**: 100MB free space
+- **Display**: 1280x720 or higher resolution
+- **Internet**: Required for API data retrieval
+- **Node.js**: 16.x or higher (for development mode)
+
+## Using the Widgets
 
 ### Widget Overview
 
-The APIwidget floating widget provides at-a-glance information about your API usage:
+APIwidget now supports multiple floating widgets with enhanced features. Each widget provides at-a-glance information about your API usage:
 
 - **Primary Cost Display**: Shows the current cost for the selected API provider
 - **Change Indicator**: Shows cost change since last period (day/week/month)
 - **Provider Name**: Displays which API provider is currently being shown
+- **Usage Percentage**: Shows percentage of budget/quota used
 - **Last Updated**: Shows when the data was last refreshed
 
 ### Widget Controls
 
 - **Drag**: Click and drag anywhere on the widget to move it
-- **Resize**: Drag the bottom-right corner to resize the widget
+- **Resize**: Drag the bottom-right corner to freely resize the widget
 - **Provider Switch**: Click the provider name to cycle through providers
 - **Settings**: Click the gear icon to open settings
 - **Refresh**: Click the refresh icon to update data manually
+- **Close**: Click the X icon to close the widget
+
+### Multiple Widget Layouts
+
+APIwidget supports three different layout modes for multiple widgets:
+
+- **Free Layout**: Position widgets anywhere on the screen
+- **Grid Layout**: Arrange widgets in a grid pattern
+- **Line Layout**: Arrange widgets in a horizontal line at the bottom of the screen
+
+### Widget Configuration Presets
+
+You can save and restore widget configurations as presets:
+
+1. Arrange your widgets as desired
+2. Click the "Save Preset" button in the Floating Widgets page
+3. Enter a name for your preset
+4. To restore a preset, select it from the dropdown and click "Load Preset"
 
 ### Keyboard Shortcuts
 
@@ -43,6 +72,8 @@ The APIwidget floating widget provides at-a-glance information about your API us
 - **T**: Toggle theme (dark/light)
 - **C**: Cycle through widget sizes
 - **Arrow keys**: Navigate between providers
+- **Ctrl+Shift+W**: Show/hide all widgets
+- **Ctrl+Shift+A**: Add a new widget
 
 ## Managing API Keys
 
@@ -56,10 +87,11 @@ To add or manage your API keys:
 
 ### Supported API Providers
 
-- **OpenAI**: Monitor token usage and costs for GPT models
+- **OpenAI**: Monitor token usage and costs for GPT models (GPT-4o, GPT-4 Turbo, GPT-3.5 Turbo)
+- **Claude (Anthropic)**: Monitor usage of Claude models (Claude 3.5 Sonnet, Claude 3 Opus, Claude 3 Haiku)
+- **Gemini (Google)**: Track Google AI API usage with free tier support (Gemini 1.5 Pro, Gemini 1.5 Flash, Gemini 2.0 Flash)
 - **GitHub**: Track API rate limits and usage
-- **AWS**: Monitor AWS API usage
-- **Google Cloud**: Track GCP API usage (coming soon)
+- **AWS**: Monitor AWS API usage (coming soon)
 - **Azure**: Monitor Azure API usage (coming soon)
 
 ## Customizing the Widget
@@ -70,17 +102,20 @@ To add or manage your API keys:
 2. Select "Appearance" from the settings menu
 3. Choose from the following options:
    - **Theme**: Dark or light
-   - **Size**: Compact, small, medium, or large
+   - **Size**: Custom size with free resizing
    - **Transparency**: Adjust the widget transparency
    - **Always on Top**: Toggle whether the widget stays on top of other windows
+   - **Glass Morphism Effect**: Adjust the blur and transparency of the glass effect
 
-### Position
+### Position and Layout
 
-The widget remembers its position between sessions. To reset the position:
+Widgets remember their positions between sessions. To manage widget layouts:
 
-1. Click the gear icon on the widget to open settings
-2. Select "Position" from the settings menu
-3. Click "Reset Position" to move the widget to the default position
+1. Navigate to the Floating Widgets page from the main dashboard
+2. Select a layout mode (Free, Grid, or Line)
+3. Add, remove, or rearrange widgets as needed
+4. Save your configuration as a preset for future use
+5. To reset all widget positions, click "Reset Layout"
 
 ## Application Settings
 
@@ -121,17 +156,34 @@ To set up alerts for API usage:
 
 To access the full dashboard:
 
-1. Click the expand icon on the widget
-2. View detailed information about all your API providers
-3. See historical usage trends and patterns
-4. Access advanced settings and configurations
+1. Click the expand icon on any widget
+2. Alternatively, click the APIwidget icon in the system tray and select "Open Dashboard"
+3. View detailed information about all your API providers
+4. See historical usage trends and patterns
+5. Access advanced settings and configurations
 
 ### Dashboard Features
 
 - **Usage Overview**: Summary of all API usage
 - **Cost Analysis**: Detailed breakdown of costs by provider
 - **Usage Trends**: Charts showing usage patterns over time
+- **Model Breakdown**: Analysis of usage by model for each provider
+- **Daily Usage**: Track usage and costs on a daily basis
+- **Token Distribution**: Analyze the distribution of input vs. output tokens
 - **Recommendations**: Suggestions for optimizing API usage
+
+### Dashboard Navigation
+
+The dashboard includes a side menu for easy navigation:
+
+- **Dashboard**: Main overview page
+- **Usage Analytics**: Detailed usage statistics and trends
+- **Request History**: History of API requests
+- **Widget Gallery**: Browse and add pre-configured widgets
+- **Floating Widgets**: Manage multiple floating widgets
+- **API Providers**: Detailed pages for each provider (OpenAI, Claude, Gemini)
+- **API Keys**: Manage your API keys
+- **Help & Support**: Access help and support resources
 
 ## Troubleshooting
 
@@ -180,10 +232,34 @@ If your usage data isn't updating:
 | Ctrl+Shift+D | Open dashboard |
 | Ctrl+Shift+Q | Quit application |
 
-## System Requirements
+## Real-Time API Tracking
 
-- **Operating System**: Windows 10 or later
-- **Memory**: 4GB RAM minimum, 8GB recommended
-- **Disk Space**: 100MB free space
-- **Display**: 1280x720 or higher resolution
-- **Internet**: Required for API data retrieval
+APIwidget provides real-time tracking of API usage and costs:
+
+### Token Counting
+
+For accurate cost calculation, APIwidget counts tokens for each API request:
+
+- **OpenAI**: Uses the tiktoken library for accurate token counting
+- **Claude**: Uses the Anthropic tokenizer for accurate token counting
+- **Gemini**: Uses the Gemini API's countTokens endpoint for accurate token counting
+
+### Usage Statistics
+
+Detailed usage statistics are available for each provider:
+
+- **Total Cost**: Current total cost for the billing period
+- **Token Usage**: Number of input and output tokens used
+- **Request Count**: Number of API requests made
+- **Daily Usage**: Usage and costs broken down by day
+- **Model Usage**: Usage and costs broken down by model
+
+### Cost Calculation
+
+Costs are calculated based on the current pricing for each provider:
+
+- **OpenAI**: GPT-4o, GPT-4 Turbo, GPT-3.5 Turbo
+- **Claude**: Claude 3.5 Sonnet, Claude 3 Opus, Claude 3 Haiku
+- **Gemini**: Gemini 1.5 Pro, Gemini 1.5 Flash, Gemini 2.0 Flash
+
+Pricing information is regularly updated to ensure accurate cost calculation.

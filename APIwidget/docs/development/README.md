@@ -10,6 +10,12 @@ This folder contains documentation related to the development process, guideline
 | [ELECTRON_IMPLEMENTATION.md](./ELECTRON_IMPLEMENTATION.md) | Electron implementation details | 2025-04-27 |
 | [SUPABASE_SETUP.md](./SUPABASE_SETUP.md) | Supabase configuration and setup | 2025-04-27 |
 | [TESTING_STRATEGY.md](./TESTING_STRATEGY.md) | Testing approach and procedures | 2025-04-27 |
+| [AI_API_COST_TRACKING.md](./AI_API_COST_TRACKING.md) | AI API cost tracking implementation | 2025-04-29 |
+| [GEMINI_API_INTEGRATION.md](./GEMINI_API_INTEGRATION.md) | Gemini API integration details | 2025-04-29 |
+| [CLAUDE_API_INTEGRATION.md](./CLAUDE_API_INTEGRATION.md) | Claude API integration details | 2025-04-29 |
+| [OPENAI_API_INTEGRATION.md](./OPENAI_API_INTEGRATION.md) | OpenAI API integration details | 2025-04-29 |
+| [API_REFERENCE.md](./API_REFERENCE.md) | Comprehensive API reference guide | 2025-05-10 |
+| [API_USAGE_EXAMPLES.md](./API_USAGE_EXAMPLES.md) | API usage examples and patterns | 2025-05-10 |
 
 ## Development Environment Setup
 
@@ -81,6 +87,19 @@ This folder contains documentation related to the development process, guideline
 - **Database**: PostgreSQL database for storing application data
 - **Row Level Security**: Ensures users can only access their own data
 - **API Keys**: Secure storage and management of API keys
+
+### API Integration
+
+- **OpenAI API**: Integration with OpenAI's API for cost tracking and usage analytics
+- **Claude API**: Integration with Anthropic's Claude API for cost tracking and usage analytics
+- **Gemini API**: Integration with Google's Gemini API for cost tracking and usage analytics
+- **GitHub API**: Integration with GitHub's API for tracking rate limits and usage
+- **AWS API**: Integration with AWS APIs for cost tracking (future implementation)
+
+For detailed information about API integration, see:
+
+- [API_REFERENCE.md](./API_REFERENCE.md): Comprehensive reference for all API services
+- [API_USAGE_EXAMPLES.md](./API_USAGE_EXAMPLES.md): Practical examples of API usage
 
 ### Testing Approach
 

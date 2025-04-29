@@ -1,25 +1,28 @@
 # APIwidget
 
-A modern dashboard for managing and monitoring API usage across multiple providers.
+A modern desktop application for managing and monitoring API usage across multiple providers with real-time tracking and visualization.
 
 ## Features
 
-- Track API usage and costs in real-time
-- Manage API keys securely
-- Monitor rate limits and quotas
-- Visualize API performance metrics
-- Set up alerts for unusual activity or approaching limits
-- Modern glass morphism floating widget for at-a-glance cost monitoring
-- Customizable widget with themes, sizes, and positioning
-- Multiple API provider support with visual indicators
-- Desktop application with Electron integration
+- **Real-Time API Tracking**: Monitor API usage and costs as they happen
+- **Secure Key Management**: Store and manage API keys securely on your local device
+- **Comprehensive Analytics**: Visualize usage trends, costs, and performance metrics
+- **Detailed History**: Track and analyze all API requests with filtering and export options
+- **Multiple Provider Support**: Track OpenAI, Claude, Gemini, and GitHub APIs in one place
+- **Floating Widgets**: Modern glass morphism floating widgets for at-a-glance monitoring
+- **Customizable Experience**: Personalize widgets with different themes, sizes, and layouts
+- **Multi-Widget Display**: View multiple widgets simultaneously in different layouts
+- **Widget Gallery**: Browse and add pre-configured widgets for different use cases
+- **Desktop Integration**: Seamless integration with your desktop environment using Electron
+- **Intelligent Caching**: Efficient data fetching with smart caching to reduce API calls
 
 ## Supported API Providers
 
-- OpenAI
-- GitHub
+- OpenAI - Track token usage and costs for GPT models
+- Claude (Anthropic) - Monitor usage of Claude models
+- Gemini (Google) - Track Google AI API usage with free tier support
+- GitHub - Monitor API rate limits and usage
 - AWS (coming soon)
-- Google Cloud (coming soon)
 - Azure (coming soon)
 
 ## Getting Started
@@ -89,7 +92,12 @@ APIwidget/                  # Root project directory
 └── APIwidget/              # Main application directory
     ├── .github/            # GitHub configuration files
     ├── database/           # Database scripts and migrations
-    ├── docs/               # Project documentation
+    ├── documentation/      # Project documentation
+    │   ├── architecture/   # Architecture documentation
+    │   ├── design/         # Design documentation
+    │   ├── development/    # Development documentation
+    │   ├── project-management/ # Project management documentation
+    │   └── user-guides/    # User guides
     ├── electron/           # Electron-specific code
     │   ├── main.js         # Main process entry point
     │   ├── preload.js      # Preload script for secure IPC
@@ -97,21 +105,43 @@ APIwidget/                  # Root project directory
     ├── src/
     │   ├── components/     # React components
     │   │   ├── app/        # App-specific components
-    │   │   │   └── ElectronApp.tsx  # Electron app component
+    │   │   │   ├── ElectronApp.tsx        # Electron app component
+    │   │   │   └── ModernElectronApp.tsx  # Modern Electron app component
+    │   │   ├── charts/     # Chart components
     │   │   ├── layout/     # Layout components
+    │   │   │   ├── ElectronAppLayout.tsx  # Electron app layout
+    │   │   │   └── Sidebar.tsx            # Sidebar navigation
     │   │   └── widgets/    # Widget-related components
-    │   │       └── GlassMorphismWidget.tsx  # Glass morphism widget component
-    │   │       └── DashboardWidget.tsx      # Dashboard widget component
+    │   │       ├── GlassMorphismWidget.tsx  # Glass morphism widget component
+    │   │       ├── EnhancedGlassMorphismWidget.tsx  # Enhanced widget component
+    │   │       ├── FloatingWidgetManager.tsx  # Floating widget manager
+    │   │       ├── RealTimeApiUsage.tsx   # Real-time API usage component
+    │   │       └── WidgetSettingsDialog.tsx  # Widget settings dialog
     │   ├── contexts/       # React contexts
-    │   │   └── DashboardWidgetContext.tsx   # Dashboard widget context
+    │   │   ├── ApiProviderContext.tsx     # API provider context
+    │   │   ├── DashboardWidgetContext.tsx # Dashboard widget context
+    │   │   └── MockAuthContext.tsx        # Mock authentication context
     │   ├── pages/          # Page components
-    │   │   └── Dashboard.tsx               # Dashboard page
+    │   │   ├── ModernDashboard.tsx        # Modern dashboard page
+    │   │   ├── ApiKeySettings.tsx         # API key settings page
+    │   │   ├── FloatingWidgetsPage.tsx    # Floating widgets page
+    │   │   ├── WidgetGalleryPage.tsx      # Widget gallery page
+    │   │   ├── UsagePage.tsx              # Usage analytics page
+    │   │   ├── HistoryPage.tsx            # Request history page
+    │   │   ├── HelpPage.tsx               # Help and support page
+    │   │   └── providers/                 # Provider-specific pages
+    │   │       ├── OpenAIProviderDetail.tsx  # OpenAI provider details
+    │   │       ├── ClaudeProviderDetail.tsx  # Claude provider details
+    │   │       └── GeminiProviderDetail.tsx  # Gemini provider details
     │   ├── services/       # Service modules
-    │   │   ├── keyManager/  # API key management
-    │   │   ├── electronService.ts  # Electron service
-    │   │   ├── mockDataService.ts  # Mock data service
-    │   │   └── settingsService.ts  # Settings service
+    │   │   ├── apiIntegrationService.ts   # API integration service
+    │   │   ├── cacheService.ts            # Caching service
+    │   │   ├── electronService.ts         # Electron service
+    │   │   ├── enhancedApiService.ts      # Enhanced API service
+    │   │   ├── mockDataService.ts         # Mock data service
+    │   │   └── mockKeyManager.ts          # Mock key manager
     │   ├── styles/         # CSS and style files
+    │   ├── types/          # TypeScript type definitions
     │   ├── App.tsx         # Main App component
     │   └── main.tsx        # Entry point
     ├── public/             # Static assets
@@ -120,7 +150,7 @@ APIwidget/                  # Root project directory
     └── vite.config.ts      # Vite configuration
 ```
 
-For more detailed information about the project structure, please see the [Project Structure Documentation](./docs/project-structure.md).
+For more detailed information about the project structure, please see the [Project Structure Documentation](./documentation/architecture/project-structure.md).
 
 ## Development Principles
 

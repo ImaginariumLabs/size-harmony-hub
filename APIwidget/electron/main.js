@@ -620,12 +620,17 @@ app.whenReady().then(async () => {
     // We already have properly sized icons in the public/images directory
     console.log('App is ready, initializing...');
 
-    // Create tray and widget
+    // Create tray and main window
     createTray();
-    createWidgetWindow(); // Start with just the widget
 
-    // Always create the main window by default
-    createMainWindow();
+    // Check if we already have windows open to prevent duplicate windows
+    if (BrowserWindow.getAllWindows().length === 0) {
+      // Create the main window first
+      createMainWindow();
+
+      // Then create the widget window
+      createWidgetWindow();
+    }
 
     // Log window creation status
     console.log('Windows created:', {

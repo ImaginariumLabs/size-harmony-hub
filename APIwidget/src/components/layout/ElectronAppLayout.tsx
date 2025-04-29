@@ -21,17 +21,22 @@ import {
 import {
   Menu as MenuIcon,
   Dashboard as DashboardIcon,
-  Timeline as TimelineIcon,
   History as HistoryIcon,
-  Settings as SettingsIcon,
   Help as HelpIcon,
   Notifications as NotificationsIcon,
   AccountCircle as AccountCircleIcon,
-  Api as ApiIcon,
   Close as CloseIcon,
   Minimize as MinimizeIcon,
-  CropSquare as MaximizeIcon
+  CropSquare as MaximizeIcon,
+  Insights as InsightsIcon,
+  Widgets as WidgetsIcon,
+  ViewInAr as ViewInArIcon,
+  VpnKey as VpnKeyIcon,
+  AdminPanelSettings as AdminPanelSettingsIcon,
+  People as PeopleIcon,
+  Settings as SettingsIcon
 } from '@mui/icons-material';
+import { useNavigate } from 'react-router-dom';
 import { isElectron } from '../../services/electronService';
 
 interface ElectronAppLayoutProps {
@@ -47,6 +52,7 @@ const ElectronAppLayout: React.FC<ElectronAppLayoutProps> = ({
   onToggleWidget,
   showWidget = true
 }) => {
+  const navigate = useNavigate();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [accountMenuAnchor, setAccountMenuAnchor] = useState<null | HTMLElement>(null);
   const [notificationsMenuAnchor, setNotificationsMenuAnchor] = useState<null | HTMLElement>(null);
@@ -209,16 +215,26 @@ const ElectronAppLayout: React.FC<ElectronAppLayoutProps> = ({
           >
             <MenuItem onClick={handleAccountMenuClose}>Profile</MenuItem>
             <MenuItem onClick={handleAccountMenuClose}>Settings</MenuItem>
+            <MenuItem onClick={() => {
+              handleAccountMenuClose();
+              navigate('/admin');
+            }}>
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <AdminPanelSettingsIcon fontSize="small" sx={{ mr: 1 }} />
+                Admin Dashboard
+              </Box>
+            </MenuItem>
             <Divider sx={{ my: 1, borderColor: 'rgba(255, 255, 255, 0.1)' }} />
             <MenuItem onClick={handleAccountMenuClose}>Logout</MenuItem>
           </Menu>
 
-          {/* Add API Key Button */}
+          {/* Multiview Button */}
           <Button
             variant="contained"
             color="primary"
-            startIcon={<ApiIcon />}
+            startIcon={<ViewInArIcon />}
             size="small"
+            onClick={() => navigate('/floating-widgets')}
             sx={{
               ml: 2,
               background: 'linear-gradient(135deg, #64b5f6, #2196f3)',
@@ -228,7 +244,7 @@ const ElectronAppLayout: React.FC<ElectronAppLayoutProps> = ({
               ...(isElectronEnv && { WebkitAppRegion: 'no-drag' as any })
             }}
           >
-            Add API Key
+            Multiview
           </Button>
 
           {/* Window Controls for Electron */}
@@ -288,26 +304,41 @@ const ElectronAppLayout: React.FC<ElectronAppLayoutProps> = ({
       >
         <Toolbar sx={{ minHeight: 48 }} />
         <Box sx={{ overflow: 'auto', px: 1, py: 2 }}>
+          {/* Main Menu Items */}
           <List>
-            <ListItem button>
+            <ListItem button onClick={() => navigate('/')}>
               <ListItemIcon>
                 <DashboardIcon />
               </ListItemIcon>
               <ListItemText primary="Dashboard" />
             </ListItem>
-            <ListItem button>
+            <ListItem button onClick={() => navigate('/usage')}>
               <ListItemIcon>
-                <TimelineIcon />
+                <InsightsIcon />
               </ListItemIcon>
-              <ListItemText primary="API Usage" />
+              <ListItemText primary="Usage Analytics" />
             </ListItem>
-            <ListItem button>
+            <ListItem button onClick={() => navigate('/history')}>
               <ListItemIcon>
                 <HistoryIcon />
               </ListItemIcon>
-              <ListItemText primary="History" />
+              <ListItemText primary="Request History" />
+            </ListItem>
+            <ListItem button onClick={() => navigate('/widgets')}>
+              <ListItemIcon>
+                <WidgetsIcon />
+              </ListItemIcon>
+              <ListItemText primary="Widget Gallery" />
+            </ListItem>
+            <ListItem button onClick={() => navigate('/floating-widgets')}>
+              <ListItemIcon>
+                <ViewInArIcon />
+              </ListItemIcon>
+              <ListItemText primary="Floating Widgets" />
             </ListItem>
           </List>
+
+          {/* API Providers */}
           <Divider sx={{ my: 2, borderColor: 'rgba(255, 255, 255, 0.1)' }} />
           <Typography
             variant="overline"
@@ -316,7 +347,7 @@ const ElectronAppLayout: React.FC<ElectronAppLayoutProps> = ({
             API Providers
           </Typography>
           <List>
-            <ListItem button>
+            <ListItem button onClick={() => navigate('/provider/openai')}>
               <ListItemIcon>
                 <Box
                   sx={{
@@ -336,14 +367,14 @@ const ElectronAppLayout: React.FC<ElectronAppLayoutProps> = ({
               </ListItemIcon>
               <ListItemText primary="OpenAI" />
             </ListItem>
-            <ListItem button>
+            <ListItem button onClick={() => navigate('/provider/google')}>
               <ListItemIcon>
                 <Box
                   sx={{
                     width: 24,
                     height: 24,
                     borderRadius: '50%',
-                    background: 'linear-gradient(135deg, #24292e, #1a1e22)',
+                    background: 'linear-gradient(135deg, #4285f4, #0d69c8)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -354,22 +385,73 @@ const ElectronAppLayout: React.FC<ElectronAppLayoutProps> = ({
                   </Typography>
                 </Box>
               </ListItemIcon>
-              <ListItemText primary="GitHub" />
+              <ListItemText primary="Gemini" />
+            </ListItem>
+            <ListItem button onClick={() => navigate('/provider/claude')}>
+              <ListItemIcon>
+                <Box
+                  sx={{
+                    width: 24,
+                    height: 24,
+                    borderRadius: '50%',
+                    background: 'linear-gradient(135deg, #7963d2, #5d4ba8)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <Typography variant="caption" sx={{ color: 'white', fontWeight: 'bold' }}>
+                    C
+                  </Typography>
+                </Box>
+              </ListItemIcon>
+              <ListItemText primary="Claude" />
             </ListItem>
           </List>
+
+          {/* Admin Section */}
           <Divider sx={{ my: 2, borderColor: 'rgba(255, 255, 255, 0.1)' }} />
+          <Typography
+            variant="overline"
+            sx={{ px: 2, color: 'rgba(255, 255, 255, 0.5)', fontSize: '0.75rem' }}
+          >
+            Administration
+          </Typography>
           <List>
-            <ListItem button>
+            <ListItem button onClick={() => navigate('/admin')}>
+              <ListItemIcon>
+                <AdminPanelSettingsIcon />
+              </ListItemIcon>
+              <ListItemText primary="Admin Dashboard" />
+            </ListItem>
+            <ListItem button onClick={() => navigate('/admin/users')}>
+              <ListItemIcon>
+                <PeopleIcon />
+              </ListItemIcon>
+              <ListItemText primary="User Management" />
+            </ListItem>
+            <ListItem button onClick={() => navigate('/admin/settings')}>
               <ListItemIcon>
                 <SettingsIcon />
               </ListItemIcon>
-              <ListItemText primary="Settings" />
+              <ListItemText primary="System Settings" />
             </ListItem>
-            <ListItem button>
+          </List>
+
+          {/* Bottom Menu Items */}
+          <Divider sx={{ my: 2, borderColor: 'rgba(255, 255, 255, 0.1)' }} />
+          <List>
+            <ListItem button onClick={() => navigate('/settings/api-keys')}>
+              <ListItemIcon>
+                <VpnKeyIcon />
+              </ListItemIcon>
+              <ListItemText primary="API Keys" />
+            </ListItem>
+            <ListItem button onClick={() => navigate('/help')}>
               <ListItemIcon>
                 <HelpIcon />
               </ListItemIcon>
-              <ListItemText primary="Help" />
+              <ListItemText primary="Help & Support" />
             </ListItem>
           </List>
         </Box>

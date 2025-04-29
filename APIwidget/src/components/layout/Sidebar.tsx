@@ -15,10 +15,12 @@ import {
 import {
   Dashboard as DashboardIcon,
   Api as ApiIcon,
-  Settings as SettingsIcon,
+  VpnKey as VpnKeyIcon,
   Insights as InsightsIcon,
   History as HistoryIcon,
   Help as HelpIcon,
+  Widgets as WidgetsIcon,
+  ViewInAr as ViewInArIcon,
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useApiProviders } from '../../contexts/ApiProviderContext';
@@ -39,25 +41,35 @@ const Sidebar: React.FC = () => {
       path: '/',
     },
     {
-      text: 'API Usage',
+      text: 'Usage Analytics',
       icon: <InsightsIcon />,
       path: '/usage',
     },
     {
-      text: 'History',
+      text: 'Request History',
       icon: <HistoryIcon />,
       path: '/history',
+    },
+    {
+      text: 'Widget Gallery',
+      icon: <WidgetsIcon />,
+      path: '/widgets',
+    },
+    {
+      text: 'Floating Widgets',
+      icon: <ViewInArIcon />,
+      path: '/floating-widgets',
     },
   ];
 
   const bottomMenuItems = [
     {
-      text: 'Settings',
-      icon: <SettingsIcon />,
-      path: '/settings',
+      text: 'API Keys',
+      icon: <VpnKeyIcon />,
+      path: '/settings/api-keys',
     },
     {
-      text: 'Help',
+      text: 'Help & Support',
       icon: <HelpIcon />,
       path: '/help',
     },
@@ -117,8 +129,8 @@ const Sidebar: React.FC = () => {
           </ListItem>
         ) : configuredProviders.length === 0 ? (
           <ListItem>
-            <ListItemText 
-              primary="No APIs configured" 
+            <ListItemText
+              primary="No APIs configured"
               secondary="Add your first API key in settings"
               secondaryTypographyProps={{ fontSize: '0.75rem' }}
             />

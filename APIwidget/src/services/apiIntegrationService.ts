@@ -1,10 +1,13 @@
 /**
  * API Integration Service
  * Handles integration with various API providers to fetch real usage and cost data
+ *
+ * This service has been enhanced with better caching and real-time data fetching
  */
 
 import { getApiKey } from './electronService';
 import { ApiCostData } from '../types/api';
+import * as enhancedApi from './enhancedApiService';
 
 // Interface for API provider configuration
 export interface ApiProviderConfig {
@@ -125,137 +128,16 @@ const historicalData: Record<string, any[]> = {};
 // Function to fetch API data
 export const fetchApiData = async (providerId: string): Promise<ApiCostData> => {
   try {
-    // Use specialized services for each provider
-    if (providerId === 'openai') {
-      try {
-        const { fetchUsageData } = await import('./openaiService');
-        return await fetchUsageData();
-      } catch (openaiError) {
-        console.error('Error fetching OpenAI data:', openaiError);
-        // Fall through to standard implementation as fallback
-      }
-    } else if (providerId === 'claude') {
-      try {
-        const { fetchUsageData } = await import('./claudeService');
-        return await fetchUsageData();
-      } catch (claudeError) {
-        console.error('Error fetching Claude data:', claudeError);
-        // Fall through to standard implementation as fallback
-      }
-    } else if (providerId === 'google') {
-      try {
-        const { fetchUsageData } = await import('./geminiService');
-        return await fetchUsageData();
-      } catch (geminiError) {
-        console.error('Error fetching Gemini data:', geminiError);
-        // Fall through to standard implementation as fallback
-      }
-    }
+    // Use enhanced API service for real-time data with caching
+    const apiData = await enhancedApi.fetchApiData(providerId as enhancedApi.ApiProvider);
 
-    // Check if provider is configured
-    const provider = API_PROVIDERS[providerId];
-    if (!provider) {
-      throw new Error(`Provider ${providerId} not configured`);
-    }
-
-    // Get API key
-    const apiKey = await getApiKey(providerId);
-    if (!apiKey) {
-      throw new Error(`No API key found for ${providerId}`);
-    }
-
-    // Check cache (valid for 5 minutes)
-    const now = Date.now();
-    const cacheKey = `${providerId}_data`;
-    if (responseCache[cacheKey] && now - responseCache[cacheKey].timestamp < 5 * 60 * 1000) {
-      console.log(`Using cached data for ${providerId}`);
-
-      // Store in historical data if not already there
-      if (!historicalData[providerId]) {
-        historicalData[providerId] = [];
-      }
-
-      if (historicalData[providerId].length === 0 ||
-          historicalData[providerId][historicalData[providerId].length - 1] !== responseCache[cacheKey].data) {
-        historicalData[providerId].push(responseCache[cacheKey].data);
-
-        // Keep only last 24 data points
-        if (historicalData[providerId].length > 24) {
-          historicalData[providerId].shift();
-        }
-      }
-
-      // Get previous data point for comparison
-      const previousData = historicalData[providerId].length > 1
-        ? historicalData[providerId][historicalData[providerId].length - 2]
-        : null;
-
-      return formatCostData(
-        responseCache[cacheKey].data,
-        previousData,
-        provider.responseMapping
-      );
-    }
-
-    // Prepare headers based on auth type
-    let headers: Record<string, string> = {
-      'Content-Type': 'application/json'
+    // Convert to ApiCostData format
+    return {
+      total: apiData.total,
+      change: apiData.change,
+      changeType: apiData.changeType,
+      usagePercentage: apiData.usagePercentage
     };
-
-    switch (provider.authType) {
-      case 'bearer':
-        headers['Authorization'] = `Bearer ${apiKey}`;
-        break;
-      case 'key':
-        headers['X-Api-Key'] = apiKey;
-        break;
-      case 'basic':
-        headers['Authorization'] = `Basic ${btoa(apiKey)}`;
-        break;
-    }
-
-    // Make API request
-    console.log(`Fetching data from ${provider.baseUrl}${provider.usageEndpoint}`);
-
-    // In a real implementation, we would make the actual API call here
-    // For now, we'll simulate a response based on the provider
-    // const response = await fetch(`${provider.baseUrl}${provider.usageEndpoint}`, {
-    //   method: 'GET',
-    //   headers
-    // });
-    // const data = await response.json();
-
-    // Simulate API response for demo purposes
-    const data = simulateApiResponse(providerId);
-
-    // Cache the response
-    responseCache[cacheKey] = {
-      data,
-      timestamp: now
-    };
-
-    // Store in historical data
-    if (!historicalData[providerId]) {
-      historicalData[providerId] = [];
-    }
-
-    historicalData[providerId].push(data);
-
-    // Keep only last 24 data points
-    if (historicalData[providerId].length > 24) {
-      historicalData[providerId].shift();
-    }
-
-    // Get previous data point for comparison
-    const previousData = historicalData[providerId].length > 1
-      ? historicalData[providerId][historicalData[providerId].length - 2]
-      : null;
-
-    return formatCostData(
-      data,
-      previousData,
-      provider.responseMapping
-    );
   } catch (error) {
     console.error(`Error fetching data for ${providerId}:`, error);
 
@@ -267,27 +149,46 @@ export const fetchApiData = async (providerId: string): Promise<ApiCostData> => 
 
 // Function to fetch data for all providers
 export const fetchAllApiData = async (): Promise<Record<string, ApiCostData>> => {
-  const result: Record<string, ApiCostData> = {};
+  try {
+    // Use enhanced API service for real-time data with caching
+    const apiData = await enhancedApi.fetchAllApiData();
 
-  // Get all provider IDs
-  const providerIds = Object.keys(API_PROVIDERS);
+    // Convert to ApiCostData format
+    const result: Record<string, ApiCostData> = {};
 
-  // Fetch data for each provider
-  await Promise.all(
-    providerIds.map(async (providerId) => {
-      try {
-        result[providerId] = await fetchApiData(providerId);
-      } catch (error) {
-        console.error(`Error fetching data for ${providerId}:`, error);
+    Object.entries(apiData).forEach(([providerId, data]) => {
+      result[providerId] = {
+        total: data.total,
+        change: data.change,
+        changeType: data.changeType,
+        usagePercentage: data.usagePercentage
+      };
+    });
 
-        // Fall back to mock data
-        const { getMockProviderData } = await import('./mockDataService');
-        result[providerId] = getMockProviderData(providerId);
-      }
-    })
-  );
+    return result;
+  } catch (error) {
+    console.error('Error fetching all API data:', error);
 
-  return result;
+    // Fall back to original implementation
+    const result: Record<string, ApiCostData> = {};
+    const providerIds = Object.keys(API_PROVIDERS);
+
+    await Promise.all(
+      providerIds.map(async (providerId) => {
+        try {
+          result[providerId] = await fetchApiData(providerId);
+        } catch (providerError) {
+          console.error(`Error fetching data for ${providerId}:`, providerError);
+
+          // Fall back to mock data
+          const { getMockProviderData } = await import('./mockDataService');
+          result[providerId] = getMockProviderData(providerId);
+        }
+      })
+    );
+
+    return result;
+  }
 };
 
 // Function to simulate API responses for demo purposes

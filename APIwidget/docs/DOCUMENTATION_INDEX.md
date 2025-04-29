@@ -15,7 +15,7 @@ This document serves as a central index for all APIwidget documentation. It prov
 
 ## Documentation Version
 
-Current documentation version: **1.0.0** (April 27, 2025)
+Current documentation version: **1.6.0** (May 3, 2025)
 
 For version history and update information, see [VERSION.md](./VERSION.md).
 
@@ -45,6 +45,18 @@ For version history and update information, see [VERSION.md](./VERSION.md).
 |----------|-------------|--------------|
 | [ELECTRON_DEVELOPMENT_GUIDE.md](./development/ELECTRON_DEVELOPMENT_GUIDE.md) | Guide for Electron development | 2025-04-27 |
 | [ELECTRON_IMPLEMENTATION.md](./development/ELECTRON_IMPLEMENTATION.md) | Electron implementation details | 2025-04-27 |
+| [AI_API_COST_TRACKING.md](./development/AI_API_COST_TRACKING.md) | AI API cost tracking implementation | 2025-04-29 |
+| [GEMINI_API_INTEGRATION.md](./development/GEMINI_API_INTEGRATION.md) | Gemini API integration details | 2025-04-29 |
+| [CLAUDE_API_INTEGRATION.md](./development/CLAUDE_API_INTEGRATION.md) | Claude API integration details | 2025-04-29 |
+| [OPENAI_API_INTEGRATION.md](./development/OPENAI_API_INTEGRATION.md) | OpenAI API integration details | 2025-04-29 |
+| [MULTIPLE_FLOATING_WIDGETS.md](./development/MULTIPLE_FLOATING_WIDGETS.md) | Multiple floating widgets implementation | 2025-04-29 |
+| [WIDGET_CONFIGURATION_PRESETS.md](./development/WIDGET_CONFIGURATION_PRESETS.md) | Widget configuration presets implementation | 2025-04-29 |
+| [REAL_TIME_API_USAGE.md](./development/REAL_TIME_API_USAGE.md) | Real-time API usage tracking implementation | 2025-04-29 |
+| [SECURE_API_KEY_STORAGE.md](./development/SECURE_API_KEY_STORAGE.md) | Secure API key storage implementation | 2025-04-29 |
+| [DASHBOARD_COMPONENTS.md](./development/DASHBOARD_COMPONENTS.md) | Dashboard components and layout system | 2025-05-03 |
+| [DEPLOYMENT_GUIDE.md](./development/DEPLOYMENT_GUIDE.md) | Guide for building and deploying the application | 2025-05-03 |
+| [API_REFERENCE.md](./development/API_REFERENCE.md) | Comprehensive API reference guide | 2025-05-10 |
+| [API_USAGE_EXAMPLES.md](./development/API_USAGE_EXAMPLES.md) | API usage examples and patterns | 2025-05-10 |
 | [TESTING_STRATEGY.md](./development/TESTING_STRATEGY.md) | Testing approach and procedures | 2024-04-27 |
 
 ### User Documentation
@@ -52,19 +64,26 @@ For version history and update information, see [VERSION.md](./VERSION.md).
 | Document | Description | Last Updated |
 |----------|-------------|--------------|
 | [USER_GUIDE.md](./user-guides/USER_GUIDE.md) | End-user guide for using the application | 2025-04-27 |
+| [TROUBLESHOOTING.md](./user-guides/TROUBLESHOOTING.md) | Guide for resolving common issues | 2025-05-03 |
 
 ### Design Documentation
 
 | Document | Description | Last Updated |
 |----------|-------------|--------------|
 | [UI_UX_DESIGN.md](./design/UI_UX_DESIGN.md) | UI/UX design guidelines | 2025-04-27 |
+| [UI_UX_DESIGN_2025.md](./design/UI_UX_DESIGN_2025.md) | Updated UI/UX design guidelines for 2025 | 2025-05-03 |
 
 ### Project Management
 
 | Document | Description | Last Updated |
 |----------|-------------|--------------|
 | [PROJECT_MANAGEMENT.md](./project-management/PROJECT_MANAGEMENT.md) | Project management and tracking | 2025-04-27 |
-| [CLEANUP_SUMMARY.md](./CLEANUP_SUMMARY.md) | Summary of code cleanup activities | 2025-04-27 |
+| [ROADMAP.md](./project-management/ROADMAP.md) | Development roadmap | 2025-04-27 |
+| [ROADMAP_2025.md](./project-management/ROADMAP_2025.md) | Updated development roadmap for 2025 | 2025-05-03 |
+| [SPRINT_TRACKER.md](./project-management/SPRINT_TRACKER.md) | Sprint planning and tracking | 2025-04-27 |
+| [PROJECT_OVERVIEW.md](./project-management/PROJECT_OVERVIEW.md) | Project overview and goals | 2025-04-27 |
+| [ORGANIZATION_SETUP.md](./project-management/ORGANIZATION_SETUP.md) | Organization and repository setup | 2025-04-27 |
+| [CLEANUP_SUMMARY.md](./project-management/CLEANUP_SUMMARY.md) | Summary of code cleanup activities | 2025-04-27 |
 | [../github/GITHUB_SETUP.md](../.github/GITHUB_SETUP.md) | GitHub repository configuration | 2025-04-27 |
 
 ## External Resources

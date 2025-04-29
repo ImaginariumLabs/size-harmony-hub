@@ -1,14 +1,24 @@
 import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
 import { getAllProviders } from '../services/mockDataService';
 
+// Widget size type
+export type WidgetSize = 'small' | 'medium' | 'large';
+
+// Custom size interface
+export interface CustomSize {
+  width: number;
+  height: number;
+}
+
 // Widget configuration interface
 export interface DashboardWidget {
   id: string;
   providerId: string;
   type: 'cost' | 'usage' | 'quota' | 'history';
-  size: 'small' | 'medium' | 'large';
+  size: WidgetSize;
   position: { x: number; y: number };
   isVisible: boolean;
+  customSize?: CustomSize;
 }
 
 interface DashboardWidgetContextType {
@@ -49,10 +59,10 @@ export function DashboardWidgetProvider({ children }: { children: React.ReactNod
     const loadWidgets = async () => {
       try {
         setLoading(true);
-        
+
         // Try to load from localStorage
         const storedWidgets = localStorage.getItem(DASHBOARD_WIDGETS_KEY);
-        
+
         if (storedWidgets) {
           setWidgets(JSON.parse(storedWidgets));
         } else {
@@ -60,7 +70,7 @@ export function DashboardWidgetProvider({ children }: { children: React.ReactNod
           const providers = getAllProviders();
           const defaultWidgets = createDefaultWidgets(providers);
           setWidgets(defaultWidgets);
-          
+
           // Save the default widgets
           localStorage.setItem(DASHBOARD_WIDGETS_KEY, JSON.stringify(defaultWidgets));
         }
@@ -88,14 +98,14 @@ export function DashboardWidgetProvider({ children }: { children: React.ReactNod
       ...widget,
       id: `widget-${Date.now()}`
     };
-    
+
     setWidgets(prevWidgets => [...prevWidgets, newWidget]);
   };
 
   // Update an existing widget
   const updateWidget = (id: string, updates: Partial<Omit<DashboardWidget, 'id'>>) => {
-    setWidgets(prevWidgets => 
-      prevWidgets.map(widget => 
+    setWidgets(prevWidgets =>
+      prevWidgets.map(widget =>
         widget.id === id ? { ...widget, ...updates } : widget
       )
     );
@@ -108,8 +118,8 @@ export function DashboardWidgetProvider({ children }: { children: React.ReactNod
 
   // Toggle widget visibility
   const toggleWidgetVisibility = (id: string) => {
-    setWidgets(prevWidgets => 
-      prevWidgets.map(widget => 
+    setWidgets(prevWidgets =>
+      prevWidgets.map(widget =>
         widget.id === id ? { ...widget, isVisible: !widget.isVisible } : widget
       )
     );

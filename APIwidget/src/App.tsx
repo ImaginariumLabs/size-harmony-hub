@@ -7,6 +7,11 @@ import Login from './pages/Login';
 import ModernDashboard from './pages/ModernDashboard';
 import ApiKeySettings from './pages/ApiKeySettings';
 import ProviderDetail from './pages/ProviderDetail';
+import OpenAIProviderDetail from './pages/providers/OpenAIProviderDetail';
+import ClaudeProviderDetail from './pages/providers/ClaudeProviderDetail';
+import GeminiProviderDetail from './pages/providers/GeminiProviderDetail';
+import WidgetGalleryPage from './pages/WidgetGalleryPage';
+import FloatingWidgetsPage from './pages/FloatingWidgetsPage';
 import { isElectron } from './services/electronService';
 import ModernElectronApp from './components/app/ModernElectronApp';
 import './App.css';
@@ -62,8 +67,14 @@ function App() {
               >
                 <Route index element={<ModernDashboard />} />
                 <Route path="settings/api-keys" element={<ApiKeySettings />} />
+                <Route path="settings/api-keys/:providerId" element={<ApiKeySettings />} />
                 <Route path="settings/api-keys/new" element={<ApiKeySettings />} />
                 <Route path="provider/:providerId" element={<ProviderDetail />} />
+                <Route path="provider/openai" element={<OpenAIProviderDetail />} />
+                <Route path="provider/claude" element={<ClaudeProviderDetail />} />
+                <Route path="provider/google" element={<GeminiProviderDetail />} />
+                <Route path="widgets" element={<WidgetGalleryPage />} />
+                <Route path="floating-widgets" element={<FloatingWidgetsPage />} />
 
                 {/* Add more routes as needed */}
                 <Route path="*" element={<Navigate to="/" replace />} />

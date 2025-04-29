@@ -64,15 +64,18 @@ const GlassMorphismWidget: React.FC<GlassMorphismWidgetProps> = ({
   const widgetRef = useRef<HTMLDivElement>(null);
   const lastUpdateRef = useRef<Date>(new Date());
 
-  // Load providers from mock data service
+  // Load providers from real API data
   useEffect(() => {
     const loadProviderData = async () => {
       try {
         // Get provider info
         const allProviders = getAllProviders();
 
-        // Get cost data for all providers
-        const costData = await getAllApiCosts();
+        // Get cost data for all providers using real API calls
+        const { fetchAllApiData } = await import('../../services/apiIntegrationService');
+        const costData = await fetchAllApiData();
+
+        console.log('Fetched real API cost data:', costData);
 
         // Combine provider info with cost data
         const updatedProviders = allProviders.map(provider => {
@@ -89,17 +92,49 @@ const GlassMorphismWidget: React.FC<GlassMorphismWidgetProps> = ({
         setProviders(updatedProviders);
       } catch (error) {
         console.error('Error loading provider data:', error);
+
+        // Fallback to mock data if real API calls fail
+        try {
+          const allProviders = getAllProviders();
+          const costData = await getAllApiCosts();
+
+          const updatedProviders = allProviders.map(provider => {
+            const cost = costData[provider.id] || { total: 0, change: 0, changeType: 'increase' };
+            return {
+              id: provider.id,
+              name: provider.name,
+              cost: cost.total,
+              change: cost.change,
+              isIncrease: cost.changeType === 'increase'
+            };
+          });
+
+          setProviders(updatedProviders);
+        } catch (fallbackError) {
+          console.error('Error loading fallback data:', fallbackError);
+        }
       }
     };
 
     loadProviderData();
+
+    // Set up auto-refresh every 30 seconds
+    const refreshInterval = setInterval(() => {
+      loadProviderData();
+    }, 30000);
+
+    return () => clearInterval(refreshInterval);
   }, []);
 
-  // Fetch data from Electron or use mock data
+  // Fetch data from real API services
   const fetchData = useCallback(async () => {
     try {
-      // Get data for the active provider
-      const data = await getApiCost(activeProvider);
+      // Import the API integration service
+      const { fetchApiData } = await import('../../services/apiIntegrationService');
+
+      // Get data for the active provider using real API calls
+      const data = await fetchApiData(activeProvider);
+      console.log(`Fetched real API data for ${activeProvider}:`, data);
 
       // Update the active provider with new data
       setProviders(prev => prev.map(provider => {
@@ -132,6 +167,28 @@ const GlassMorphismWidget: React.FC<GlassMorphismWidgetProps> = ({
       lastUpdateRef.current = new Date();
     } catch (error) {
       console.error('Error fetching API cost data:', error);
+
+      // Fallback to Electron API if real API calls fail
+      try {
+        const data = await getApiCost(activeProvider);
+
+        // Update the active provider with fallback data
+        setProviders(prev => prev.map(provider => {
+          if (provider.id === activeProvider) {
+            return {
+              ...provider,
+              cost: data.total,
+              change: data.change,
+              isIncrease: data.changeType === 'increase'
+            };
+          }
+          return provider;
+        }));
+
+        lastUpdateRef.current = new Date();
+      } catch (fallbackError) {
+        console.error('Error fetching fallback data:', fallbackError);
+      }
     }
   }, [activeProvider]);
 

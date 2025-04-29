@@ -18,7 +18,9 @@ import {
   Tooltip,
   Card,
   CardContent,
+  Paper,
 } from '@mui/material';
+import RealTimeApiUsage from '../components/widgets/RealTimeApiUsage';
 import {
   TrendingUp as TrendingUpIcon,
   Warning as WarningIcon,
@@ -27,11 +29,14 @@ import {
   Add as AddIcon,
   Refresh as RefreshIcon,
   Settings as SettingsIcon,
+  ViewDay as ViewDayIcon,
+  ViewInAr as ViewInArIcon,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useApiProviders } from '../contexts/ApiProviderContext';
 import { useDashboardWidgets, DashboardWidget as DashboardWidgetType } from '../contexts/DashboardWidgetContext';
 import DashboardWidget from '../components/widgets/DashboardWidget';
+import MultiviewDisplay from '../components/widgets/MultiviewDisplay';
 import { isElectron } from '../services/electronService';
 import '../styles/components/layout/BentoGrid.css';
 
@@ -67,6 +72,7 @@ const ModernDashboard: React.FC = () => {
 
   // Add a refresh function
   const [lastRefreshed, setLastRefreshed] = useState(new Date());
+  const [showMultiview, setShowMultiview] = useState(false);
 
   const configuredProviders = providers.filter(provider => provider.isConfigured);
   const unconfiguredProviders = providers.filter(provider => !provider.isConfigured);
@@ -190,15 +196,31 @@ const ModernDashboard: React.FC = () => {
             Add Widget
           </Button>
           <Button
-            variant="contained"
+            variant={showMultiview ? "contained" : "outlined"}
             color="primary"
-            onClick={() => navigate('/settings/api-keys/new')}
-            startIcon={<ApiIcon />}
+            onClick={() => setShowMultiview(!showMultiview)}
+            startIcon={<ViewDayIcon />}
+            sx={{ mr: 1 }}
           >
-            Add API Key
+            Multiview
+          </Button>
+          <Button
+            variant="outlined"
+            color="primary"
+            onClick={() => navigate('/floating-widgets')}
+            startIcon={<ViewInArIcon />}
+          >
+            Floating Widgets
           </Button>
         </Box>
       </Box>
+
+      {/* Multiview Display */}
+      {showMultiview && (
+        <Box sx={{ mb: 4 }}>
+          <MultiviewDisplay onClose={() => setShowMultiview(false)} />
+        </Box>
+      )}
 
       {loading ? (
         <Box sx={{ display: 'flex', justifyContent: 'center', my: 4 }}>
@@ -228,43 +250,14 @@ const ModernDashboard: React.FC = () => {
         <>
           {/* Bento Grid Layout */}
           <div className="bento-grid">
-            {/* Total API Cost */}
+            {/* Real-Time API Usage */}
             <div className="bento-item medium cost-summary">
-              <div className="bento-item-header">
-                <h3 className="bento-item-title">Total API Cost (This Month)</h3>
-              </div>
-              <div className="bento-item-content">
-                <div className="value">${calculateTotalCost().toFixed(2)}</div>
-                <div className="usage-details">
-                  <span style={{ display: 'flex', alignItems: 'center', color: '#4caf50' }}>
-                    <TrendingUpIcon sx={{ mr: 0.5, fontSize: 16 }} />
-                    12% less than last month
-                  </span>
-                  <span>Budget: $100.00</span>
-                </div>
-                <div className="usage-bar">
-                  <div
-                    className={`usage-bar-fill ${calculateTotalCost() > 80 ? 'high' : calculateTotalCost() > 50 ? 'medium' : 'low'}`}
-                    style={{ width: `${Math.min(calculateTotalCost(), 100)}%` }}
-                  ></div>
-                </div>
-              </div>
+              <RealTimeApiUsage refreshInterval={30} />
             </div>
 
-            {/* API Requests */}
+            {/* API Requests - Gemini */}
             <div className="bento-item medium">
-              <div className="bento-item-header">
-                <h3 className="bento-item-title">API Requests (Today)</h3>
-              </div>
-              <div className="bento-item-content">
-                <div className="value">{calculateTotalRequests().toLocaleString()}</div>
-                <div className="usage-details">
-                  <span style={{ display: 'flex', alignItems: 'center', color: '#4caf50' }}>
-                    <TrendingUpIcon sx={{ mr: 0.5, fontSize: 16 }} />
-                    8% more than yesterday
-                  </span>
-                </div>
-              </div>
+              <RealTimeApiUsage provider="google" refreshInterval={30} />
             </div>
 
             {/* Active API Providers */}
@@ -287,49 +280,7 @@ const ModernDashboard: React.FC = () => {
 
             {/* API Status */}
             <div className="bento-item medium provider-list">
-              <div className="bento-item-header">
-                <h3 className="bento-item-title">API Status</h3>
-              </div>
-              <div className="bento-item-content">
-                {configuredProviders.map((provider) => {
-                  // Get usage data from our API cost data
-                  const providerData = apiCostData[provider.id];
-                  const usagePercentage = providerData?.usagePercentage || 0;
-
-                  return (
-                    <div key={provider.id} style={{ padding: '12px 0', borderBottom: '1px solid rgba(255, 255, 255, 0.05)' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                        <div className="provider-status">
-                          <div
-                            className={`provider-status-indicator ${
-                              usagePercentage > 80 ? 'error' :
-                              usagePercentage > 50 ? 'warning' : 'healthy'
-                            }`}
-                          ></div>
-                          <span className="provider-status-name">{provider.name}</span>
-                        </div>
-                        <span className="provider-status-value">${providerData?.total.toFixed(2) || '0.00'} ({usagePercentage}% Used)</span>
-                      </div>
-                      <div className="usage-bar">
-                        <div
-                          className={`usage-bar-fill ${
-                            usagePercentage > 80 ? 'high' :
-                            usagePercentage > 50 ? 'medium' : 'low'
-                          }`}
-                          style={{ width: `${usagePercentage}%` }}
-                        ></div>
-                      </div>
-                    </div>
-                  );
-                })}
-                {configuredProviders.length === 0 && (
-                  <div style={{ padding: '12px 0', textAlign: 'center' }}>
-                    <Typography variant="body2" color="text.secondary">
-                      No API providers configured
-                    </Typography>
-                  </div>
-                )}
-              </div>
+              <RealTimeApiUsage refreshInterval={30} compact={true} />
             </div>
 
             {/* Alerts */}
@@ -420,6 +371,13 @@ const ModernDashboard: React.FC = () => {
                 <Typography variant="h5" component="h2" sx={{ fontWeight: 600 }}>
                   Widgets
                 </Typography>
+                <Button
+                  variant="outlined"
+                  size="small"
+                  onClick={() => navigate('/widgets')}
+                >
+                  View All Widgets
+                </Button>
               </Box>
               <div className="bento-grid">
                 {widgets.map((widget) => (

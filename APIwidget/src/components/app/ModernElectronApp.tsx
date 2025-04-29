@@ -4,11 +4,25 @@ import {
   ThemeProvider,
   CssBaseline
 } from '@mui/material';
-import { BrowserRouter as Router } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { DashboardWidgetProvider } from '../../contexts/DashboardWidgetContext';
 import { ApiProviderProvider } from '../../contexts/ApiProviderContext';
 import { AuthProvider } from '../../contexts/MockAuthContext';
 import ModernDashboard from '../../pages/ModernDashboard';
+import ApiKeySettings from '../../pages/ApiKeySettings';
+import ProviderDetail from '../../pages/ProviderDetail';
+import OpenAIProviderDetail from '../../pages/providers/OpenAIProviderDetail';
+import ClaudeProviderDetail from '../../pages/providers/ClaudeProviderDetail';
+import GeminiProviderDetail from '../../pages/providers/GeminiProviderDetail';
+import WidgetGalleryPage from '../../pages/WidgetGalleryPage';
+import FloatingWidgetsPage from '../../pages/FloatingWidgetsPage';
+import UsagePage from '../../pages/UsagePage';
+import HistoryPage from '../../pages/HistoryPage';
+import HelpPage from '../../pages/HelpPage';
+// Admin pages
+import AdminDashboard from '../../pages/AdminDashboard';
+import UserManagement from '../../pages/admin/UserManagement';
+import SystemSettings from '../../pages/admin/SystemSettings';
 import ElectronAppLayout from '../layout/ElectronAppLayout';
 import { isElectron } from '../../services/electronService';
 
@@ -126,7 +140,28 @@ const ModernElectronApp: React.FC = () => {
                 onToggleWidget={toggleWidgetVisibility}
                 showWidget={showWidget}
               >
-                <ModernDashboard />
+                <Routes>
+                  <Route path="/" element={<ModernDashboard />} />
+                  <Route path="/settings/api-keys" element={<ApiKeySettings />} />
+                  <Route path="/settings/api-keys/:providerId" element={<ApiKeySettings />} />
+                  <Route path="/settings/api-keys/new" element={<ApiKeySettings />} />
+                  <Route path="/provider/:providerId" element={<ProviderDetail />} />
+                  <Route path="/provider/openai" element={<OpenAIProviderDetail />} />
+                  <Route path="/provider/claude" element={<ClaudeProviderDetail />} />
+                  <Route path="/provider/google" element={<GeminiProviderDetail />} />
+                  <Route path="/widgets" element={<WidgetGalleryPage />} />
+                  <Route path="/floating-widgets" element={<FloatingWidgetsPage />} />
+                  <Route path="/usage" element={<UsagePage />} />
+                  <Route path="/history" element={<HistoryPage />} />
+                  <Route path="/help" element={<HelpPage />} />
+
+                  {/* Admin Routes */}
+                  <Route path="/admin" element={<AdminDashboard />} />
+                  <Route path="/admin/users" element={<UserManagement />} />
+                  <Route path="/admin/settings" element={<SystemSettings />} />
+
+                  <Route path="*" element={<Navigate to="/" replace />} />
+                </Routes>
               </ElectronAppLayout>
             </Router>
           </DashboardWidgetProvider>

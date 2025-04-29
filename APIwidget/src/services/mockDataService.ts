@@ -34,8 +34,8 @@ const PROVIDERS: ProviderData[] = [
     id: 'google',
     name: 'Gemini',
     baseRate: 0.0001, // $0.0001 per token
-    usagePattern: 'steady',
-    volatility: 0.2
+    usagePattern: 'growing',
+    volatility: 0.3
   },
   {
     id: 'github',

@@ -20,6 +20,15 @@ const mockStorage: Record<string, ApiKeyEntry[]> = {
       created_at: new Date().toISOString(),
       last_used: new Date().toISOString(),
       user_id: 'demo-user'
+    },
+    {
+      id: '3',
+      provider: 'google',
+      key: 'AIzaSyAmfGElxy4h4PXxMnQ6_cj7WmInQKBd1Bk',
+      label: 'Gemini API Key',
+      created_at: new Date().toISOString(),
+      last_used: new Date().toISOString(),
+      user_id: 'demo-user'
     }
   ]
 };
@@ -31,8 +40,8 @@ let currentUserId = 'demo-user';
  * Save an API key to the mock storage
  */
 export const saveApiKey = async (
-  provider: string, 
-  key: string, 
+  provider: string,
+  key: string,
   label?: string
 ): Promise<void> => {
   try {
@@ -47,7 +56,7 @@ export const saveApiKey = async (
 
     // Check if key already exists
     const existingKeyIndex = mockStorage[currentUserId].findIndex(k => k.provider === provider);
-    
+
     if (existingKeyIndex >= 0) {
       // Update existing key
       mockStorage[currentUserId][existingKeyIndex] = {
@@ -85,7 +94,7 @@ export const getApiKey = async (provider: string): Promise<string | null> => {
 
     const keys = mockStorage[currentUserId] || [];
     const keyEntry = keys.find(k => k.provider === provider);
-    
+
     return keyEntry?.key || null;
   } catch (error) {
     console.error('Error getting API key:', error);
@@ -138,7 +147,7 @@ export const updateKeyLastUsed = async (provider: string): Promise<void> => {
 
     const keys = mockStorage[currentUserId] || [];
     const keyIndex = keys.findIndex(k => k.provider === provider);
-    
+
     if (keyIndex >= 0) {
       mockStorage[currentUserId][keyIndex].last_used = new Date().toISOString();
     }
