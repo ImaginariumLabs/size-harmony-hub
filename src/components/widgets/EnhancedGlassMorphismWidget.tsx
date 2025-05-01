@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import '../../styles/components/widgets/GlassMorphismWidget.css';
 import { getApiCost } from '../../services/electronService';
-;
+import { IconButton, Tooltip } from '@mui/material';
 import {
   Settings as SettingsIcon,
   OpenInFull as ExpandIcon,
