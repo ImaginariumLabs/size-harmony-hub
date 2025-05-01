@@ -1,0 +1,161 @@
+/*
+ * electron.css
+ * Specific styles for the Electron environment
+ */
+
+/* Ensure the app takes up the full Electron window */
+html, body, #root {
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  background-color: #121212;
+  color: #ffffff;
+  font-family: 'Inter', 'Roboto', 'Helvetica', 'Arial', sans-serif;
+}
+
+/* Fix for Electron-specific display issues */
+.electron-environment {
+  background-color: #121212 !important;
+  color: #ffffff !important;
+}
+
+/* Fix for black screen issue in Electron */
+.electron-environment .MuiBox-root,
+.electron-environment .MuiContainer-root,
+.electron-environment .MuiPaper-root,
+.electron-environment .MuiCard-root {
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+/* Ensure proper background colors */
+.electron-environment .MuiBox-root {
+  background-color: #121212 !important;
+}
+
+.electron-environment .MuiPaper-root,
+.electron-environment .MuiCard-root {
+  background-color: #1e1e1e !important;
+  color: #ffffff !important;
+}
+
+/* Fix for dashboard components */
+.electron-environment .dashboard-container,
+.electron-environment .dashboard-grid,
+.electron-environment .dashboard-item {
+  visibility: visible !important;
+  opacity: 1 !important;
+  display: flex !important;
+}
+
+/* Ensure content is visible */
+.electron-environment #root {
+  visibility: visible !important;
+  opacity: 1 !important;
+  display: block !important;
+}
+
+.electron-app {
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  background-color: #121212;
+  color: #ffffff;
+}
+
+.electron-app .content-area {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* Frameless window styles */
+.frameless-window {
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+/* Custom title bar styles */
+.title-bar {
+  -webkit-app-region: drag;
+  user-select: none;
+}
+
+.title-bar-controls {
+  -webkit-app-region: no-drag;
+}
+
+/* Window control buttons */
+.window-control-button {
+  width: 30px;
+  height: 30px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s ease;
+}
+
+.window-control-button:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.window-control-button.close:hover {
+  background-color: rgba(244, 67, 54, 0.8);
+}
+
+/* Electron-specific scrollbar styles */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* Ensure proper backdrop-filter support in Electron */
+@supports (-webkit-backdrop-filter: none) or (backdrop-filter: none) {
+  .bento-item,
+  .glass-morphism,
+  .glass-widget {
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+  }
+}
+
+/* Fallback for browsers/Electron versions that don't support backdrop-filter */
+@supports not ((-webkit-backdrop-filter: none) or (backdrop-filter: none)) {
+  .bento-item,
+  .glass-morphism,
+  .glass-widget {
+    background: rgba(30, 30, 30, 0.9);
+  }
+}
+
+/* Fix for draggable regions in Electron */
+.glass-widget-header {
+  -webkit-app-region: drag;
+}
+
+.glass-widget-header .glass-widget-controls,
+.glass-widget-header button {
+  -webkit-app-region: no-drag;
+}
+
+

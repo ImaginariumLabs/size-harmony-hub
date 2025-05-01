@@ -1,0 +1,121 @@
+/*
+ * DraggableWidgetsGrid.css
+ * Styling for the draggable widgets grid
+ */
+
+.draggable-widgets-container {
+  width: 100%;
+  position: relative;
+}
+
+.draggable-grid-container {
+  width: 100%;
+  overflow: hidden;
+  margin-bottom: 24px;
+}
+
+/* Ensure proper rendering in Electron */
+.draggable-grid-container.electron-environment {
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+.draggable-grid {
+  width: 100%;
+}
+
+.draggable-grid-item {
+  background: rgba(30, 30, 30, 0.7);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  transition: box-shadow 0.3s ease, border 0.3s ease, transform 0.3s ease;
+  overflow: hidden;
+  position: relative;
+  animation: fadeIn 0.5s ease forwards;
+}
+
+.draggable-grid-item:hover {
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  transform: translateY(-2px);
+}
+
+/* Dragging state */
+.draggable-grid-item.react-draggable-dragging {
+  z-index: 100;
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  cursor: grabbing;
+}
+
+/* Resizing state */
+.draggable-grid-item.react-resizable-resizing {
+  z-index: 100;
+  opacity: 0.8;
+  transition: none;
+}
+
+/* Resize handle */
+.react-resizable-handle {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  bottom: 0;
+  right: 0;
+  background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255, 255, 255, 0.5)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 22L12 12M22 12L12 22"></path></svg>');
+  background-position: bottom right;
+  background-repeat: no-repeat;
+  padding: 0 3px 3px 0;
+  background-origin: content-box;
+  box-sizing: border-box;
+  cursor: se-resize;
+  opacity: 0.5;
+  transition: opacity 0.2s ease;
+}
+
+.react-resizable-handle:hover {
+  opacity: 1;
+}
+
+/* Widget drag handle */
+.widget-drag-handle {
+  cursor: grab;
+}
+
+.widget-drag-handle:active {
+  cursor: grabbing;
+}
+
+/* Fade-in animation */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 1200px) {
+  .draggable-grid {
+    width: 100%;
+  }
+}
+
+@media (max-width: 768px) {
+  .draggable-grid {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .draggable-grid {
+    width: 100%;
+  }
+}

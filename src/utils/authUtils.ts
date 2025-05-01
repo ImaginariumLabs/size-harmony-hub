@@ -1,4 +1,6 @@
-import { User } from '../types/auth';
+/**
+ * Authentication utilities for the APIwidget application
+ */
 
 /**
  * User roles in the application
@@ -11,41 +13,68 @@ export enum UserRole {
 }
 
 /**
- * Check if a user has a specific role
- * @param user The user object
- * @param role The role to check
- * @returns {boolean} True if the user has the specified role
- */
-export const hasRole = (user: User | null, role: UserRole): boolean => {
-  if (!user) return false;
-  return user.role === role;
-};
-
-/**
  * Check if a user has admin privileges
- * @param user The user object
- * @returns {boolean} True if the user is an admin
+ * @param role The user's role
+ * @returns True if the user is an admin
  */
-export const isAdmin = (user: User | null): boolean => {
-  return hasRole(user, UserRole.ADMIN);
+export const isAdmin = (role?: string): boolean => {
+  return role === UserRole.ADMIN;
 };
 
 /**
- * Check if a user has manager privileges
- * @param user The user object
- * @returns {boolean} True if the user is a manager
+ * Check if a user has manager privileges or higher
+ * @param role The user's role
+ * @returns True if the user is a manager or admin
  */
-export const isManager = (user: User | null): boolean => {
-  return hasRole(user, UserRole.MANAGER) || isAdmin(user);
+export const isManagerOrHigher = (role?: string): boolean => {
+  return role === UserRole.ADMIN || role === UserRole.MANAGER;
 };
 
 /**
- * Check if a user can access admin features
- * This combines platform checks with role checks
- * @param user The user object
- * @param isWebPlatform Whether the app is running in web mode
- * @returns {boolean} True if the user can access admin features
+ * Check if a user has regular user privileges or higher
+ * @param role The user's role
+ * @returns True if the user is a user, manager, or admin
  */
-export const canAccessAdminFeatures = (user: User | null, isWebPlatform: boolean): boolean => {
-  return isWebPlatform && isAdmin(user);
+export const isUserOrHigher = (role?: string): boolean => {
+  return role === UserRole.ADMIN || role === UserRole.MANAGER || role === UserRole.USER;
+};
+
+/**
+ * Get the display name for a role
+ * @param role The user's role
+ * @returns The display name for the role
+ */
+export const getRoleDisplayName = (role?: string): string => {
+  switch (role) {
+    case UserRole.ADMIN:
+      return 'Administrator';
+    case UserRole.MANAGER:
+      return 'Manager';
+    case UserRole.USER:
+      return 'User';
+    case UserRole.VIEWER:
+      return 'Viewer';
+    default:
+      return 'Unknown';
+  }
+};
+
+/**
+ * Get the available roles for user assignment
+ * @param currentUserRole The current user's role
+ * @returns Array of roles that can be assigned
+ */
+export const getAvailableRoles = (currentUserRole?: string): UserRole[] => {
+  // Admins can assign any role
+  if (currentUserRole === UserRole.ADMIN) {
+    return [UserRole.ADMIN, UserRole.MANAGER, UserRole.USER, UserRole.VIEWER];
+  }
+
+  // Managers can assign user and viewer roles
+  if (currentUserRole === UserRole.MANAGER) {
+    return [UserRole.USER, UserRole.VIEWER];
+  }
+
+  // Others can't assign roles
+  return [];
 };

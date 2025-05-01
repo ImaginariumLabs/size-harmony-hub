@@ -1,15 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import {
   Box,
-  Typography,
-  Button,
   CircularProgress,
   Tabs,
   Tab,
+  Typography,
   Paper,
   Divider,
   IconButton,
   Tooltip,
+  Button
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -18,6 +18,9 @@ import {
 import { useNavigate, useParams } from 'react-router-dom';
 import { useApiProviders } from '../contexts/ApiProviderContext';
 import GeminiApiSettings from '../components/settings/GeminiApiSettings';
+import OpenAIApiSettings from '../components/settings/OpenAIApiSettings';
+import ClaudeApiSettings from '../components/settings/ClaudeApiSettings';
+import { isElectron } from '../services/electronService';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -25,7 +28,9 @@ interface TabPanelProps {
   value: number;
 }
 
-const TabPanel: React.FC<TabPanelProps> = ({ children, value, index, ...other }) => {
+function TabPanel(props: TabPanelProps) {
+  const { children, value, index, ...other } = props;
+
   return (
     <div
       role="tabpanel"
@@ -34,14 +39,17 @@ const TabPanel: React.FC<TabPanelProps> = ({ children, value, index, ...other })
       aria-labelledby={`api-key-tab-${index}`}
       {...other}
     >
-      {value === index && (
-        <Box sx={{ py: 3 }}>
-          {children}
-        </Box>
-      )}
+      {value === index && <Box>{children}</Box>}
     </div>
   );
-};
+}
+
+function a11yProps(index: number) {
+  return {
+    id: `api-key-tab-${index}`,
+    'aria-controls': `api-key-tabpanel-${index}`,
+  };
+}
 
 const ApiKeySettings: React.FC = () => {
   const navigate = useNavigate();
@@ -58,6 +66,33 @@ const ApiKeySettings: React.FC = () => {
       }
     }
   }, [providerId, providers]);
+
+  // Ensure all providers are displayed
+  useEffect(() => {
+    if (providers.length === 0) {
+      console.error('No API providers found');
+    } else {
+      console.log('Available providers:', providers.map(p => p.id).join(', '));
+    }
+  }, [providers]);
+
+  // Add electron-environment class to body when in Electron
+  useEffect(() => {
+    if (isElectron()) {
+      document.body.classList.add('electron-environment');
+      console.log('Added electron-environment class to body in ApiKeySettings');
+
+      // Force a re-render to ensure proper display in Electron
+      const timer = setTimeout(() => {
+        console.log('Forcing re-render in ApiKeySettings');
+      }, 500);
+
+      return () => {
+        document.body.classList.remove('electron-environment');
+        clearTimeout(timer);
+      };
+    }
+  }, []);
 
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setActiveTab(newValue);
@@ -97,54 +132,34 @@ const ApiKeySettings: React.FC = () => {
       </Box>
 
       <Paper sx={{ borderRadius: 2, overflow: 'hidden', background: 'rgba(30, 30, 30, 0.7)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255, 255, 255, 0.1)' }}>
-        <Tabs
-          value={activeTab}
-          onChange={handleTabChange}
-          variant="scrollable"
-          scrollButtons="auto"
-          sx={{
-            borderBottom: 1,
-            borderColor: 'divider',
-            '& .MuiTab-root': {
-              py: 2,
-              px: 3,
-            }
-          }}
-        >
-          {providers.map((provider) => (
-            <Tab
-              key={provider.id}
-              label={provider.name}
-              icon={
-                <Box
-                  sx={{
-                    width: 24,
-                    height: 24,
-                    borderRadius: '50%',
-                    backgroundColor: provider.color,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: '#fff',
-                    fontWeight: 'bold',
-                    fontSize: '12px',
-                    mr: 1
-                  }}
-                >
-                  {provider.name.charAt(0)}
-                </Box>
-              }
-              iconPosition="start"
-              sx={{
-                display: 'flex',
-                flexDirection: 'row',
-                alignItems: 'center',
-                textTransform: 'none',
-                fontWeight: 500,
-              }}
-            />
-          ))}
-        </Tabs>
+        <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+          <Tabs
+            value={activeTab}
+            onChange={handleTabChange}
+            aria-label="API provider tabs"
+            variant="scrollable"
+            scrollButtons="auto"
+            sx={{
+              '& .MuiTabs-indicator': {
+                backgroundColor: theme => theme.palette.primary.main,
+              },
+            }}
+          >
+            {providers.map((provider, index) => (
+              <Tab
+                key={provider.id}
+                label={provider.name}
+                {...a11yProps(index)}
+                sx={{
+                  color: 'text.secondary',
+                  '&.Mui-selected': {
+                    color: 'text.primary',
+                  },
+                }}
+              />
+            ))}
+          </Tabs>
+        </Box>
 
         <Box sx={{ p: 3 }}>
           {providers.map((provider, index) => (
@@ -155,22 +170,14 @@ const ApiKeySettings: React.FC = () => {
               <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
                 {provider.description}
               </Typography>
-              
+
               <Divider sx={{ my: 3 }} />
-              
+
               {provider.id === 'google' && <GeminiApiSettings />}
-              
-              {provider.id === 'openai' && (
-                <Typography variant="body1">
-                  OpenAI API key settings will be implemented here.
-                </Typography>
-              )}
-              
-              {provider.id === 'claude' && (
-                <Typography variant="body1">
-                  Claude API key settings will be implemented here.
-                </Typography>
-              )}
+
+              {provider.id === 'openai' && <OpenAIApiSettings />}
+
+              {provider.id === 'claude' && <ClaudeApiSettings />}
             </TabPanel>
           ))}
         </Box>
