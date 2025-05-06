@@ -1,38 +1,38 @@
 import React, { useState } from 'react';
 import {
   Box,
-  Grid,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Switch,
-  FormControlLabel,
-  Typography,
   Button,
   Card,
-  CardContent,
   CardActions,
-  Paper,
-  IconButton,
-  Tooltip,
+  CardContent,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
   Divider,
   FormControl,
+  FormControlLabel,
+  Grid,
+  IconButton,
   InputLabel,
+  MenuItem,
+  Paper,
   Select,
-  MenuItem
+  Switch,
+  Tooltip,
+  Typography,
 } from '@mui/material';
 import {
   Add as AddIcon,
   Visibility as VisibilityIcon,
   VisibilityOff as VisibilityOffIcon,
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   Edit as EditIcon,
   Delete as DeleteIcon,
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   Settings as SettingsIcon,
   OpenInNew as OpenInNewIcon,
-  Close as CloseIcon
+  Close as CloseIcon,
 } from '@mui/icons-material';
 import { useDashboardWidgets } from '../../contexts/DashboardWidgetContext';
 import { useApiProviders } from '../../contexts/ApiProviderContext';
@@ -63,8 +63,8 @@ const WidgetPreview: React.FC<WidgetPreviewProps> = ({ type, providerId, size, o
         transition: 'transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out',
         '&:hover': {
           transform: 'translateY(-4px)',
-          boxShadow: '0 8px 16px rgba(0, 0, 0, 0.2)'
-        }
+          boxShadow: '0 8px 16px rgba(0, 0, 0, 0.2)',
+        },
       }}
     >
       <CardContent sx={{ flexGrow: 1 }}>
@@ -78,7 +78,7 @@ const WidgetPreview: React.FC<WidgetPreviewProps> = ({ type, providerId, size, o
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              mr: 1
+              mr: 1,
             }}
           >
             <Typography variant="subtitle2" sx={{ color: 'white', fontWeight: 'bold' }}>
@@ -102,27 +102,43 @@ const WidgetPreview: React.FC<WidgetPreviewProps> = ({ type, providerId, size, o
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            flexDirection: 'column'
+            flexDirection: 'column',
           }}
         >
           {type === 'cost' && (
             <>
-              <Typography variant="h4" sx={{ fontWeight: 'bold' }}>$0.00</Typography>
-              <Typography variant="body2" color="success.main">↓ $0.00 (0%)</Typography>
+              <Typography variant="h4" sx={{ fontWeight: 'bold' }}>
+                $0.00
+              </Typography>
+              <Typography variant="body2" color="success.main">
+                ↓ $0.00 (0%)
+              </Typography>
             </>
           )}
 
           {type === 'usage' && (
             <>
-              <Typography variant="h4" sx={{ fontWeight: 'bold' }}>0</Typography>
+              <Typography variant="h4" sx={{ fontWeight: 'bold' }}>
+                0
+              </Typography>
               <Typography variant="body2">Requests Today</Typography>
             </>
           )}
 
           {type === 'quota' && (
             <>
-              <Box sx={{ width: '100%', height: 10, bgcolor: 'rgba(255, 255, 255, 0.1)', borderRadius: 5, mb: 1 }}>
-                <Box sx={{ width: '30%', height: '100%', bgcolor: 'primary.main', borderRadius: 5 }} />
+              <Box
+                sx={{
+                  width: '100%',
+                  height: 10,
+                  bgcolor: 'rgba(255, 255, 255, 0.1)',
+                  borderRadius: 5,
+                  mb: 1,
+                }}
+              >
+                <Box
+                  sx={{ width: '30%', height: '100%', bgcolor: 'primary.main', borderRadius: 5 }}
+                />
               </Box>
               <Typography variant="body2">30% of quota used</Typography>
             </>
@@ -131,13 +147,7 @@ const WidgetPreview: React.FC<WidgetPreviewProps> = ({ type, providerId, size, o
       </CardContent>
 
       <CardActions>
-        <Button
-          startIcon={<AddIcon />}
-          variant="contained"
-          size="small"
-          onClick={onAdd}
-          fullWidth
-        >
+        <Button startIcon={<AddIcon />} variant="contained" size="small" onClick={onAdd} fullWidth>
           Add Widget
         </Button>
       </CardActions>
@@ -165,11 +175,11 @@ const WidgetGallery: React.FC = () => {
     if (selectedProvider) {
       addWidget({
         providerId: selectedProvider,
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         type: selectedType as any,
         size: selectedSize,
         position: { x: Math.random() * 500, y: Math.random() * 300 },
-        isVisible: true
+        isVisible: true,
       });
       setOpenDialog(false);
     }
@@ -191,7 +201,8 @@ const WidgetGallery: React.FC = () => {
       </Box>
 
       <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
-        Choose from a variety of widgets to monitor your API usage and costs. Add multiple widgets to your dashboard or as floating widgets.
+        Choose from a variety of widgets to monitor your API usage and costs. Add multiple widgets
+        to your dashboard or as floating widgets.
       </Typography>
 
       <Grid container spacing={3}>
@@ -225,7 +236,15 @@ const WidgetGallery: React.FC = () => {
 
       {widgets.length > 0 && (
         <>
-          <Box sx={{ mt: 6, mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Box
+            sx={{
+              mt: 6,
+              mb: 3,
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+            }}
+          >
             <Typography variant="h5" component="h2" sx={{ fontWeight: 600 }}>
               Your Widgets
             </Typography>
@@ -249,7 +268,14 @@ const WidgetGallery: React.FC = () => {
                       border: '1px solid rgba(255, 255, 255, 0.1)',
                     }}
                   >
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        mb: 2,
+                      }}
+                    >
                       <Box sx={{ display: 'flex', alignItems: 'center' }}>
                         <Box
                           sx={{
@@ -260,10 +286,13 @@ const WidgetGallery: React.FC = () => {
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
-                            mr: 1
+                            mr: 1,
                           }}
                         >
-                          <Typography variant="subtitle2" sx={{ color: 'white', fontWeight: 'bold' }}>
+                          <Typography
+                            variant="subtitle2"
+                            sx={{ color: 'white', fontWeight: 'bold' }}
+                          >
                             {provider?.name.charAt(0) || '?'}
                           </Typography>
                         </Box>
@@ -271,7 +300,7 @@ const WidgetGallery: React.FC = () => {
                       </Box>
 
                       <Box>
-                        <Tooltip title={widget.isVisible ? "Hide Widget" : "Show Widget"}>
+                        <Tooltip title={widget.isVisible ? 'Hide Widget' : 'Show Widget'}>
                           <IconButton
                             size="small"
                             onClick={() => toggleWidgetVisibility(widget.id)}
@@ -331,8 +360,8 @@ const WidgetGallery: React.FC = () => {
             background: 'rgba(30, 30, 30, 0.95)',
             backdropFilter: 'blur(10px)',
             border: '1px solid rgba(255, 255, 255, 0.1)',
-            borderRadius: 2
-          }
+            borderRadius: 2,
+          },
         }}
       >
         <DialogTitle>
@@ -344,7 +373,7 @@ const WidgetGallery: React.FC = () => {
               position: 'absolute',
               right: 8,
               top: 8,
-              color: (theme) => theme.palette.grey[500],
+              color: theme => theme.palette.grey[500],
             }}
           >
             <CloseIcon />
@@ -358,7 +387,7 @@ const WidgetGallery: React.FC = () => {
               labelId="widget-type-label"
               value={selectedType}
               label="Widget Type"
-              onChange={(e) => setSelectedType(e.target.value)}
+              onChange={e => setSelectedType(e.target.value)}
             >
               <MenuItem value="cost">Cost</MenuItem>
               <MenuItem value="usage">Usage</MenuItem>
@@ -372,7 +401,7 @@ const WidgetGallery: React.FC = () => {
               labelId="provider-label"
               value={selectedProvider}
               label="API Provider"
-              onChange={(e) => setSelectedProvider(e.target.value)}
+              onChange={e => setSelectedProvider(e.target.value)}
             >
               {providers.map(provider => (
                 <MenuItem key={provider.id} value={provider.id}>
@@ -388,7 +417,7 @@ const WidgetGallery: React.FC = () => {
               labelId="size-label"
               value={selectedSize}
               label="Widget Size"
-              onChange={(e) => setSelectedSize(e.target.value as 'small' | 'medium' | 'large')}
+              onChange={e => setSelectedSize(e.target.value as 'small' | 'medium' | 'large')}
             >
               <MenuItem value="small">Small</MenuItem>
               <MenuItem value="medium">Medium</MenuItem>
@@ -396,19 +425,12 @@ const WidgetGallery: React.FC = () => {
             </Select>
           </FormControl>
 
-          <FormControlLabel
-            control={<Switch defaultChecked />}
-            label="Show as floating widget"
-          />
+          <FormControlLabel control={<Switch defaultChecked />} label="Show as floating widget" />
         </DialogContent>
 
         <DialogActions>
           <Button onClick={() => setOpenDialog(false)}>Cancel</Button>
-          <Button
-            variant="contained"
-            onClick={handleAddWidget}
-            disabled={!selectedProvider}
-          >
+          <Button variant="contained" onClick={handleAddWidget} disabled={!selectedProvider}>
             Add Widget
           </Button>
         </DialogActions>
