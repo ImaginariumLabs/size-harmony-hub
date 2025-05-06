@@ -1,10 +1,28 @@
 import React, { useState, useEffect } from 'react';
-import { Box, CircularProgress, Alert, Tabs, Tab, Typography, Button, Card, CardContent, Paper, Divider, IconButton, Tooltip } from '@mui/material';
+import {
+  Alert,
+  Box,
+  Button,
+  Card,
+  CardContent,
+  CircularProgress,
+  Divider,
+  FormControl,
+  IconButton,
+  InputLabel,
+  MenuItem,
+  Paper,
+  Select,
+  Tab,
+  Tabs,
+  Tooltip,
+  Typography,
+} from '@mui/material';
 import {
   Refresh as RefreshIcon,
   TrendingUp as TrendingUpIcon,
   TrendingDown as TrendingDownIcon,
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   Info as InfoIcon,
 } from '@mui/icons-material';
 import { useApiProviders } from '../contexts/ApiProviderContext';
@@ -29,11 +47,7 @@ function TabPanel(props: TabPanelProps) {
       aria-labelledby={`usage-tab-${index}`}
       {...other}
     >
-      {value === index && (
-        <Box sx={{ p: 3 }}>
-          {children}
-        </Box>
-      )}
+      {value === index && <Box sx={{ p: 3 }}>{children}</Box>}
     </div>
   );
 }
@@ -46,7 +60,7 @@ function a11yProps(index: number) {
 }
 
 const UsagePage: React.FC = () => {
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { providers, loading: providersLoading } = useApiProviders();
   const [tabValue, setTabValue] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
@@ -72,9 +86,7 @@ const UsagePage: React.FC = () => {
 
   // Fetch data on component mount
 
-
-
-
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     fetchUsageData();
   }, []);
@@ -135,11 +147,17 @@ const UsagePage: React.FC = () => {
           <Typography variant="body2" color="text.secondary">
             Last updated: {formatLastRefreshed()}
           </Typography>
-          <Tooltip title="Refresh data">
-            <IconButton onClick={fetchUsageData} size="small" disabled={isLoading}>
-              {isLoading ? <CircularProgress size={20} /> : <RefreshIcon />}
+          {isLoading ? (
+            <IconButton size="small" disabled>
+              <CircularProgress size={20} />
             </IconButton>
-          </Tooltip>
+          ) : (
+            <Tooltip title="Refresh data">
+              <IconButton onClick={fetchUsageData} size="small">
+                <RefreshIcon />
+              </IconButton>
+            </Tooltip>
+          )}
         </Box>
       </Box>
 
@@ -174,7 +192,14 @@ const UsagePage: React.FC = () => {
 
             {/* Usage Trends Tab */}
             <TabPanel value={tabValue} index={0}>
-              <Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <Box
+                sx={{
+                  mb: 3,
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                }}
+              >
                 <Typography variant="h6" component="h3">
                   API Usage Over Time
                 </Typography>
@@ -208,7 +233,7 @@ const UsagePage: React.FC = () => {
               <UsageLineChart
                 data={generateSampleData(timeRange === 'day' ? 24 : timeRange === 'week' ? 7 : 30)}
                 height={300}
-                formatValue={(value) => `$${value.toFixed(2)}`}
+                formatValue={value => `$${value.toFixed(2)}`}
                 color="#90caf9"
               />
 
@@ -281,7 +306,7 @@ const UsagePage: React.FC = () => {
               <UsageBarChart
                 data={generateProviderComparisonData()}
                 height={300}
-                formatValue={(value) => `$${value.toFixed(2)}`}
+                formatValue={value => `$${value.toFixed(2)}`}
               />
 
               <Box sx={{ mt: 4 }}>
@@ -346,7 +371,7 @@ const UsagePage: React.FC = () => {
                           { label: 'Gemini Pro', value: 1.78, color: '#4285F4' },
                         ]}
                         height={250}
-                        formatValue={(value) => `$${value.toFixed(2)}`}
+                        formatValue={value => `$${value.toFixed(2)}`}
                       />
                     </CardContent>
                   </Card>
@@ -363,10 +388,10 @@ const UsagePage: React.FC = () => {
                       <UsageBarChart
                         data={[
                           { label: 'Prompt Tokens', value: 42.35, color: '#3B82F6' },
-                          { label: 'Completion Tokens', value: 85.10, color: '#10B981' },
+                          { label: 'Completion Tokens', value: 85.1, color: '#10B981' },
                         ]}
                         height={250}
-                        formatValue={(value) => `$${value.toFixed(2)}`}
+                        formatValue={value => `$${value.toFixed(2)}`}
                       />
                     </CardContent>
                   </Card>
@@ -386,8 +411,9 @@ const UsagePage: React.FC = () => {
                         Prompt Engineering
                       </Typography>
                       <Typography variant="body2">
-                        Optimize your prompts to be more concise. Your current prompt-to-completion ratio is 1:2,
-                        which suggests you could reduce prompt length by up to 20% without affecting quality.
+                        Optimize your prompts to be more concise. Your current prompt-to-completion
+                        ratio is 1:2, which suggests you could reduce prompt length by up to 20%
+                        without affecting quality.
                       </Typography>
                     </Paper>
                   </Box>
@@ -398,8 +424,9 @@ const UsagePage: React.FC = () => {
                         Model Selection
                       </Typography>
                       <Typography variant="body2">
-                        Consider using GPT-3.5 for simpler tasks. Our analysis shows that 35% of your GPT-4
-                        requests could be handled by GPT-3.5 with similar results at 1/10th the cost.
+                        Consider using GPT-3.5 for simpler tasks. Our analysis shows that 35% of
+                        your GPT-4 requests could be handled by GPT-3.5 with similar results at
+                        1/10th the cost.
                       </Typography>
                     </Paper>
                   </Box>
@@ -410,8 +437,9 @@ const UsagePage: React.FC = () => {
                         Caching Strategy
                       </Typography>
                       <Typography variant="body2">
-                        Implement response caching for common queries. We've identified that 22% of your
-                        requests are similar enough that caching could significantly reduce API calls.
+                        Implement response caching for common queries. We've identified that 22% of
+                        your requests are similar enough that caching could significantly reduce API
+                        calls.
                       </Typography>
                     </Paper>
                   </Box>

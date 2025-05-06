@@ -1,34 +1,33 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Box,
-  CircularProgress,
   Alert,
-  TablePagination,
-  InputAdornment,
-  SelectChangeEvent,
-  Typography,
-  Tooltip,
-  IconButton,
+  Box,
+  Button,
   Card,
   CardContent,
-  TextField,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  Button,
   Chip,
-  Paper
+  CircularProgress,
+  FormControl,
+  IconButton,
+  InputAdornment,
+  InputLabel,
+  MenuItem,
+  Paper,
+  SelectChangeEvent,
+  TablePagination,
+  TextField,
+  Tooltip,
+  Typography,
 } from '@mui/material';
 import {
   Refresh as RefreshIcon,
   Search as SearchIcon,
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   FilterList as FilterListIcon,
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   Info as InfoIcon,
   Download as DownloadIcon,
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   Delete as DeleteIcon,
 } from '@mui/icons-material';
 import { useApiProviders } from '../contexts/ApiProviderContext';
@@ -75,7 +74,7 @@ const HistoryPage: React.FC = () => {
       const provider = configuredProviders[Math.floor(Math.random() * configuredProviders.length)];
       const providerModels = models[provider.id as keyof typeof models] || ['default-model'];
       const model = providerModels[Math.floor(Math.random() * providerModels.length)];
-      const status = statuses[Math.floor(Math.random() * (i > 90 ? 3 : (i > 80 ? 2 : 1)))]; // More errors in later entries
+      const status = statuses[Math.floor(Math.random() * (i > 90 ? 3 : i > 80 ? 2 : 1))]; // More errors in later entries
 
       const date = new Date();
       date.setHours(date.getHours() - Math.floor(Math.random() * 72)); // Random time in the last 72 hours
@@ -95,7 +94,7 @@ const HistoryPage: React.FC = () => {
         costPerCompletionToken = 0.000045;
       }
 
-      const cost = (promptTokens * costPerPromptToken) + (completionTokens * costPerCompletionToken);
+      const cost = promptTokens * costPerPromptToken + completionTokens * costPerCompletionToken;
 
       data.push({
         id: `req-${i}-${Date.now()}`,
@@ -132,11 +131,9 @@ const HistoryPage: React.FC = () => {
 
   // Fetch data on component mount
 
-
-
   useEffect(() => {
     fetchHistoryData();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Handle page change
@@ -268,17 +265,28 @@ const HistoryPage: React.FC = () => {
   // Export history data
   const exportHistoryData = () => {
     const csvContent = [
-      ['Timestamp', 'Provider', 'Model', 'Prompt Tokens', 'Completion Tokens', 'Cost', 'Status', 'Duration (ms)'].join(','),
-      ...filteredData.map(request => [
-        request.timestamp,
-        getProviderName(request.provider),
-        request.model,
-        request.promptTokens,
-        request.completionTokens,
-        request.cost,
-        request.status,
-        request.duration
-      ].join(','))
+      [
+        'Timestamp',
+        'Provider',
+        'Model',
+        'Prompt Tokens',
+        'Completion Tokens',
+        'Cost',
+        'Status',
+        'Duration (ms)',
+      ].join(','),
+      ...filteredData.map(request =>
+        [
+          request.timestamp,
+          getProviderName(request.provider),
+          request.model,
+          request.promptTokens,
+          request.completionTokens,
+          request.cost,
+          request.status,
+          request.duration,
+        ].join(',')
+      ),
     ].join('\n');
 
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -302,17 +310,24 @@ const HistoryPage: React.FC = () => {
           <Typography variant="body2" color="text.secondary">
             Last updated: {formatLastRefreshed()}
           </Typography>
-          <Tooltip title="Refresh data">
-            <IconButton onClick={fetchHistoryData} size="small" disabled={isLoading}>
-              {isLoading ? <CircularProgress size={20} /> : <RefreshIcon />}
+          {isLoading ? (
+            <IconButton size="small" disabled>
+              <CircularProgress size={20} />
             </IconButton>
-          </Tooltip>
+          ) : (
+            <Tooltip title="Refresh data">
+              <IconButton onClick={fetchHistoryData} size="small">
+                <RefreshIcon />
+              </IconButton>
+            </Tooltip>
+          )}
         </Box>
       </Box>
 
       {configuredProviders.length === 0 ? (
         <Alert severity="info" sx={{ mb: 3 }}>
-          No API providers configured. Add your first API key in settings to start tracking API requests.
+          No API providers configured. Add your first API key in settings to start tracking API
+          requests.
         </Alert>
       ) : (
         <>
@@ -325,7 +340,7 @@ const HistoryPage: React.FC = () => {
                   variant="outlined"
                   size="small"
                   value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onChange={e => setSearchQuery(e.target.value)}
                   sx={{ flexGrow: 1, minWidth: 200 }}
                   InputProps={{
                     startAdornment: (
@@ -346,7 +361,9 @@ const HistoryPage: React.FC = () => {
                   >
                     <MenuItem value="all">All Providers</MenuItem>
                     {configuredProviders.map(provider => (
-                      <MenuItem key={provider.id} value={provider.id}>{provider.name}</MenuItem>
+                      <MenuItem key={provider.id} value={provider.id}>
+                        {provider.name}
+                      </MenuItem>
                     ))}
                   </Select>
                 </FormControl>
@@ -404,30 +421,34 @@ const HistoryPage: React.FC = () => {
                     id: 'timestamp',
                     label: 'Timestamp',
                     minWidth: 180,
-                    accessor: (row) => formatTimestamp(row.timestamp),
+                    accessor: row => formatTimestamp(row.timestamp),
                   },
                   {
                     id: 'provider',
                     label: 'Provider',
                     minWidth: 120,
-                    accessor: (row) => getProviderName(row.provider),
+                    accessor: row => getProviderName(row.provider),
                   },
                   {
                     id: 'model',
                     label: 'Model',
                     minWidth: 150,
-                    accessor: (row) => row.model,
+                    accessor: row => row.model,
                   },
                   {
                     id: 'tokens',
                     label: 'Tokens',
                     minWidth: 120,
                     align: 'right',
-                    accessor: (row) => row.promptTokens + row.completionTokens,
+                    accessor: row => row.promptTokens + row.completionTokens,
                     format: (value, row) => (
                       <>
                         {value}
-                        <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+                        <Typography
+                          variant="caption"
+                          color="text.secondary"
+                          sx={{ display: 'block' }}
+                        >
                           {row.promptTokens} in / {row.completionTokens} out
                         </Typography>
                       </>
@@ -438,16 +459,16 @@ const HistoryPage: React.FC = () => {
                     label: 'Cost',
                     minWidth: 100,
                     align: 'right',
-                    accessor: (row) => row.cost,
-                    format: (value) => formatCost(value),
+                    accessor: row => row.cost,
+                    format: value => formatCost(value),
                   },
                   {
                     id: 'status',
                     label: 'Status',
                     minWidth: 100,
                     align: 'center',
-                    accessor: (row) => row.status,
-                    format: (value) => (
+                    accessor: row => row.status,
+                    format: value => (
                       <Chip
                         label={value}
                         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -462,12 +483,12 @@ const HistoryPage: React.FC = () => {
                     label: 'Duration',
                     minWidth: 100,
                     align: 'right',
-                    accessor: (row) => row.duration,
-                    format: (value) => `${value}ms`,
+                    accessor: row => row.duration,
+                    format: value => `${value}ms`,
                   },
                 ]}
                 data={filteredData}
-                getRowId={(row) => row.id}
+                getRowId={row => row.id}
                 maxHeight={600}
                 emptyMessage="No requests found matching the current filters."
               />
@@ -496,7 +517,13 @@ const HistoryPage: React.FC = () => {
                   {filteredData.length}
                 </Typography>
                 <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                  {filteredData.filter(r => r.status === 'success').length} successful ({((filteredData.filter(r => r.status === 'success').length / filteredData.length) * 100).toFixed(1)}%)
+                  {filteredData.filter(r => r.status === 'success').length} successful (
+                  {(
+                    (filteredData.filter(r => r.status === 'success').length /
+                      filteredData.length) *
+                    100
+                  ).toFixed(1)}
+                  %)
                 </Typography>
               </Paper>
             </Box>
@@ -510,7 +537,12 @@ const HistoryPage: React.FC = () => {
                   ${filteredData.reduce((sum, request) => sum + request.cost, 0).toFixed(2)}
                 </Typography>
                 <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                  Avg. ${(filteredData.reduce((sum, request) => sum + request.cost, 0) / (filteredData.length || 1)).toFixed(4)} per request
+                  Avg. $
+                  {(
+                    filteredData.reduce((sum, request) => sum + request.cost, 0) /
+                    (filteredData.length || 1)
+                  ).toFixed(4)}{' '}
+                  per request
                 </Typography>
               </Paper>
             </Box>
@@ -521,10 +553,22 @@ const HistoryPage: React.FC = () => {
                   Total Tokens
                 </Typography>
                 <Typography variant="h4" component="div">
-                  {filteredData.reduce((sum, request) => sum + request.promptTokens + request.completionTokens, 0).toLocaleString()}
+                  {filteredData
+                    .reduce(
+                      (sum, request) => sum + request.promptTokens + request.completionTokens,
+                      0
+                    )
+                    .toLocaleString()}
                 </Typography>
                 <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                  {filteredData.reduce((sum, request) => sum + request.promptTokens, 0).toLocaleString()} prompt / {filteredData.reduce((sum, request) => sum + request.completionTokens, 0).toLocaleString()} completion
+                  {filteredData
+                    .reduce((sum, request) => sum + request.promptTokens, 0)
+                    .toLocaleString()}{' '}
+                  prompt /{' '}
+                  {filteredData
+                    .reduce((sum, request) => sum + request.completionTokens, 0)
+                    .toLocaleString()}{' '}
+                  completion
                 </Typography>
               </Paper>
             </Box>

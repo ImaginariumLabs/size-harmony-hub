@@ -1,8 +1,13 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Tooltip, IconButton, Fade } from '@mui/material';
 import '../../styles/components/widgets/GlassMorphismWidget.css';
-import { getApiCost, getAllApiCosts, isElectron } from '../../services/electronService';
-import { loadSettings, saveSettings, isAboveThreshold } from '../../services/settingsService';
+import { getApiCost, getAllApiCosts } from '../../services/electronService';
+import { environment } from '../../utils/environment';
+import {
+  loadUserSettings as loadSettings,
+  saveUserSettings as saveSettings,
+  isAboveThreshold,
+} from '../../services/settingsService';
 import { getAllProviders } from '../../services/mockDataService';
 import WidgetSettings from './WidgetSettings';
 import {
@@ -13,7 +18,7 @@ import {
   Refresh as RefreshIcon,
   DarkMode as DarkModeIcon,
   LightMode as LightModeIcon,
-  Warning as WarningIcon
+  Warning as WarningIcon,
 } from '@mui/icons-material';
 import { Size, Theme, Position } from '../../types/common';
 
@@ -38,7 +43,7 @@ const GlassMorphismWidget: React.FC<GlassMorphismWidgetProps> = ({
   initialTheme = 'dark',
   initialPosition = { x: 20, y: 20 },
   onToggleMainWindow,
-  onClose
+  onClose,
 }) => {
   // Add debugging
   console.log('GlassMorphismWidget rendering with props:', {
@@ -46,7 +51,7 @@ const GlassMorphismWidget: React.FC<GlassMorphismWidgetProps> = ({
     initialTheme,
     initialPosition,
     hasToggleMainWindow: !!onToggleMainWindow,
-    hasOnClose: !!onClose
+    hasOnClose: !!onClose,
   });
 
   // Load settings from storage
@@ -56,10 +61,12 @@ const GlassMorphismWidget: React.FC<GlassMorphismWidgetProps> = ({
   // State for widget data and behavior
   const [providers, setProviders] = useState<Provider[]>([
     { id: 'openai', name: 'OpenAI', cost: 24.56, change: 1.2, isIncrease: true },
-    { id: 'github', name: 'GitHub', cost: 0.00, change: 0.0, isIncrease: false },
-    { id: 'aws', name: 'AWS', cost: 12.34, change: 0.8, isIncrease: false }
+    { id: 'github', name: 'GitHub', cost: 0.0, change: 0.0, isIncrease: false },
+    { id: 'aws', name: 'AWS', cost: 12.34, change: 0.8, isIncrease: false },
   ]);
-  const [activeProvider, setActiveProvider] = useState<string>(storedSettings.activeProvider || 'openai');
+  const [activeProvider, setActiveProvider] = useState<string>(
+    storedSettings.activeProvider || 'openai'
+  );
   const [position, setPosition] = useState<Position>(storedSettings.position || initialPosition);
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState<Position>({ x: 0, y: 0 });
@@ -96,7 +103,7 @@ const GlassMorphismWidget: React.FC<GlassMorphismWidgetProps> = ({
             name: provider.name,
             cost: cost.total,
             change: cost.change,
-            isIncrease: cost.changeType === 'increase'
+            isIncrease: cost.changeType === 'increase',
           };
         });
 
@@ -116,7 +123,7 @@ const GlassMorphismWidget: React.FC<GlassMorphismWidgetProps> = ({
               name: provider.name,
               cost: cost.total,
               change: cost.change,
-              isIncrease: cost.changeType === 'increase'
+              isIncrease: cost.changeType === 'increase',
             };
           });
 
@@ -151,40 +158,39 @@ const GlassMorphismWidget: React.FC<GlassMorphismWidgetProps> = ({
       const { fetchApiData } = await import('../../services/apiIntegrationService');
 
       // Race the API call against the timeout
-      const data = await Promise.race([
-        fetchApiData(activeProvider),
-        timeout
-      ]);
+      const data = await Promise.race([fetchApiData(activeProvider), timeout]);
 
       console.log(`Fetched real API data for ${activeProvider}:`, data);
 
       // Update the active provider with new data
-      setProviders(prev => prev.map(provider => {
-        if (provider.id === activeProvider) {
-          // Check if value has changed significantly
-          const hasChanged = Math.abs(provider.cost - data.total) > 0.01;
+      setProviders(prev =>
+        prev.map(provider => {
+          if (provider.id === activeProvider) {
+            // Check if value has changed significantly
+            const hasChanged = Math.abs(provider.cost - data.total) > 0.01;
 
-          // Check if we should show an alert (cost exceeded threshold)
-          const shouldAlert = isAboveThreshold(provider.id, data.total);
+            // Check if we should show an alert (cost exceeded threshold)
+            const shouldAlert = isAboveThreshold(provider.id, data.total);
 
-          if (hasChanged) {
-            setValueChanged(true);
-            setTimeout(() => setValueChanged(false), 500);
+            if (hasChanged) {
+              setValueChanged(true);
+              setTimeout(() => setValueChanged(false), 500);
+            }
+
+            if (shouldAlert) {
+              setShowAlert(true);
+            }
+
+            return {
+              ...provider,
+              cost: data.total,
+              change: data.change,
+              isIncrease: data.changeType === 'increase',
+            };
           }
-
-          if (shouldAlert) {
-            setShowAlert(true);
-          }
-
-          return {
-            ...provider,
-            cost: data.total,
-            change: data.change,
-            isIncrease: data.changeType === 'increase'
-          };
-        }
-        return provider;
-      }));
+          return provider;
+        })
+      );
 
       lastUpdateRef.current = new Date();
     } catch (error) {
@@ -199,21 +205,23 @@ const GlassMorphismWidget: React.FC<GlassMorphismWidgetProps> = ({
             setTimeout(() => {
               reject(new Error('Fallback API request timed out'));
             }, 3000); // 3 second timeout for fallback
-          })
+          }),
         ]);
 
         // Update the active provider with fallback data
-        setProviders(prev => prev.map(provider => {
-          if (provider.id === activeProvider) {
-            return {
-              ...provider,
-              cost: data.total,
-              change: data.change,
-              isIncrease: data.changeType === 'increase'
-            };
-          }
-          return provider;
-        }));
+        setProviders(prev =>
+          prev.map(provider => {
+            if (provider.id === activeProvider) {
+              return {
+                ...provider,
+                cost: data.total,
+                change: data.change,
+                isIncrease: data.changeType === 'increase',
+              };
+            }
+            return provider;
+          })
+        );
 
         lastUpdateRef.current = new Date();
       } catch (fallbackError) {
@@ -224,21 +232,23 @@ const GlassMorphismWidget: React.FC<GlassMorphismWidgetProps> = ({
           total: 0,
           change: 0,
           changeType: 'increase' as const,
-          usagePercentage: 0
+          usagePercentage: 0,
         };
 
         // Update with mock data
-        setProviders(prev => prev.map(provider => {
-          if (provider.id === activeProvider) {
-            return {
-              ...provider,
-              cost: mockData.total,
-              change: mockData.change,
-              isIncrease: mockData.changeType === 'increase'
-            };
-          }
-          return provider;
-        }));
+        setProviders(prev =>
+          prev.map(provider => {
+            if (provider.id === activeProvider) {
+              return {
+                ...provider,
+                cost: mockData.total,
+                change: mockData.change,
+                isIncrease: mockData.changeType === 'increase',
+              };
+            }
+            return provider;
+          })
+        );
 
         lastUpdateRef.current = new Date();
       }
@@ -265,14 +275,14 @@ const GlassMorphismWidget: React.FC<GlassMorphismWidgetProps> = ({
       size,
       theme,
       activeProvider,
-      refreshInterval
+      refreshInterval,
     });
   }, [position, size, theme, activeProvider, refreshInterval]);
 
   // Get window dimensions for boundary detection
   const [windowDimensions, setWindowDimensions] = useState({
     width: window.innerWidth,
-    height: window.innerHeight
+    height: window.innerHeight,
   });
 
   // Update window dimensions when they change
@@ -280,7 +290,7 @@ const GlassMorphismWidget: React.FC<GlassMorphismWidgetProps> = ({
     const handleResize = () => {
       setWindowDimensions({
         width: window.innerWidth,
-        height: window.innerHeight
+        height: window.innerHeight,
       });
     };
 
@@ -303,25 +313,33 @@ const GlassMorphismWidget: React.FC<GlassMorphismWidgetProps> = ({
   }, [size]);
 
   // Ensure position is within screen boundaries
-  const ensureWithinBoundaries = useCallback((pos: { x: number; y: number }) => {
-    const { width, height } = getWidgetDimensions();
+  const ensureWithinBoundaries = useCallback(
+    (pos: { x: number; y: number }) => {
+      const { width, height } = getWidgetDimensions();
 
-    // Add padding to ensure widget is always at least partially visible
-    const padding = 20;
+      // Add padding to ensure widget is always at least partially visible
+      const padding = 20;
 
-    return {
-      x: Math.max(padding - width / 2, Math.min(windowDimensions.width - width / 2 - padding, pos.x)),
-      y: Math.max(padding, Math.min(windowDimensions.height - padding - height / 2, pos.y))
-    };
-  }, [windowDimensions, getWidgetDimensions]);
+      return {
+        x: Math.max(
+          padding - width / 2,
+          Math.min(windowDimensions.width - width / 2 - padding, pos.x)
+        ),
+        y: Math.max(padding, Math.min(windowDimensions.height - padding - height / 2, pos.y)),
+      };
+    },
+    [windowDimensions, getWidgetDimensions]
+  );
 
   // Handle mouse events for dragging
   const handleMouseDown = (e: React.MouseEvent) => {
     // Ignore if clicking on interactive elements
-    if (e.target instanceof HTMLElement &&
-        (e.target.className.includes('button') ||
-         e.target.className.includes('provider-icon') ||
-         e.target.className.includes('resize-handle'))) {
+    if (
+      e.target instanceof HTMLElement &&
+      (e.target.className.includes('button') ||
+        e.target.className.includes('provider-icon') ||
+        e.target.className.includes('resize-handle'))
+    ) {
       return;
     }
 
@@ -329,7 +347,7 @@ const GlassMorphismWidget: React.FC<GlassMorphismWidgetProps> = ({
     setIsDragging(true);
     setDragOffset({
       x: e.clientX - position.x,
-      y: e.clientY - position.y
+      y: e.clientY - position.y,
     });
 
     // Add dragging class to body for cursor changes
@@ -342,8 +360,8 @@ const GlassMorphismWidget: React.FC<GlassMorphismWidgetProps> = ({
       position,
       offset: {
         x: e.clientX - position.x,
-        y: e.clientY - position.y
-      }
+        y: e.clientY - position.y,
+      },
     });
   };
 
@@ -352,7 +370,7 @@ const GlassMorphismWidget: React.FC<GlassMorphismWidgetProps> = ({
       // Calculate new position
       const newPosition = {
         x: e.clientX - dragOffset.x,
-        y: e.clientY - dragOffset.y
+        y: e.clientY - dragOffset.y,
       };
 
       // Ensure position is within boundaries
@@ -376,10 +394,12 @@ const GlassMorphismWidget: React.FC<GlassMorphismWidgetProps> = ({
   // Handle touch events for mobile/tablet
   const handleTouchStart = (e: React.TouchEvent) => {
     // Ignore if touching interactive elements
-    if (e.target instanceof HTMLElement &&
-        (e.target.className.includes('button') ||
-         e.target.className.includes('provider-icon') ||
-         e.target.className.includes('resize-handle'))) {
+    if (
+      e.target instanceof HTMLElement &&
+      (e.target.className.includes('button') ||
+        e.target.className.includes('provider-icon') ||
+        e.target.className.includes('resize-handle'))
+    ) {
       return;
     }
 
@@ -390,7 +410,7 @@ const GlassMorphismWidget: React.FC<GlassMorphismWidgetProps> = ({
     setIsDragging(true);
     setDragOffset({
       x: e.touches[0].clientX - position.x,
-      y: e.touches[0].clientY - position.y
+      y: e.touches[0].clientY - position.y,
     });
 
     // Add dragging class to body
@@ -405,7 +425,7 @@ const GlassMorphismWidget: React.FC<GlassMorphismWidgetProps> = ({
       // Calculate new position
       const newPosition = {
         x: e.touches[0].clientX - dragOffset.x,
-        y: e.touches[0].clientY - dragOffset.y
+        y: e.touches[0].clientY - dragOffset.y,
       };
 
       // Ensure position is within boundaries
@@ -461,7 +481,7 @@ const GlassMorphismWidget: React.FC<GlassMorphismWidgetProps> = ({
         // Calculate new position
         const newPosition = {
           x: e.clientX - dragOffset.x,
-          y: e.clientY - dragOffset.y
+          y: e.clientY - dragOffset.y,
         };
 
         // Ensure position is within boundaries
@@ -473,7 +493,7 @@ const GlassMorphismWidget: React.FC<GlassMorphismWidgetProps> = ({
           clientX: e.clientX,
           clientY: e.clientY,
           newPosition,
-          boundedPosition
+          boundedPosition,
         });
       } else if (isResizing) {
         handleResize(e);
@@ -504,7 +524,7 @@ const GlassMorphismWidget: React.FC<GlassMorphismWidgetProps> = ({
         // Calculate new position
         const newPosition = {
           x: e.touches[0].clientX - dragOffset.x,
-          y: e.touches[0].clientY - dragOffset.y
+          y: e.touches[0].clientY - dragOffset.y,
         };
 
         // Ensure position is within boundaries
@@ -542,7 +562,17 @@ const GlassMorphismWidget: React.FC<GlassMorphismWidgetProps> = ({
       document.removeEventListener('touchend', onTouchEnd);
       document.removeEventListener('touchcancel', onTouchEnd);
     };
-  }, [isDragging, dragOffset, isResizing, ensureWithinBoundaries, position, setPosition, handleResizeEnd, handleResize, saveSettings]);
+  }, [
+    isDragging,
+    dragOffset,
+    isResizing,
+    ensureWithinBoundaries,
+    position,
+    setPosition,
+    handleResizeEnd,
+    handleResize,
+    saveSettings,
+  ]);
 
   // Configure widget position within viewport
   useEffect(() => {
@@ -561,20 +591,20 @@ const GlassMorphismWidget: React.FC<GlassMorphismWidgetProps> = ({
       boundedPosition,
       size,
       theme,
-      isElectron: isElectron()
+      isElectron: environment.isElectron(),
     });
 
     // Send debug info to main process if in Electron
-    if (isElectron() && window.electronAPI?.debug) {
+    if (environment.isElectron() && window.electronAPI?.debug) {
       window.electronAPI.debug({
         component: 'GlassMorphismWidget',
         event: 'initialized',
-        data: { position, size, theme }
+        data: { position, size, theme },
       });
     }
 
     // Add special handling for Electron environment
-    if (isElectron()) {
+    if (environment.isElectron()) {
       // Force the widget to be draggable in Electron
       const handleElectronDrag = (e: MouseEvent) => {
         // Only handle events on the widget header (for better UX)
@@ -587,7 +617,7 @@ const GlassMorphismWidget: React.FC<GlassMorphismWidgetProps> = ({
             window.electronAPI.debug({
               component: 'GlassMorphismWidget',
               event: 'drag-start',
-              data: { clientX: e.clientX, clientY: e.clientY, position }
+              data: { clientX: e.clientX, clientY: e.clientY, position },
             });
           }
 
@@ -595,7 +625,7 @@ const GlassMorphismWidget: React.FC<GlassMorphismWidgetProps> = ({
           setIsDragging(true);
           setDragOffset({
             x: e.clientX - position.x,
-            y: e.clientY - position.y
+            y: e.clientY - position.y,
           });
 
           // Add dragging class to body
@@ -610,7 +640,6 @@ const GlassMorphismWidget: React.FC<GlassMorphismWidgetProps> = ({
       return () => {
         document.removeEventListener('mousedown', handleElectronDrag);
       };
-
     }
   }, [windowDimensions, ensureWithinBoundaries, position, size, theme]);
 
@@ -652,7 +681,12 @@ const GlassMorphismWidget: React.FC<GlassMorphismWidgetProps> = ({
 
   // Cycle through sizes
   const cycleSize = useCallback(() => {
-    const sizes: ('small' | 'medium' | 'large' | 'compact')[] = ['compact', 'small', 'medium', 'large'];
+    const sizes: ('small' | 'medium' | 'large' | 'compact')[] = [
+      'compact',
+      'small',
+      'medium',
+      'large',
+    ];
     const currentIndex = sizes.indexOf(size);
     const nextIndex = (currentIndex + 1) % sizes.length;
     setSize(sizes[nextIndex]);
@@ -725,7 +759,7 @@ const GlassMorphismWidget: React.FC<GlassMorphismWidgetProps> = ({
         style={{
           left: `${position.x}px`,
           top: `${position.y}px`,
-          cursor: isDragging ? 'grabbing' : 'grab'
+          cursor: isDragging ? 'grabbing' : 'grab',
         }}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
@@ -750,7 +784,7 @@ const GlassMorphismWidget: React.FC<GlassMorphismWidgetProps> = ({
                   padding: '4px',
                   color: 'rgba(255, 255, 255, 0.8)',
                   background: 'rgba(255, 165, 0, 0.2)',
-                  '&:hover': { background: 'rgba(255, 165, 0, 0.4)' }
+                  '&:hover': { background: 'rgba(255, 165, 0, 0.4)' },
                 }}
               >
                 <SettingsIcon fontSize="small" />
@@ -758,7 +792,9 @@ const GlassMorphismWidget: React.FC<GlassMorphismWidgetProps> = ({
             </Tooltip>
 
             <Tooltip
-              title={isElectron() && onToggleMainWindow ? "Open Dashboard" : "Change Size"}
+              title={
+                environment.isElectron() && onToggleMainWindow ? 'Open Dashboard' : 'Change Size'
+              }
               placement="top"
               TransitionComponent={Fade}
               arrow
@@ -767,7 +803,7 @@ const GlassMorphismWidget: React.FC<GlassMorphismWidgetProps> = ({
                 size="small"
                 className="glass-widget-icon-button expand"
                 onClick={() => {
-                  if (isElectron() && onToggleMainWindow) {
+                  if (environment.isElectron() && onToggleMainWindow) {
                     onToggleMainWindow();
                   } else {
                     cycleSize();
@@ -777,15 +813,19 @@ const GlassMorphismWidget: React.FC<GlassMorphismWidgetProps> = ({
                   padding: '4px',
                   color: 'rgba(255, 255, 255, 0.8)',
                   background: 'rgba(33, 150, 243, 0.2)',
-                  '&:hover': { background: 'rgba(33, 150, 243, 0.4)' }
+                  '&:hover': { background: 'rgba(33, 150, 243, 0.4)' },
                 }}
               >
-                {size === 'large' ? <CompressIcon fontSize="small" /> : <ExpandIcon fontSize="small" />}
+                {size === 'large' ? (
+                  <CompressIcon fontSize="small" />
+                ) : (
+                  <ExpandIcon fontSize="small" />
+                )}
               </IconButton>
             </Tooltip>
 
             <Tooltip
-              title={isElectron() && onClose ? "Close Widget" : "Toggle Theme"}
+              title={environment.isElectron() && onClose ? 'Close Widget' : 'Toggle Theme'}
               placement="top"
               TransitionComponent={Fade}
               arrow
@@ -794,7 +834,7 @@ const GlassMorphismWidget: React.FC<GlassMorphismWidgetProps> = ({
                 size="small"
                 className="glass-widget-icon-button close"
                 onClick={() => {
-                  if (isElectron() && onClose) {
+                  if (environment.isElectron() && onClose) {
                     onClose();
                   } else {
                     toggleTheme();
@@ -803,16 +843,25 @@ const GlassMorphismWidget: React.FC<GlassMorphismWidgetProps> = ({
                 sx={{
                   padding: '4px',
                   color: 'rgba(255, 255, 255, 0.8)',
-                  background: isElectron() && onClose ? 'rgba(244, 67, 54, 0.2)' : 'rgba(156, 39, 176, 0.2)',
+                  background:
+                    environment.isElectron() && onClose
+                      ? 'rgba(244, 67, 54, 0.2)'
+                      : 'rgba(156, 39, 176, 0.2)',
                   '&:hover': {
-                    background: isElectron() && onClose ? 'rgba(244, 67, 54, 0.4)' : 'rgba(156, 39, 176, 0.4)'
-                  }
+                    background:
+                      environment.isElectron() && onClose
+                        ? 'rgba(244, 67, 54, 0.4)'
+                        : 'rgba(156, 39, 176, 0.4)',
+                  },
                 }}
               >
-                {isElectron() && onClose ?
-                  <CloseIcon fontSize="small" /> :
-                  (theme === 'dark' ? <LightModeIcon fontSize="small" /> : <DarkModeIcon fontSize="small" />)
-                }
+                {environment.isElectron() && onClose ? (
+                  <CloseIcon fontSize="small" />
+                ) : theme === 'dark' ? (
+                  <LightModeIcon fontSize="small" />
+                ) : (
+                  <DarkModeIcon fontSize="small" />
+                )}
               </IconButton>
             </Tooltip>
           </div>
@@ -821,11 +870,15 @@ const GlassMorphismWidget: React.FC<GlassMorphismWidgetProps> = ({
         {/* Content */}
         <div className={`glass-widget-content ${valueChanged ? 'value-changed' : ''}`}>
           <p className="cost-value">${activeProviderData.cost.toFixed(2)}</p>
-          <p className={`cost-change ${activeProviderData.isIncrease ? 'cost-increase' : 'cost-decrease'}`}>
-            <span className="cost-change-icon">{activeProviderData.isIncrease ? '↑' : '↓'}</span>
-            ${activeProviderData.change.toFixed(2)}
+          <p
+            className={`cost-change ${
+              activeProviderData.isIncrease ? 'cost-increase' : 'cost-decrease'
+            }`}
+          >
+            <span className="cost-change-icon">{activeProviderData.isIncrease ? '↑' : '↓'}</span>$
+            {activeProviderData.change.toFixed(2)}
             <span className="cost-percentage">
-              ({(activeProviderData.change / (activeProviderData.cost || 1) * 100).toFixed(1)}%)
+              ({((activeProviderData.change / (activeProviderData.cost || 1)) * 100).toFixed(1)}%)
             </span>
           </p>
         </div>
@@ -846,7 +899,7 @@ const GlassMorphismWidget: React.FC<GlassMorphismWidgetProps> = ({
                   padding: '2px',
                   marginLeft: '4px',
                   color: 'rgba(255, 255, 255, 0.5)',
-                  '&:hover': { color: 'rgba(255, 255, 255, 0.8)' }
+                  '&:hover': { color: 'rgba(255, 255, 255, 0.8)' },
                 }}
               >
                 <RefreshIcon fontSize="small" sx={{ fontSize: '14px' }} />
@@ -861,12 +914,14 @@ const GlassMorphismWidget: React.FC<GlassMorphismWidgetProps> = ({
             {providers.map(provider => (
               <button
                 key={provider.id}
-                className={`provider-icon ${provider.id} ${activeProvider === provider.id ? 'active' : ''}`}
+                className={`provider-icon ${provider.id} ${
+                  activeProvider === provider.id ? 'active' : ''
+                }`}
                 onClick={() => setActiveProvider(provider.id)}
                 title={provider.name}
                 aria-label={`Switch to ${provider.name}`}
                 style={{
-                  backgroundColor: getProviderColor(provider.id)
+                  backgroundColor: getProviderColor(provider.id),
                 }}
               />
             ))}
@@ -880,7 +935,7 @@ const GlassMorphismWidget: React.FC<GlassMorphismWidgetProps> = ({
           role="button"
           tabIndex={0}
           aria-label="Resize widget"
-          onKeyDown={(e) => {
+          onKeyDown={e => {
             if (e.key === 'Enter' || e.key === ' ') {
               handleResizeStart(e as unknown as React.MouseEvent);
             }
@@ -905,7 +960,7 @@ const GlassMorphismWidget: React.FC<GlassMorphismWidgetProps> = ({
                 color: '#fff',
                 background: 'rgba(244, 67, 54, 0.8)',
                 '&:hover': { background: 'rgba(244, 67, 54, 1)' },
-                animation: 'blink 1s infinite'
+                animation: 'blink 1s infinite',
               }}
             >
               <WarningIcon fontSize="small" />
@@ -914,15 +969,11 @@ const GlassMorphismWidget: React.FC<GlassMorphismWidgetProps> = ({
         )}
 
         {/* Keyboard shortcuts hint (only visible on hover) */}
-        <div className="keyboard-shortcuts-hint">
-          Press 's' for settings
-        </div>
+        <div className="keyboard-shortcuts-hint">Press 's' for settings</div>
       </div>
 
       {/* Settings Panel */}
-      {showSettings && (
-        <WidgetSettings onClose={closeSettings} />
-      )}
+      {showSettings && <WidgetSettings onClose={closeSettings} />}
     </>
   );
 };

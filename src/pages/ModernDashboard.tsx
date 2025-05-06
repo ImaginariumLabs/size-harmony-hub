@@ -1,10 +1,22 @@
 import React, { useState, useEffect, lazy, Suspense } from 'react';
-import { Box, CircularProgress, Tabs, Tab, Switch, FormControlLabel, Tooltip, Grid, Button } from '@mui/material';
+import {
+  Box,
+  CircularProgress,
+  FormControlLabel,
+  Grid,
+  Switch,
+  Tab,
+  Tabs,
+  Tooltip,
+} from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { useApiProviders } from '../contexts/ApiProviderContext';
-import { useDashboardWidgets, DashboardWidget as DashboardWidgetType } from '../contexts/DashboardWidgetContext';
+import {
+  useDashboardWidgets,
+  DashboardWidget as DashboardWidgetType,
+} from '../contexts/DashboardWidgetContext';
 import MultiviewDisplay from '../components/widgets/MultiviewDisplay';
-import { isElectron } from '../services/electronService';
+import { environment } from '../utils/environment';
 import '../styles/components/layout/BentoGrid.css';
 import '../styles/components/dashboard/DraggableWidgetsGrid.css';
 
@@ -19,18 +31,27 @@ import DashboardSharingDialog from '../components/dashboard/DashboardSharingDial
 import DashboardActions from '../components/dashboard/DashboardActions';
 import DashboardBreadcrumbs from '../components/navigation/DashboardBreadcrumbs';
 import GlobalErrorBoundary from '../components/common/GlobalErrorBoundary';
-import AdvancedWidgetFactory, { AdvancedWidgetType } from '../components/widgets/AdvancedWidgetFactory';
+import AdvancedWidgetFactory, {
+  AdvancedWidgetType,
+} from '../components/widgets/AdvancedWidgetFactory';
 import { DashboardConfig } from '../services/dashboardSharingService';
 
 // Lazy load the EnhancedCostMonitoringDashboard to improve initial load time
-const EnhancedCostMonitoringDashboard = lazy(() =>
-  import('../components/dashboard/EnhancedCostMonitoringDashboard')
+const EnhancedCostMonitoringDashboard = lazy(
+  () => import('../components/dashboard/EnhancedCostMonitoringDashboard')
 );
 
 const ModernDashboard: React.FC = () => {
   const navigate = useNavigate();
   const { providers, loading: providersLoading } = useApiProviders();
-  const { widgets, addWidget, updateWidget, removeWidget, toggleWidgetVisibility, loading: widgetsLoading } = useDashboardWidgets();
+  const {
+    widgets,
+    addWidget,
+    updateWidget,
+    removeWidget,
+    toggleWidgetVisibility,
+    loading: widgetsLoading,
+  } = useDashboardWidgets();
 
   // Enhanced navigation handler with better error handling and feedback
   const handleNavigation = (path: string) => {
@@ -40,12 +61,13 @@ const ModernDashboard: React.FC = () => {
       console.error('Navigation error:', error);
 
       // If navigation fails in Electron, handle it gracefully
-      if (isElectron()) {
+      if (environment.isElectron()) {
         console.log('Electron environment detected, handling navigation differently');
 
         // Use IPC to communicate with the main process if available
         if (window.electronAPI?.navigate) {
-          window.electronAPI.navigate(path)
+          window.electronAPI
+            .navigate(path)
             .then(() => console.log(`Successfully navigated to ${path} via Electron IPC`))
             .catch(err => {
               console.error('Electron navigation failed:', err);
@@ -72,7 +94,7 @@ const ModernDashboard: React.FC = () => {
     type: 'cost',
     size: 'medium',
     position: { x: 0, y: 0 },
-    isVisible: true
+    isVisible: true,
   });
 
   // Add a refresh function
@@ -82,11 +104,13 @@ const ModernDashboard: React.FC = () => {
   const [useDraggableGrid, setUseDraggableGrid] = useState(false);
 
   // Advanced widgets state
-  const [advancedWidgets, setAdvancedWidgets] = useState<Array<{
-    id: string;
-    type: AdvancedWidgetType;
-    config: any;
-  }>>([]);
+  const [advancedWidgets, setAdvancedWidgets] = useState<
+    Array<{
+      id: string;
+      type: AdvancedWidgetType;
+      config: unknown;
+    }>
+  >([]);
   const [addAdvancedWidgetDialogOpen, setAddAdvancedWidgetDialogOpen] = useState(false);
 
   // Dashboard sharing state
@@ -99,7 +123,7 @@ const ModernDashboard: React.FC = () => {
     if (configuredProviders.length > 0) {
       setNewWidget(prev => ({
         ...prev,
-        providerId: configuredProviders[0].id
+        providerId: configuredProviders[0].id,
       }));
     }
     setAddWidgetDialogOpen(true);
@@ -151,13 +175,14 @@ const ModernDashboard: React.FC = () => {
   };
 
   // Fetch data on component mount
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     fetchApiCostData();
   }, []);
 
   // Force render update in Electron environment
   useEffect(() => {
-    if (isElectron()) {
+    if (environment.isElectron()) {
       console.log('Electron environment detected, forcing render update');
       // Force a re-render to ensure proper display in Electron
       const timer = setTimeout(() => {
@@ -169,8 +194,6 @@ const ModernDashboard: React.FC = () => {
     }
   }, []);
 
-
-
   const handleRefresh = async () => {
     // Fetch fresh data
     await fetchApiCostData();
@@ -181,7 +204,10 @@ const ModernDashboard: React.FC = () => {
   const loading = providersLoading || widgetsLoading;
 
   // Handle dashboard view toggle
-  const handleDashboardViewChange = (_event: React.SyntheticEvent, newValue: 'standard' | 'enhanced') => {
+  const handleDashboardViewChange = (
+    _event: React.SyntheticEvent,
+    newValue: 'standard' | 'enhanced'
+  ) => {
     setDashboardView(newValue);
   };
 
@@ -196,7 +222,7 @@ const ModernDashboard: React.FC = () => {
   };
 
   // Handle adding a new advanced widget
-  const handleAddAdvancedWidget = (type: AdvancedWidgetType, config: any) => {
+  const handleAddAdvancedWidget = (type: AdvancedWidgetType, config: unknown) => {
     const newAdvancedWidget = {
       id: `advanced-widget-${Date.now()}`,
       type,
@@ -299,7 +325,7 @@ const ModernDashboard: React.FC = () => {
                   control={
                     <Switch
                       checked={useDraggableGrid}
-                      onChange={(e) => setUseDraggableGrid(e.target.checked)}
+                      onChange={e => setUseDraggableGrid(e.target.checked)}
                       size="small"
                     />
                   }
@@ -323,75 +349,91 @@ const ModernDashboard: React.FC = () => {
         )}
 
         {!loading && configuredProviders.length > 0 && dashboardView === 'enhanced' && (
-          <Suspense fallback={<Box sx={{ display: 'flex', justifyContent: 'center', my: 4 }}><CircularProgress /></Box>}>
+          <Suspense
+            fallback={
+              <Box sx={{ display: 'flex', justifyContent: 'center', my: 4 }}>
+                <CircularProgress />
+              </Box>
+            }
+          >
             <EnhancedCostMonitoringDashboard />
           </Suspense>
         )}
 
-        {!loading && configuredProviders.length > 0 && dashboardView === 'standard' && !useDraggableGrid && (
-          <>
-            <DashboardWidgetsGrid
-              configuredProviders={configuredProviders}
-              widgets={widgets}
-              onRemoveWidget={removeWidget}
-              onSizeChange={handleWidgetSizeChange}
-              onToggleVisibility={toggleWidgetVisibility}
-              onNavigate={handleNavigation}
-              apiCostData={apiCostData}
-            />
+        {!loading &&
+          configuredProviders.length > 0 &&
+          dashboardView === 'standard' &&
+          !useDraggableGrid && (
+            <>
+              <DashboardWidgetsGrid
+                configuredProviders={configuredProviders}
+                widgets={widgets}
+                onRemoveWidget={removeWidget}
+                onSizeChange={handleWidgetSizeChange}
+                onToggleVisibility={toggleWidgetVisibility}
+                onNavigate={handleNavigation}
+                apiCostData={apiCostData}
+              />
 
-            {/* Advanced Widgets Section */}
-            {advancedWidgets.length > 0 && (
-              <Box sx={{ mt: 4 }}>
-                <Grid container spacing={3}>
-                  {advancedWidgets.map((widget) => (
-                    <Grid item xs={12} md={6} key={widget.id}>
-                      <AdvancedWidgetFactory
-                        type={widget.type}
-                        config={widget.config}
-                        onRemove={() => handleRemoveAdvancedWidget(widget.id)}
-                        onEdit={() => {/* Handle edit */}}
-                      />
-                    </Grid>
-                  ))}
-                </Grid>
-              </Box>
-            )}
-          </>
-        )}
+              {/* Advanced Widgets Section */}
+              {advancedWidgets.length > 0 && (
+                <Box sx={{ mt: 4 }}>
+                  <Grid container spacing={3}>
+                    {advancedWidgets.map(widget => (
+                      <Grid item xs={12} md={6} key={widget.id}>
+                        <AdvancedWidgetFactory
+                          type={widget.type}
+                          config={widget.config}
+                          onRemove={() => handleRemoveAdvancedWidget(widget.id)}
+                          onEdit={() => {
+                            /* Handle edit */
+                          }}
+                        />
+                      </Grid>
+                    ))}
+                  </Grid>
+                </Box>
+              )}
+            </>
+          )}
 
-        {!loading && configuredProviders.length > 0 && dashboardView === 'standard' && useDraggableGrid && (
-          <>
-            <DraggableWidgetsGrid
-              configuredProviders={configuredProviders}
-              widgets={widgets}
-              onRemoveWidget={removeWidget}
-              onSizeChange={handleWidgetSizeChange}
-              onToggleVisibility={toggleWidgetVisibility}
-              onPositionChange={handleWidgetPositionChange}
-              onNavigate={handleNavigation}
-              apiCostData={apiCostData}
-            />
+        {!loading &&
+          configuredProviders.length > 0 &&
+          dashboardView === 'standard' &&
+          useDraggableGrid && (
+            <>
+              <DraggableWidgetsGrid
+                configuredProviders={configuredProviders}
+                widgets={widgets}
+                onRemoveWidget={removeWidget}
+                onSizeChange={handleWidgetSizeChange}
+                onToggleVisibility={toggleWidgetVisibility}
+                onPositionChange={handleWidgetPositionChange}
+                onNavigate={handleNavigation}
+                apiCostData={apiCostData}
+              />
 
-            {/* Advanced Widgets Section */}
-            {advancedWidgets.length > 0 && (
-              <Box sx={{ mt: 4 }}>
-                <Grid container spacing={3}>
-                  {advancedWidgets.map((widget) => (
-                    <Grid item xs={12} md={6} key={widget.id}>
-                      <AdvancedWidgetFactory
-                        type={widget.type}
-                        config={widget.config}
-                        onRemove={() => handleRemoveAdvancedWidget(widget.id)}
-                        onEdit={() => {/* Handle edit */}}
-                      />
-                    </Grid>
-                  ))}
-                </Grid>
-              </Box>
-            )}
-          </>
-        )}
+              {/* Advanced Widgets Section */}
+              {advancedWidgets.length > 0 && (
+                <Box sx={{ mt: 4 }}>
+                  <Grid container spacing={3}>
+                    {advancedWidgets.map(widget => (
+                      <Grid size={{ xs: 12, md: 6 }} key={widget.id}>
+                        <AdvancedWidgetFactory
+                          type={widget.type}
+                          config={widget.config}
+                          onRemove={() => handleRemoveAdvancedWidget(widget.id)}
+                          onEdit={() => {
+                            /* Handle edit */
+                          }}
+                        />
+                      </Grid>
+                    ))}
+                  </Grid>
+                </Box>
+              )}
+            </>
+          )}
 
         {/* Add Widget Dialog */}
         <AddWidgetDialog
@@ -430,6 +472,6 @@ const ModernDashboard: React.FC = () => {
       </Box>
     </GlobalErrorBoundary>
   );
-}
+};
 
 export default ModernDashboard;
