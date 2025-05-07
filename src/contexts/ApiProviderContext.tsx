@@ -1,7 +1,12 @@
 import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
-import { listApiKeys } from '../services/mockKeyManager';
-import { fetchCustomProviders } from '../services/customProviderService';
-import { ApiProvider as ApiProviderType, ApiProviderConfig } from '../types/api';
+import { listApiKeys } from '../services/keyManager';
+import {
+  fetchApiProviders,
+  createCustomProvider as createProvider,
+  updateApiProvider,
+  deleteApiProvider,
+} from '../services/apiProviderService';
+import { ApiProvider as ApiProviderType } from '../types/api';
 
 // Re-export the ApiProvider type from types/api.ts
 export type ApiProvider = ApiProviderType;
@@ -12,7 +17,10 @@ interface ApiProviderContextType {
   error: string | null;
   refreshProviders: () => Promise<void>;
   addCustomProvider: (provider: Partial<ApiProvider>) => Promise<ApiProvider | null>;
-  updateCustomProvider: (providerId: string, updates: Partial<ApiProvider>) => Promise<ApiProvider | null>;
+  updateCustomProvider: (
+    providerId: string,
+    updates: Partial<ApiProvider>
+  ) => Promise<ApiProvider | null>;
   deleteCustomProvider: (providerId: string) => Promise<boolean>;
   getProviderById: (providerId: string) => ApiProvider | undefined;
 }
@@ -26,8 +34,8 @@ const defaultProviders: ApiProvider[] = [
     description: 'GPT-4o, GPT-4 Turbo, and GPT-3.5 Turbo models',
     icon: 'openai-logo.svg',
     color: '#10a37f',
-    isConfigured: false,
-    usagePercentage: 65
+    isConfigured: true, // Set to true for development
+    usagePercentage: 65,
   },
   {
     id: 'claude',
@@ -36,8 +44,8 @@ const defaultProviders: ApiProvider[] = [
     description: 'Claude 3.5 Sonnet, Claude 3 Opus, and other Anthropic models',
     icon: 'claude-logo.svg',
     color: '#7963d2',
-    isConfigured: false,
-    usagePercentage: 45
+    isConfigured: true, // Set to true for development
+    usagePercentage: 45,
   },
   {
     id: 'google',
@@ -46,9 +54,9 @@ const defaultProviders: ApiProvider[] = [
     description: 'Gemini 1.5 Pro, Gemini 1.5 Flash, and other Google AI models',
     icon: 'gemini-logo.svg',
     color: '#4285f4',
-    isConfigured: false,
-    usagePercentage: 30
-  }
+    isConfigured: true, // Set to true for development
+    usagePercentage: 30,
+  },
 ];
 
 const ApiProviderContext = createContext<ApiProviderContextType | undefined>(undefined);
@@ -62,46 +70,61 @@ export function ApiProviderProvider({ children }: { readonly children: React.Rea
     setLoading(true);
     setError(null);
 
+    // Set a safety timeout to prevent perpetual loading
+    const safetyTimeout = setTimeout(() => {
+      if (loading) {
+        console.warn('Safety timeout triggered in ApiProviderContext to prevent perpetual loading');
+        setLoading(false);
+        setProviders(defaultProviders);
+      }
+    }, 5000); // 5 second safety timeout
+
     try {
       // Get configured API keys
-      const apiKeys = await listApiKeys();
-
-      // Fetch custom providers from the database
-      let customProviders: ApiProvider[] = [];
+      let apiKeys = [];
       try {
-        customProviders = await fetchCustomProviders();
-      } catch (customProviderError) {
-        console.error('Error fetching custom providers:', customProviderError);
-        // Continue with empty custom providers rather than failing completely
+        apiKeys = await listApiKeys();
+      } catch (keyError) {
+        if (process.env.NODE_ENV !== 'production' || process.env.DEBUG === 'true') {
+          console.error('Error listing API keys:', keyError);
+        }
+        // Continue with empty keys rather than failing completely
+        apiKeys = [];
       }
 
-      // Update built-in providers with configuration status
-      const updatedBuiltInProviders = defaultProviders.map(provider => {
+      // Fetch all providers from the database
+      let allProviders: ApiProvider[] = [];
+      try {
+        allProviders = await fetchApiProviders();
+      } catch (providerError) {
+        if (process.env.NODE_ENV !== 'production' || process.env.DEBUG === 'true') {
+          console.error('Error fetching API providers:', providerError);
+        }
+        // Continue with default providers rather than failing completely
+        allProviders = defaultProviders;
+      }
+
+      // Update providers with configuration status
+      const updatedProviders = allProviders.map(provider => {
         const keyEntry = apiKeys.find(key => key.provider === provider.slug);
         return {
           ...provider,
           isConfigured: !!keyEntry,
-          lastUsed: keyEntry?.last_used
+          lastUsed: keyEntry?.last_used,
         };
       });
 
-      // Update custom providers with configuration status
-      const updatedCustomProviders = customProviders.map(provider => {
-        const keyEntry = apiKeys.find(key => key.provider === provider.slug);
-        return {
-          ...provider,
-          isConfigured: !!keyEntry,
-          lastUsed: keyEntry?.last_used
-        };
-      });
-
-      // Combine built-in and custom providers
-      setProviders([...updatedBuiltInProviders, ...updatedCustomProviders]);
+      // Set providers
+      setProviders(updatedProviders);
+      clearTimeout(safetyTimeout);
     } catch (err) {
-      console.error('Error refreshing providers:', err);
+      if (process.env.NODE_ENV !== 'production' || process.env.DEBUG === 'true') {
+        console.error('Error refreshing providers:', err);
+      }
       setError(err instanceof Error ? err.message : 'Failed to refresh providers');
       // Set default providers even on error to prevent endless loading
       setProviders(defaultProviders);
+      clearTimeout(safetyTimeout);
     } finally {
       setLoading(false);
     }
@@ -118,23 +141,8 @@ export function ApiProviderProvider({ children }: { readonly children: React.Rea
     setError(null);
 
     try {
-      // Convert from ApiProvider to ApiProviderConfig format
-      const providerConfig = {
-        id: provider.id || provider.slug || '',
-        slug: provider.slug || '',
-        name: provider.name || '',
-        description: provider.description || '',
-        baseUrl: provider.baseUrl || '',
-        authType: provider.authType || 'bearer',
-        usageEndpoint: '/usage', // Default endpoint
-        responseMapping: {
-          usage: ['data.usage']
-        }
-      };
-
       // Call the service to create the provider
-      const { createCustomProvider } = await import('../services/customProviderService');
-      const newProvider = await createCustomProvider(providerConfig);
+      const newProvider = await createProvider(provider);
 
       if (newProvider) {
         // Refresh the providers list to include the new one
@@ -144,7 +152,9 @@ export function ApiProviderProvider({ children }: { readonly children: React.Rea
 
       return null;
     } catch (err) {
-      console.error('Error adding custom provider:', err);
+      if (process.env.NODE_ENV !== 'production' || process.env.DEBUG === 'true') {
+        console.error('Error adding custom provider:', err);
+      }
       setError(err instanceof Error ? err.message : 'Failed to add custom provider');
       return null;
     } finally {
@@ -161,16 +171,8 @@ export function ApiProviderProvider({ children }: { readonly children: React.Rea
     setError(null);
 
     try {
-      // Convert from ApiProvider to ApiProviderConfig format
-      const providerConfig: Partial<ApiProviderConfig> = {};
-      if (updates.name) providerConfig.name = updates.name;
-      if (updates.description) providerConfig.description = updates.description;
-      if (updates.baseUrl) providerConfig.baseUrl = updates.baseUrl;
-      if (updates.authType) providerConfig.authType = updates.authType;
-
       // Call the service to update the provider
-      const { updateCustomProvider: updateProviderService } = await import('../services/customProviderService');
-      const updatedProvider = await updateProviderService(providerId, providerConfig);
+      const updatedProvider = await updateApiProvider(providerId, updates);
 
       if (updatedProvider) {
         // Refresh the providers list to include the updated one
@@ -180,7 +182,9 @@ export function ApiProviderProvider({ children }: { readonly children: React.Rea
 
       return null;
     } catch (err) {
-      console.error('Error updating custom provider:', err);
+      if (process.env.NODE_ENV !== 'production' || process.env.DEBUG === 'true') {
+        console.error('Error updating custom provider:', err);
+      }
       setError(err instanceof Error ? err.message : 'Failed to update custom provider');
       return null;
     } finally {
@@ -195,8 +199,7 @@ export function ApiProviderProvider({ children }: { readonly children: React.Rea
 
     try {
       // Call the service to delete the provider
-      const { deleteCustomProvider } = await import('../services/customProviderService');
-      const success = await deleteCustomProvider(providerId);
+      const success = await deleteApiProvider(providerId);
 
       if (success) {
         // Refresh the providers list to remove the deleted one
@@ -206,7 +209,9 @@ export function ApiProviderProvider({ children }: { readonly children: React.Rea
 
       return false;
     } catch (err) {
-      console.error('Error deleting custom provider:', err);
+      if (process.env.NODE_ENV !== 'production' || process.env.DEBUG === 'true') {
+        console.error('Error deleting custom provider:', err);
+      }
       setError(err instanceof Error ? err.message : 'Failed to delete custom provider');
       return false;
     } finally {
@@ -216,25 +221,24 @@ export function ApiProviderProvider({ children }: { readonly children: React.Rea
 
   // Initial load
 
-
-
-
   useEffect(() => {
     refreshProviders();
   }, []);
 
   // Memoize the context value to prevent unnecessary re-renders
-  const value = useMemo(() => ({
-    providers,
-    loading,
-    error,
-    refreshProviders,
-    addCustomProvider,
-    updateCustomProvider,
-    deleteCustomProvider,
-    getProviderById
-// eslint-disable-next-line react-hooks/exhaustive-deps
-  }), [providers, loading, error]);
+  const value = useMemo(
+    () => ({
+      providers,
+      loading,
+      error,
+      refreshProviders,
+      addCustomProvider,
+      updateCustomProvider,
+      deleteCustomProvider,
+      getProviderById,
+    }),
+    [providers, loading, error]
+  );
 
   return <ApiProviderContext.Provider value={value}>{children}</ApiProviderContext.Provider>;
 }

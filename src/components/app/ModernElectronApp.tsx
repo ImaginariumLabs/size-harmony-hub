@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, ErrorInfo } from 'react';
 import { createTheme, ThemeProvider, CssBaseline, Box, Typography } from '@mui/material';
 import '../../styles/electron.css';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
@@ -6,7 +6,7 @@ import { DashboardWidgetProvider } from '../../contexts/DashboardWidgetContext';
 import { ApiProviderProvider } from '../../contexts/ApiProviderContext';
 import { AuthProvider } from '../../contexts/AuthContext';
 import ProtectedRoute from '../routing/ProtectedRoute';
-import AdminRoute from '../routing/AdminRoute';
+import AdminRoute from '../auth/AdminRoute';
 import ModernDashboard from '../../pages/ModernDashboard';
 import ApiKeySettings from '../../pages/ApiKeySettings';
 import ProviderDetail from '../../pages/ProviderDetail';
@@ -22,7 +22,11 @@ import Login from '../../pages/Login';
 // Settings pages
 import AlertSettings from '../../components/settings/AlertSettings';
 import ElectronAppLayout from '../layout/ElectronAppLayout';
-import { isElectron } from '../../services/electronService';
+import { isElectron } from '../../services/environmentService';
+// Import the test report component
+import TestReport from '../diagnostics/TestReport';
+// Import error boundary components
+import ErrorBoundary from '../common/ErrorBoundary';
 
 // Create a dark theme
 const darkTheme = createTheme({
@@ -82,18 +86,22 @@ const ModernElectronApp: React.FC = () => {
     const electronEnvironment = isElectron();
 
     // Log environment information
-    console.log('Environment:', {
-      isElectron: electronEnvironment,
-      userAgent: navigator.userAgent,
-      windowElectronAPI: window.electronAPI ? 'Available' : 'Not Available',
-      windowInnerWidth: window.innerWidth,
-      windowInnerHeight: window.innerHeight
-    });
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Environment:', {
+        isElectron: electronEnvironment,
+        userAgent: navigator.userAgent,
+        windowElectronAPI: window.electronAPI ? 'Available' : 'Not Available',
+        windowInnerWidth: window.innerWidth,
+        windowInnerHeight: window.innerHeight,
+      });
+    }
 
     // Add electron-specific class to body if in Electron
     if (electronEnvironment) {
       document.body.classList.add('electron-environment');
-      console.log('Added electron-environment class to body');
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Added electron-environment class to body');
+      }
     }
 
     // Debug message to Electron main process
@@ -101,11 +109,15 @@ const ModernElectronApp: React.FC = () => {
       window.electronAPI.debug({
         component: 'ModernElectronApp',
         event: 'initialized',
-        data: { electronEnvironment }
+        data: { electronEnvironment },
       });
-      console.log('Sent debug message to Electron main process');
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Sent debug message to Electron main process');
+      }
     } else if (electronEnvironment) {
-      console.log('Electron environment detected but debug API not available');
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Electron environment detected but debug API not available');
+      }
     }
 
     // Force render update to ensure proper detection
@@ -116,128 +128,268 @@ const ModernElectronApp: React.FC = () => {
   // Toggle widget visibility through Electron API
   const toggleWidgetVisibility = () => {
     if (window.electronAPI) {
-      window.electronAPI.toggleWidgetVisibility()
-        .then((isVisible) => {
+      window.electronAPI
+        .toggleWidgetVisibility()
+        .then(isVisible => {
           setShowWidget(isVisible);
         })
-        .catch((error) => {
-          console.error('Error toggling widget visibility:', error);
+        .catch(error => {
+          if (process.env.NODE_ENV !== 'production' || process.env.DEBUG === 'true') {
+            console.error('Error toggling widget visibility:', error);
+          }
         });
     }
   };
 
+  // Handle global errors
+  const handleGlobalError = (error: Error, errorInfo: ErrorInfo) => {
+    if (process.env.NODE_ENV !== 'production' || process.env.DEBUG === 'true') {
+      console.error('Global error caught by ModernElectronApp error boundary:', error, errorInfo);
+    }
+
+    // In a production app, you would send this to your error reporting service
+    // For example: errorReportingService.reportError({ error, errorInfo });
+
+    // Log to Electron main process if available
+    if (window.electronAPI?.debug) {
+      try {
+        window.electronAPI.debug({
+          component: 'ModernElectronApp',
+          event: 'error',
+          error: error.message,
+          stack: error.stack,
+          componentStack: errorInfo.componentStack,
+        });
+      } catch (debugError) {
+        if (process.env.NODE_ENV !== 'production' || process.env.DEBUG === 'true') {
+          console.error('Failed to send error to Electron main process:', debugError);
+        }
+      }
+    }
+  };
+
   return (
-    <ThemeProvider theme={darkTheme}>
-      <CssBaseline />
-      <AuthProvider>
-        <ApiProviderProvider>
-          <DashboardWidgetProvider>
-            <Router>
-              <ElectronAppLayout
-                title="APIwidget"
-                onToggleWidget={toggleWidgetVisibility}
-                showWidget={showWidget}
-              >
-                <Routes>
-                  {/* Public Routes - No authentication required */}
-                  <Route path="/login" element={<Login />} />
+    <ErrorBoundary onError={handleGlobalError} componentName="ModernElectronApp">
+      <ThemeProvider theme={darkTheme}>
+        <CssBaseline />
+        <AuthProvider>
+          <ApiProviderProvider>
+            <DashboardWidgetProvider>
+              <Router>
+                <ErrorBoundary componentName="ElectronAppLayout">
+                  <ElectronAppLayout
+                    title="APIwidget"
+                    onToggleWidget={toggleWidgetVisibility}
+                    showWidget={showWidget}
+                  >
+                    <Routes>
+                      {/* Public Routes - No authentication required */}
+                      <Route
+                        path="/login"
+                        element={
+                          <ErrorBoundary componentName="Login">
+                            <Login />
+                          </ErrorBoundary>
+                        }
+                      />
 
-                  {/* Regular Routes - Protected but available in both platforms */}
-                  <Route path="/" element={
-                    <ProtectedRoute>
-                      <ModernDashboard />
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/settings/api-keys" element={
-                    <ProtectedRoute>
-                      <ApiKeySettings />
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/settings/api-keys/:providerId" element={
-                    <ProtectedRoute>
-                      <ApiKeySettings />
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/settings/api-keys/new" element={
-                    <ProtectedRoute>
-                      <ApiKeySettings />
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/provider/:providerId" element={
-                    <ProtectedRoute>
-                      <ProviderDetail />
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/provider/openai" element={
-                    <ProtectedRoute>
-                      <OpenAIProviderDetail />
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/provider/claude" element={
-                    <ProtectedRoute>
-                      <ClaudeProviderDetail />
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/provider/google" element={
-                    <ProtectedRoute>
-                      <GeminiProviderDetail />
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/widgets" element={
-                    <ProtectedRoute>
-                      <WidgetGalleryPage />
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/floating-widgets" element={
-                    <ProtectedRoute>
-                      <FloatingWidgetsPage />
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/usage" element={
-                    <ProtectedRoute>
-                      <UsagePage />
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/history" element={
-                    <ProtectedRoute>
-                      <HistoryPage />
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/help" element={
-                    <ProtectedRoute>
-                      <HelpPage />
-                    </ProtectedRoute>
-                  } />
-                  {/* Notifications page temporarily removed */}
-                  <Route path="/settings/alerts" element={
-                    <ProtectedRoute>
-                      <AlertSettings />
-                    </ProtectedRoute>
-                  } />
+                      {/* Regular Routes - Protected but available in both platforms */}
+                      <Route
+                        path="/"
+                        element={
+                          <ErrorBoundary componentName="ProtectedRoute">
+                            <ProtectedRoute>
+                              <ErrorBoundary componentName="ModernDashboard">
+                                <ModernDashboard />
+                              </ErrorBoundary>
+                            </ProtectedRoute>
+                          </ErrorBoundary>
+                        }
+                      />
+                      <Route
+                        path="/settings/api-keys"
+                        element={
+                          <ErrorBoundary componentName="ProtectedRoute">
+                            <ProtectedRoute>
+                              <ErrorBoundary componentName="ApiKeySettings">
+                                <ApiKeySettings />
+                              </ErrorBoundary>
+                            </ProtectedRoute>
+                          </ErrorBoundary>
+                        }
+                      />
+                      <Route
+                        path="/settings/api-keys/:providerId"
+                        element={
+                          <ErrorBoundary componentName="ProtectedRoute">
+                            <ProtectedRoute>
+                              <ErrorBoundary componentName="ApiKeySettings">
+                                <ApiKeySettings />
+                              </ErrorBoundary>
+                            </ProtectedRoute>
+                          </ErrorBoundary>
+                        }
+                      />
+                      <Route
+                        path="/settings/api-keys/new"
+                        element={
+                          <ErrorBoundary componentName="ProtectedRoute">
+                            <ProtectedRoute>
+                              <ErrorBoundary componentName="ApiKeySettings">
+                                <ApiKeySettings />
+                              </ErrorBoundary>
+                            </ProtectedRoute>
+                          </ErrorBoundary>
+                        }
+                      />
+                      <Route
+                        path="/provider/:providerId"
+                        element={
+                          <ErrorBoundary componentName="ProtectedRoute">
+                            <ProtectedRoute>
+                              <ErrorBoundary componentName="ProviderDetail">
+                                <ProviderDetail />
+                              </ErrorBoundary>
+                            </ProtectedRoute>
+                          </ErrorBoundary>
+                        }
+                      />
+                      <Route
+                        path="/provider/openai"
+                        element={
+                          <ErrorBoundary componentName="ProtectedRoute">
+                            <ProtectedRoute>
+                              <ErrorBoundary componentName="OpenAIProviderDetail">
+                                <OpenAIProviderDetail />
+                              </ErrorBoundary>
+                            </ProtectedRoute>
+                          </ErrorBoundary>
+                        }
+                      />
+                      <Route
+                        path="/provider/claude"
+                        element={
+                          <ErrorBoundary componentName="ProtectedRoute">
+                            <ProtectedRoute>
+                              <ErrorBoundary componentName="ClaudeProviderDetail">
+                                <ClaudeProviderDetail />
+                              </ErrorBoundary>
+                            </ProtectedRoute>
+                          </ErrorBoundary>
+                        }
+                      />
+                      <Route
+                        path="/provider/google"
+                        element={
+                          <ErrorBoundary componentName="ProtectedRoute">
+                            <ProtectedRoute>
+                              <ErrorBoundary componentName="GeminiProviderDetail">
+                                <GeminiProviderDetail />
+                              </ErrorBoundary>
+                            </ProtectedRoute>
+                          </ErrorBoundary>
+                        }
+                      />
+                      <Route
+                        path="/widgets"
+                        element={
+                          <ErrorBoundary componentName="ProtectedRoute">
+                            <ProtectedRoute>
+                              <ErrorBoundary componentName="WidgetGalleryPage">
+                                <WidgetGalleryPage />
+                              </ErrorBoundary>
+                            </ProtectedRoute>
+                          </ErrorBoundary>
+                        }
+                      />
+                      <Route
+                        path="/floating-widgets"
+                        element={
+                          <ErrorBoundary componentName="ProtectedRoute">
+                            <ProtectedRoute>
+                              <ErrorBoundary componentName="FloatingWidgetsPage">
+                                <FloatingWidgetsPage />
+                              </ErrorBoundary>
+                            </ProtectedRoute>
+                          </ErrorBoundary>
+                        }
+                      />
+                      <Route
+                        path="/usage"
+                        element={
+                          <ErrorBoundary componentName="ProtectedRoute">
+                            <ProtectedRoute>
+                              <ErrorBoundary componentName="UsagePage">
+                                <UsagePage />
+                              </ErrorBoundary>
+                            </ProtectedRoute>
+                          </ErrorBoundary>
+                        }
+                      />
+                      <Route
+                        path="/history"
+                        element={
+                          <ErrorBoundary componentName="ProtectedRoute">
+                            <ProtectedRoute>
+                              <ErrorBoundary componentName="HistoryPage">
+                                <HistoryPage />
+                              </ErrorBoundary>
+                            </ProtectedRoute>
+                          </ErrorBoundary>
+                        }
+                      />
+                      <Route
+                        path="/help"
+                        element={
+                          <ErrorBoundary componentName="ProtectedRoute">
+                            <ProtectedRoute>
+                              <ErrorBoundary componentName="HelpPage">
+                                <HelpPage />
+                              </ErrorBoundary>
+                            </ProtectedRoute>
+                          </ErrorBoundary>
+                        }
+                      />
+                      <Route
+                        path="/diagnostics"
+                        element={
+                          <ErrorBoundary componentName="ProtectedRoute">
+                            <ProtectedRoute>
+                              <ErrorBoundary componentName="TestReport">
+                                <TestReport />
+                              </ErrorBoundary>
+                            </ProtectedRoute>
+                          </ErrorBoundary>
+                        }
+                      />
+                      {/* Notifications page temporarily removed */}
+                      <Route
+                        path="/settings/alerts"
+                        element={
+                          <ErrorBoundary componentName="ProtectedRoute">
+                            <ProtectedRoute>
+                              <ErrorBoundary componentName="AlertSettings">
+                                <AlertSettings />
+                              </ErrorBoundary>
+                            </ProtectedRoute>
+                          </ErrorBoundary>
+                        }
+                      />
 
-                  {/* Admin Routes - Only available in web mode and for admin users */}
-                  {/* Admin Dashboard temporarily removed */}
-                  {/* Admin routes temporarily disabled until components are implemented */}
-                  <Route path="/admin/*" element={
-                    <AdminRoute>
-                      <Box sx={{ p: 4, textAlign: 'center' }}>
-                        <Typography variant="h5">Admin Panel</Typography>
-                        <Typography variant="body1" sx={{ mt: 2 }}>
-                          Admin functionality is currently under development.
-                        </Typography>
-                      </Box>
-                    </AdminRoute>
-                  } />
+                      {/* Admin Routes - Only available in web mode and for admin users */}
+                      {/* Admin routes are defined in App.tsx */}
 
-                  {/* Fallback Route */}
-                  <Route path="*" element={<Navigate to="/" replace />} />
-                </Routes>
-              </ElectronAppLayout>
-            </Router>
-          </DashboardWidgetProvider>
-        </ApiProviderProvider>
-      </AuthProvider>
-    </ThemeProvider>
+                      {/* Fallback Route */}
+                      <Route path="*" element={<Navigate to="/" replace />} />
+                    </Routes>
+                  </ElectronAppLayout>
+                </ErrorBoundary>
+              </Router>
+            </DashboardWidgetProvider>
+          </ApiProviderProvider>
+        </AuthProvider>
+      </ThemeProvider>
+    </ErrorBoundary>
   );
 };
 
