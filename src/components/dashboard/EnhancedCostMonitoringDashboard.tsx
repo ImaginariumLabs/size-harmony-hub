@@ -1,28 +1,40 @@
 import React, { useState, useEffect } from 'react';
 import {
   Box,
-  Grid,
-  Paper,
-  Typography,
-  CircularProgress,
-  useTheme,
+  Button,
   Card,
   CardContent,
   CardHeader,
+  CircularProgress,
   Divider,
-  IconButton,
-  Tooltip,
-  Select,
-  MenuItem,
   FormControl,
+  Grid,
+  IconButton,
   InputLabel,
-  SelectChangeEvent
+  MenuItem,
+  Select,
+  SelectChangeEvent,
+  Tooltip,
+  Typography,
 } from '@mui/material';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import InfoIcon from '@mui/icons-material/Info';
 import { fetchAllApiData, ApiProvider, ApiUsageData } from '../../services/enhancedApiService';
 import useLoadingIndicator from '../../hooks/useLoadingIndicator';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
+import DefaultDashboardView from './DefaultDashboardView';
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+  Legend,
+  Tooltip as RechartsTooltip,
+} from 'recharts';
 
 // Time period options for data display
 type TimePeriod = 'day' | 'week' | 'month' | 'year';
@@ -34,7 +46,6 @@ type TimePeriod = 'day' | 'week' | 'month' | 'year';
  * with improved visualizations based on competitor analysis.
  */
 const EnhancedCostMonitoringDashboard: React.FC = () => {
-  const theme = useTheme();
   const [apiData, setApiData] = useState<Record<ApiProvider, ApiUsageData> | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -51,19 +62,120 @@ const EnhancedCostMonitoringDashboard: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [timePeriod]);
 
-  // Function to fetch API data
+  // Function to fetch API data with timeout
   const fetchData = async () => {
     setLoading(true);
     setError(null);
 
+    // Set a safety timeout to ensure loading state is always reset
+    const safetyTimeout = setTimeout(() => {
+      if (loading) {
+        console.warn('Safety timeout triggered to prevent perpetual loading');
+        setLoading(false);
+        setError('Request took too long. Using fallback data.');
+
+        // Create minimal fallback data if we have nothing
+        if (!apiData) {
+          const fallbackData: Record<ApiProvider, ApiUsageData> = {
+            openai: {
+              total: 0,
+              change: 0,
+              changeType: 'increase',
+              usagePercentage: 0,
+              lastUpdated: new Date().toISOString(),
+            },
+            claude: {
+              total: 0,
+              change: 0,
+              changeType: 'increase',
+              usagePercentage: 0,
+              lastUpdated: new Date().toISOString(),
+            },
+            google: {
+              total: 0,
+              change: 0,
+              changeType: 'increase',
+              usagePercentage: 0,
+              lastUpdated: new Date().toISOString(),
+            },
+            github: {
+              total: 0,
+              change: 0,
+              changeType: 'increase',
+              usagePercentage: 0,
+              lastUpdated: new Date().toISOString(),
+            },
+          };
+          setApiData(fallbackData);
+        }
+      }
+    }, 5000); // 5 second safety timeout
+
     try {
+      // Use a shorter timeout for the API call
       const data = await fetchAllApiData();
-      setApiData(data);
+
+      // Check if we got valid data
+      if (!data || Object.keys(data).length === 0) {
+        throw new Error('No data received from API');
+      }
+
+      setApiData(data as Record<ApiProvider, ApiUsageData>);
     } catch (err) {
-      setError(`Error: ${err instanceof Error ? err.message : 'Unknown error'}`);
-      console.error('Error fetching API data:', err);
+      // Provide more specific error messages
+      if (err instanceof Error) {
+        if (err.message.includes('timed out')) {
+          setError('Request timed out. Please try again later.');
+        } else {
+          setError(`Error: ${err.message}`);
+        }
+      } else {
+        setError('Unknown error occurred');
+      }
+
+      if (process.env.NODE_ENV !== 'production' || process.env.DEBUG === 'true') {
+        console.error('Error fetching API data:', err);
+      }
+
+      // If we have previous data, keep using it
+      if (!apiData) {
+        // Create minimal fallback data if we have nothing
+        const fallbackData: Record<ApiProvider, ApiUsageData> = {
+          openai: {
+            total: 0,
+            change: 0,
+            changeType: 'increase',
+            usagePercentage: 0,
+            lastUpdated: new Date().toISOString(),
+          },
+          claude: {
+            total: 0,
+            change: 0,
+            changeType: 'increase',
+            usagePercentage: 0,
+            lastUpdated: new Date().toISOString(),
+          },
+          google: {
+            total: 0,
+            change: 0,
+            changeType: 'increase',
+            usagePercentage: 0,
+            lastUpdated: new Date().toISOString(),
+          },
+          github: {
+            total: 0,
+            change: 0,
+            changeType: 'increase',
+            usagePercentage: 0,
+            lastUpdated: new Date().toISOString(),
+          },
+        };
+        setApiData(fallbackData);
+      }
     } finally {
+      // Ensure loading state is always reset
       setLoading(false);
+      clearTimeout(safetyTimeout);
     }
   };
 
@@ -90,7 +202,7 @@ const EnhancedCostMonitoringDashboard: React.FC = () => {
         OpenAI: openai.toFixed(2),
         Claude: claude.toFixed(2),
         Gemini: gemini.toFixed(2),
-        total: (openai + claude + gemini).toFixed(2)
+        total: (openai + claude + gemini).toFixed(2),
       };
     });
   };
@@ -104,7 +216,7 @@ const EnhancedCostMonitoringDashboard: React.FC = () => {
     return [
       { name: 'Project Alpha', value: 3674, percentage: 85 },
       { name: 'Project Nebula', value: 234, percentage: 5 },
-      { name: 'Project Quantum', value: 415, percentage: 10 }
+      { name: 'Project Quantum', value: 415, percentage: 10 },
     ];
   };
 
@@ -114,9 +226,9 @@ const EnhancedCostMonitoringDashboard: React.FC = () => {
 
     // In a real implementation, this would use actual model usage data
     return [
-      { name: 'GPT-4 Turbo', value: 93.60, color: '#4CAF50' },
+      { name: 'GPT-4 Turbo', value: 93.6, color: '#4CAF50' },
       { name: 'Claude Opus', value: 81.93, color: '#00BCD4' },
-      { name: 'GPT-3.5 Turbo', value: 58.47, color: '#F44336' }
+      { name: 'GPT-3.5 Turbo', value: 58.47, color: '#F44336' },
     ];
   };
 
@@ -150,6 +262,53 @@ const EnhancedCostMonitoringDashboard: React.FC = () => {
   // Colors for the pie chart
   const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
 
+  // If loading, show a loading indicator with a timeout
+  useEffect(() => {
+    // Set a safety timeout to ensure we always show something
+    const safetyTimeout = setTimeout(() => {
+      if (loading && !apiData) {
+        console.warn('Safety timeout triggered in EnhancedCostMonitoringDashboard');
+        setLoading(false);
+        // If we don't have data yet, create default empty data
+        if (!apiData) {
+          const defaultData: Record<ApiProvider, ApiUsageData> = {
+            openai: {
+              total: 0,
+              change: 0,
+              changeType: 'increase',
+              usagePercentage: 0,
+              lastUpdated: new Date().toISOString(),
+            },
+            claude: {
+              total: 0,
+              change: 0,
+              changeType: 'increase',
+              usagePercentage: 0,
+              lastUpdated: new Date().toISOString(),
+            },
+            google: {
+              total: 0,
+              change: 0,
+              changeType: 'increase',
+              usagePercentage: 0,
+              lastUpdated: new Date().toISOString(),
+            },
+            github: {
+              total: 0,
+              change: 0,
+              changeType: 'increase',
+              usagePercentage: 0,
+              lastUpdated: new Date().toISOString(),
+            },
+          };
+          setApiData(defaultData);
+        }
+      }
+    }, 3000); // 3 second safety timeout
+
+    return () => clearTimeout(safetyTimeout);
+  }, [loading, apiData]);
+
   // If loading, show a loading indicator
   if (loading && !apiData) {
     return (
@@ -159,17 +318,43 @@ const EnhancedCostMonitoringDashboard: React.FC = () => {
     );
   }
 
-  // If error, show error message
-  if (error && !apiData) {
+  // If error, show error message with fallback data
+  if (error) {
     return (
       <Box sx={{ p: 3 }}>
-        <Typography color="error">{error}</Typography>
-        <Box sx={{ mt: 2 }}>
-          <IconButton onClick={fetchData} color="primary">
-            <RefreshIcon />
-          </IconButton>
+        <Typography color="error" gutterBottom>
+          {error}
+        </Typography>
+        <Typography variant="body2" sx={{ mb: 2 }}>
+          Showing default dashboard view. Your actual data will appear when connection is restored.
+        </Typography>
+        <Box sx={{ mt: 2, mb: 4 }}>
+          <Button
+            startIcon={<RefreshIcon />}
+            variant="contained"
+            onClick={fetchData}
+            color="primary"
+          >
+            Retry Connection
+          </Button>
         </Box>
+
+        {/* Show default dashboard view */}
+        <DefaultDashboardView
+          title="Cost Monitoring Dashboard"
+          subtitle="Unable to load data. You can retry the connection or configure your API keys."
+        />
       </Box>
+    );
+  }
+
+  // If no API data is available, show the default dashboard view
+  if (!apiData || Object.keys(apiData).length === 0) {
+    return (
+      <DefaultDashboardView
+        title="Cost Monitoring Dashboard"
+        subtitle="Configure your API keys to start monitoring your usage and costs."
+      />
     );
   }
 
@@ -209,7 +394,7 @@ const EnhancedCostMonitoringDashboard: React.FC = () => {
             </Select>
           </FormControl>
 
-          <IconButton onClick={fetchData} color="primary">
+          <IconButton aria-label="Button description" onClick={fetchData} color="primary">
             <RefreshIcon />
           </IconButton>
         </Box>
@@ -217,28 +402,32 @@ const EnhancedCostMonitoringDashboard: React.FC = () => {
 
       <Grid container spacing={3}>
         {/* Total Spend Card */}
-        <Grid item xs={12} md={6}>
-          <Card sx={{
-            height: '100%',
-            bgcolor: 'background.paper',
-            borderRadius: 2,
-            boxShadow: 3,
-            background: 'rgba(30, 30, 30, 0.7)',
-            backdropFilter: 'blur(10px)',
-            border: '1px solid rgba(255, 255, 255, 0.1)'
-          }}>
+        <Grid sx={{ gridColumn: { xs: 'span 12', md: 'span 6' } }}>
+          <Card
+            sx={{
+              height: '100%',
+              bgcolor: 'background.paper',
+              borderRadius: 2,
+              boxShadow: 3,
+              background: 'rgba(30, 30, 30, 0.7)',
+              backdropFilter: 'blur(10px)',
+              border: '1px solid rgba(255, 255, 255, 0.1)',
+            }}
+          >
             <CardHeader
               title={
                 <Box sx={{ display: 'flex', alignItems: 'center' }}>
                   <Typography variant="h6">AI API Spend</Typography>
                   <Typography variant="body2" sx={{ ml: 1, color: 'text.secondary' }}>
-                    {timePeriod === 'week' ? 'Weekly Overview' : `${timePeriod.charAt(0).toUpperCase() + timePeriod.slice(1)}ly Overview`}
+                    {timePeriod === 'week'
+                      ? 'Weekly Overview'
+                      : `${timePeriod.charAt(0).toUpperCase() + timePeriod.slice(1)}ly Overview`}
                   </Typography>
                 </Box>
               }
               action={
                 <Tooltip title="Total spend across all API providers">
-                  <IconButton size="small">
+                  <IconButton aria-label="Button description" size="small">
                     <InfoIcon fontSize="small" />
                   </IconButton>
                 </Tooltip>
@@ -250,14 +439,16 @@ const EnhancedCostMonitoringDashboard: React.FC = () => {
                 <Typography variant="h3" component="div">
                   ${calculateTotalSpend()}
                 </Typography>
-                <Box sx={{
-                  bgcolor: 'success.main',
-                  color: 'success.contrastText',
-                  px: 1,
-                  py: 0.5,
-                  borderRadius: 1,
-                  height: 'fit-content'
-                }}>
+                <Box
+                  sx={{
+                    bgcolor: 'success.main',
+                    color: 'success.contrastText',
+                    px: 1,
+                    py: 0.5,
+                    borderRadius: 1,
+                    height: 'fit-content',
+                  }}
+                >
                   <Typography variant="body2">{calculateChangePercentage()}</Typography>
                 </Box>
               </Box>
@@ -283,16 +474,18 @@ const EnhancedCostMonitoringDashboard: React.FC = () => {
         </Grid>
 
         {/* Project Usage Card */}
-        <Grid item xs={12} md={6}>
-          <Card sx={{
-            height: '100%',
-            bgcolor: 'background.paper',
-            borderRadius: 2,
-            boxShadow: 3,
-            background: 'rgba(30, 30, 30, 0.7)',
-            backdropFilter: 'blur(10px)',
-            border: '1px solid rgba(255, 255, 255, 0.1)'
-          }}>
+        <Grid sx={{ gridColumn: { xs: 'span 12', md: 'span 6' } }}>
+          <Card
+            sx={{
+              height: '100%',
+              bgcolor: 'background.paper',
+              borderRadius: 2,
+              boxShadow: 3,
+              background: 'rgba(30, 30, 30, 0.7)',
+              backdropFilter: 'blur(10px)',
+              border: '1px solid rgba(255, 255, 255, 0.1)',
+            }}
+          >
             <CardHeader
               title={
                 <Box sx={{ display: 'flex', alignItems: 'center' }}>
@@ -304,7 +497,7 @@ const EnhancedCostMonitoringDashboard: React.FC = () => {
               }
               action={
                 <Tooltip title="API usage breakdown by project">
-                  <IconButton size="small">
+                  <IconButton aria-label="Button description" size="small">
                     <InfoIcon fontSize="small" />
                   </IconButton>
                 </Tooltip>
@@ -334,8 +527,15 @@ const EnhancedCostMonitoringDashboard: React.FC = () => {
                       dataKey="value"
                       label={({ name, percentage }) => `${name}: ${percentage}%`}
                     >
-                      {projectData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      {projectData.map(entry => (
+                        <Cell
+                          key={`cell-${entry.name}`}
+                          fill={
+                            COLORS[
+                              projectData.findIndex(p => p.name === entry.name) % COLORS.length
+                            ]
+                          }
+                        />
                       ))}
                     </Pie>
                     <Legend />
@@ -347,22 +547,22 @@ const EnhancedCostMonitoringDashboard: React.FC = () => {
         </Grid>
 
         {/* Model Cost Breakdown */}
-        <Grid item xs={12}>
-          <Card sx={{
-            bgcolor: 'background.paper',
-            borderRadius: 2,
-            boxShadow: 3,
-            background: 'rgba(30, 30, 30, 0.7)',
-            backdropFilter: 'blur(10px)',
-            border: '1px solid rgba(255, 255, 255, 0.1)'
-          }}>
+        <Grid sx={{ gridColumn: 'span 12' }}>
+          <Card
+            sx={{
+              bgcolor: 'background.paper',
+              borderRadius: 2,
+              boxShadow: 3,
+              background: 'rgba(30, 30, 30, 0.7)',
+              backdropFilter: 'blur(10px)',
+              border: '1px solid rgba(255, 255, 255, 0.1)',
+            }}
+          >
             <CardHeader
-              title={
-                <Typography variant="h6">Model Cost Breakdown</Typography>
-              }
+              title={<Typography variant="h6">Model Cost Breakdown</Typography>}
               action={
                 <Tooltip title="Cost breakdown by model">
-                  <IconButton size="small">
+                  <IconButton aria-label="Button description" size="small">
                     <InfoIcon fontSize="small" />
                   </IconButton>
                 </Tooltip>
@@ -371,19 +571,26 @@ const EnhancedCostMonitoringDashboard: React.FC = () => {
             <Divider />
             <CardContent>
               <Grid container spacing={2}>
-                {modelCostData.map((model, index) => (
-                  <Grid item xs={12} md={4} key={index}>
-                    <Box sx={{
-                      p: 2,
-                      borderRadius: 2,
-                      bgcolor: 'background.default',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'center',
-                      gap: 1
-                    }}>
+                {modelCostData.map(model => (
+                  <Grid
+                    sx={{ gridColumn: { xs: 'span 12', md: 'span 4' } }}
+                    key={`model-${model.name}`}
+                  >
+                    <Box
+                      sx={{
+                        p: 2,
+                        borderRadius: 2,
+                        bgcolor: 'background.default',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        gap: 1,
+                      }}
+                    >
                       <Typography variant="body1">{model.name}</Typography>
-                      <Typography variant="h5" sx={{ color: model.color }}>${model.value}</Typography>
+                      <Typography variant="h5" sx={{ color: model.color }}>
+                        ${model.value}
+                      </Typography>
                     </Box>
                   </Grid>
                 ))}

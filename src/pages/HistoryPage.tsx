@@ -70,6 +70,11 @@ const HistoryPage: React.FC = () => {
     const statuses: ('success' | 'error' | 'timeout')[] = ['success', 'error', 'timeout'];
     const data: ApiRequest[] = [];
 
+    // If no providers are configured, return empty data
+    if (configuredProviders.length === 0) {
+      return data;
+    }
+
     for (let i = 0; i < 100; i++) {
       const provider = configuredProviders[Math.floor(Math.random() * configuredProviders.length)];
       const providerModels = models[provider.id as keyof typeof models] || ['default-model'];
@@ -123,7 +128,9 @@ const HistoryPage: React.FC = () => {
       setApiRequests(generateSampleData());
       setLastRefreshed(new Date());
     } catch (error) {
-      console.error('Error fetching history data:', error);
+      if (process.env.NODE_ENV !== 'production' || process.env.DEBUG === 'true') {
+        console.error('Error fetching history data:', error);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -311,12 +318,12 @@ const HistoryPage: React.FC = () => {
             Last updated: {formatLastRefreshed()}
           </Typography>
           {isLoading ? (
-            <IconButton size="small" disabled>
+            <IconButton aria-label="Button description" size="small" disabled>
               <CircularProgress size={20} />
             </IconButton>
           ) : (
             <Tooltip title="Refresh data">
-              <IconButton onClick={fetchHistoryData} size="small">
+              <IconButton aria-label="Button description" onClick={fetchHistoryData} size="small">
                 <RefreshIcon />
               </IconButton>
             </Tooltip>

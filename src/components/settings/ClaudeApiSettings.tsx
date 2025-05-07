@@ -1,18 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Box,
-  CircularProgress,
   Alert,
-  Grid,
-  Typography,
-  TextField,
+  Box,
   Button,
-  IconButton,
-  Tooltip,
-  Paper,
+  Chip,
+  CircularProgress,
   Divider,
+  Grid,
+  IconButton,
   Link,
-  Chip
+  Paper,
+  TextField,
+  Tooltip,
+  Typography,
 } from '@mui/material';
 import {
   Check as CheckIcon,
@@ -40,15 +40,19 @@ const ClaudeApiSettings: React.FC = () => {
       const timeout = new Promise<never>((_, reject) => {
         setTimeout(() => {
           reject(new Error('API key load timed out after 5 seconds'));
+
+          return () => {
+            // Cleanup timeout to prevent memory leaks
+            if (timeoutId) {
+              clearTimeout(timeoutId);
+            }
+          };
         }, 5000); // 5 second timeout
       });
 
       try {
         // Race the API call against the timeout
-        const key = await Promise.race([
-          getApiKey('claude'),
-          timeout
-        ]);
+        const key = await Promise.race([getApiKey('claude'), timeout]);
 
         if (key) {
           setApiKey(key);
@@ -56,11 +60,15 @@ const ClaudeApiSettings: React.FC = () => {
           setIsValid(true);
         }
       } catch (error) {
-        console.error('Error loading API key:', error);
+        if (process.env.NODE_ENV !== 'production' || process.env.DEBUG === 'true') {
+          console.error('Error loading API key:', error);
+        }
 
         // Provide more specific error messages
         if (error instanceof Error && error.message.includes('timed out')) {
-          console.warn('API key load timed out');
+          if (process.env.NODE_ENV !== 'production' || process.env.DEBUG === 'true') {
+            console.warn('API key load timed out');
+          }
         }
       }
     };
@@ -93,18 +101,19 @@ const ClaudeApiSettings: React.FC = () => {
       }
 
       // Make a real API call to validate the key with timeout protection
-      const valid = await Promise.race([
-        validateApiKey(apiKey),
-        timeout
-      ]);
+      const valid = await Promise.race([validateApiKey(apiKey), timeout]);
 
       setIsValid(valid);
     } catch (error) {
-      console.error('Error validating API key:', error);
+      if (process.env.NODE_ENV !== 'production' || process.env.DEBUG === 'true') {
+        console.error('Error validating API key:', error);
+      }
 
       // Provide more specific error messages
       if (error instanceof Error && error.message.includes('timed out')) {
-        console.warn('API key validation timed out');
+        if (process.env.NODE_ENV !== 'production' || process.env.DEBUG === 'true') {
+          console.warn('API key validation timed out');
+        }
       }
 
       setIsValid(false);
@@ -128,18 +137,19 @@ const ClaudeApiSettings: React.FC = () => {
 
     try {
       // Race the API call against the timeout
-      await Promise.race([
-        saveApiKey('claude', apiKey),
-        timeout
-      ]);
+      await Promise.race([saveApiKey('claude', apiKey), timeout]);
 
       setHasSavedKey(true);
     } catch (error) {
-      console.error('Error saving API key:', error);
+      if (process.env.NODE_ENV !== 'production' || process.env.DEBUG === 'true') {
+        console.error('Error saving API key:', error);
+      }
 
       // Provide more specific error messages
       if (error instanceof Error && error.message.includes('timed out')) {
-        console.warn('API key save operation timed out');
+        if (process.env.NODE_ENV !== 'production' || process.env.DEBUG === 'true') {
+          console.warn('API key save operation timed out');
+        }
       }
     } finally {
       setIsSaving(false);
@@ -160,7 +170,16 @@ const ClaudeApiSettings: React.FC = () => {
   };
 
   return (
-    <Paper sx={{ p: 3, mb: 3, borderRadius: 2, background: 'rgba(30, 30, 30, 0.7)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255, 255, 255, 0.1)' }}>
+    <Paper
+      sx={{
+        p: 3,
+        mb: 3,
+        borderRadius: 2,
+        background: 'rgba(30, 30, 30, 0.7)',
+        backdropFilter: 'blur(10px)',
+        border: '1px solid rgba(255, 255, 255, 0.1)',
+      }}
+    >
       <Typography variant="h6" gutterBottom>
         Claude API Settings
       </Typography>
@@ -168,13 +187,14 @@ const ClaudeApiSettings: React.FC = () => {
       <Divider sx={{ my: 2 }} />
 
       <Grid container spacing={2}>
-        <Grid item xs={12}>
+        <Grid sx={{ gridColumn: 'span 12' }}>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-            Enter your Claude API key to track usage and costs. Your key is stored locally and never sent to our servers.
+            Enter your Claude API key to track usage and costs. Your key is stored locally and never
+            sent to our servers.
           </Typography>
         </Grid>
 
-        <Grid item xs={12}>
+        <Grid sx={{ gridColumn: 'span 12' }}>
           <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1 }}>
             <TextField
               label="Claude API Key"
@@ -187,6 +207,7 @@ const ClaudeApiSettings: React.FC = () => {
               InputProps={{
                 endAdornment: (
                   <IconButton
+                    aria-label="Button description"
                     onClick={() => setShowApiKey(!showApiKey)}
                     edge="end"
                   >
@@ -197,7 +218,7 @@ const ClaudeApiSettings: React.FC = () => {
             />
 
             <Tooltip title="Copy API Key">
-              <IconButton onClick={handleCopy} disabled={!apiKey}>
+              <IconButton aria-label="Button description" onClick={handleCopy} disabled={!apiKey}>
                 {copySuccess ? <CheckIcon color="success" /> : <CopyIcon />}
               </IconButton>
             </Tooltip>
@@ -205,18 +226,21 @@ const ClaudeApiSettings: React.FC = () => {
         </Grid>
 
         {isValid === true && (
-          <Grid item xs={12}>
+          <Grid sx={{ gridColumn: 'span 12' }}>
             <Alert severity="success">API key is valid!</Alert>
           </Grid>
         )}
 
         {isValid === false && (
-          <Grid item xs={12}>
-            <Alert severity="error">Invalid API key. Claude API keys typically start with "sk-ant-" and are at least 30 characters long.</Alert>
+          <Grid sx={{ gridColumn: 'span 12' }}>
+            <Alert severity="error">
+              Invalid API key. Claude API keys typically start with "sk-ant-" and are at least 30
+              characters long.
+            </Alert>
           </Grid>
         )}
 
-        <Grid item xs={12}>
+        <Grid sx={{ gridColumn: 'span 12' }}>
           <Box sx={{ display: 'flex', gap: 2, mt: 1 }}>
             <Button
               variant="outlined"
@@ -238,26 +262,56 @@ const ClaudeApiSettings: React.FC = () => {
           </Box>
         </Grid>
 
-        <Grid item xs={12} sx={{ mt: 2 }}>
+        <Grid sx={{ gridColumn: 'span 12', mt: 2 }}>
           <Typography variant="subtitle2" gutterBottom>
             How to get a Claude API key:
           </Typography>
           <ol>
-            <li>Go to <Link href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener noreferrer">Anthropic Console</Link></li>
+            <li>
+              Go to{' '}
+              <Link
+                href="https://console.anthropic.com/settings/keys"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Anthropic Console
+              </Link>
+            </li>
             <li>Sign in with your Anthropic account</li>
             <li>Click "Create Key"</li>
             <li>Copy and paste it here</li>
           </ol>
 
-          <Box sx={{ mt: 3, mb: 2, p: 2, bgcolor: 'rgba(121, 99, 210, 0.1)', borderRadius: 1, border: '1px solid rgba(121, 99, 210, 0.2)' }}>
-            <Typography variant="subtitle2" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Box
+            sx={{
+              mt: 3,
+              mb: 2,
+              p: 2,
+              bgcolor: 'rgba(121, 99, 210, 0.1)',
+              borderRadius: 1,
+              border: '1px solid rgba(121, 99, 210, 0.2)',
+            }}
+          >
+            <Typography
+              variant="subtitle2"
+              gutterBottom
+              sx={{ display: 'flex', alignItems: 'center', gap: 1 }}
+            >
               <InfoIcon fontSize="small" color="primary" />
               Claude API Pricing Information
             </Typography>
             <Typography variant="body2" sx={{ mb: 2 }}>
-              Claude API usage is billed based on the number of tokens processed. Current pricing (as of 2025):
+              Claude API usage is billed based on the number of tokens processed. Current pricing
+              (as of 2025):
             </Typography>
-            <Box component="table" sx={{ width: '100%', borderCollapse: 'collapse', '& th, & td': { p: 1, borderBottom: '1px solid rgba(255, 255, 255, 0.1)' } }}>
+            <Box
+              component="table"
+              sx={{
+                width: '100%',
+                borderCollapse: 'collapse',
+                '& th, & td': { p: 1, borderBottom: '1px solid rgba(255, 255, 255, 0.1)' },
+              }}
+            >
               <Box component="thead" sx={{ '& th': { textAlign: 'left', fontWeight: 'bold' } }}>
                 <Box component="tr">
                   <Box component="th">Model</Box>
@@ -289,7 +343,11 @@ const ClaudeApiSettings: React.FC = () => {
               </Box>
             </Box>
             <Typography variant="body2" sx={{ mt: 2 }}>
-              Check the <Link href="https://www.anthropic.com/api" target="_blank" rel="noopener noreferrer">Anthropic pricing page</Link> for the most current rates.
+              Check the{' '}
+              <Link href="https://www.anthropic.com/api" target="_blank" rel="noopener noreferrer">
+                Anthropic pricing page
+              </Link>{' '}
+              for the most current rates.
             </Typography>
           </Box>
 

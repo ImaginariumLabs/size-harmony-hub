@@ -1,18 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Box,
-  CircularProgress,
   Alert,
-  Grid,
-  Typography,
-  Paper,
-  Divider,
-  TextField,
-  IconButton,
-  Tooltip,
+  Box,
   Button,
+  Chip,
+  CircularProgress,
+  Divider,
+  Grid,
+  IconButton,
   Link,
-  Chip
+  Paper,
+  TextField,
+  Tooltip,
+  Typography,
 } from '@mui/material';
 import {
   Check as CheckIcon,
@@ -40,15 +40,19 @@ const GeminiApiSettings: React.FC = () => {
       const timeout = new Promise<never>((_, reject) => {
         setTimeout(() => {
           reject(new Error('API key load timed out after 5 seconds'));
+
+          return () => {
+            // Cleanup timeout to prevent memory leaks
+            if (timeoutId) {
+              clearTimeout(timeoutId);
+            }
+          };
         }, 5000); // 5 second timeout
       });
 
       try {
         // Race the API call against the timeout
-        const key = await Promise.race([
-          getApiKey('google'),
-          timeout
-        ]);
+        const key = await Promise.race([getApiKey('google'), timeout]);
 
         if (key) {
           setApiKey(key);
@@ -56,11 +60,15 @@ const GeminiApiSettings: React.FC = () => {
           setIsValid(true);
         }
       } catch (error) {
-        console.error('Error loading API key:', error);
+        if (process.env.NODE_ENV !== 'production' || process.env.DEBUG === 'true') {
+          console.error('Error loading API key:', error);
+        }
 
         // Provide more specific error messages
         if (error instanceof Error && error.message.includes('timed out')) {
-          console.warn('API key load timed out');
+          if (process.env.NODE_ENV !== 'production' || process.env.DEBUG === 'true') {
+            console.warn('API key load timed out');
+          }
         }
       }
     };
@@ -84,18 +92,19 @@ const GeminiApiSettings: React.FC = () => {
 
     try {
       // Race the API call against the timeout
-      const valid = await Promise.race([
-        validateApiKey(apiKey),
-        timeout
-      ]);
+      const valid = await Promise.race([validateApiKey(apiKey), timeout]);
 
       setIsValid(valid);
     } catch (error) {
-      console.error('Error validating API key:', error);
+      if (process.env.NODE_ENV !== 'production' || process.env.DEBUG === 'true') {
+        console.error('Error validating API key:', error);
+      }
 
       // Provide more specific error messages
       if (error instanceof Error && error.message.includes('timed out')) {
-        console.warn('API key validation timed out');
+        if (process.env.NODE_ENV !== 'production' || process.env.DEBUG === 'true') {
+          console.warn('API key validation timed out');
+        }
       }
 
       setIsValid(false);
@@ -119,18 +128,19 @@ const GeminiApiSettings: React.FC = () => {
 
     try {
       // Race the API call against the timeout
-      await Promise.race([
-        saveApiKey('google', apiKey),
-        timeout
-      ]);
+      await Promise.race([saveApiKey('google', apiKey), timeout]);
 
       setHasSavedKey(true);
     } catch (error) {
-      console.error('Error saving API key:', error);
+      if (process.env.NODE_ENV !== 'production' || process.env.DEBUG === 'true') {
+        console.error('Error saving API key:', error);
+      }
 
       // Provide more specific error messages
       if (error instanceof Error && error.message.includes('timed out')) {
-        console.warn('API key save operation timed out');
+        if (process.env.NODE_ENV !== 'production' || process.env.DEBUG === 'true') {
+          console.warn('API key save operation timed out');
+        }
       }
     } finally {
       setIsSaving(false);
@@ -151,7 +161,16 @@ const GeminiApiSettings: React.FC = () => {
   };
 
   return (
-    <Paper sx={{ p: 3, mb: 3, borderRadius: 2, background: 'rgba(30, 30, 30, 0.7)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255, 255, 255, 0.1)' }}>
+    <Paper
+      sx={{
+        p: 3,
+        mb: 3,
+        borderRadius: 2,
+        background: 'rgba(30, 30, 30, 0.7)',
+        backdropFilter: 'blur(10px)',
+        border: '1px solid rgba(255, 255, 255, 0.1)',
+      }}
+    >
       <Typography variant="h6" gutterBottom>
         Gemini API Settings
       </Typography>
@@ -159,13 +178,14 @@ const GeminiApiSettings: React.FC = () => {
       <Divider sx={{ my: 2 }} />
 
       <Grid container spacing={2}>
-        <Grid size={12}>
+        <Grid sx={{ gridColumn: 'span 12' }}>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-            Enter your Gemini API key to track usage and costs. Your key is stored locally and never sent to our servers.
+            Enter your Gemini API key to track usage and costs. Your key is stored locally and never
+            sent to our servers.
           </Typography>
         </Grid>
 
-        <Grid size={12}>
+        <Grid sx={{ gridColumn: 'span 12' }}>
           <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1 }}>
             <TextField
               label="Gemini API Key"
@@ -178,6 +198,7 @@ const GeminiApiSettings: React.FC = () => {
               InputProps={{
                 endAdornment: (
                   <IconButton
+                    aria-label="Button description"
                     onClick={() => setShowApiKey(!showApiKey)}
                     edge="end"
                   >
@@ -188,7 +209,7 @@ const GeminiApiSettings: React.FC = () => {
             />
 
             <Tooltip title="Copy API Key">
-              <IconButton onClick={handleCopy} disabled={!apiKey}>
+              <IconButton aria-label="Button description" onClick={handleCopy} disabled={!apiKey}>
                 {copySuccess ? <CheckIcon color="success" /> : <CopyIcon />}
               </IconButton>
             </Tooltip>
@@ -196,18 +217,18 @@ const GeminiApiSettings: React.FC = () => {
         </Grid>
 
         {isValid === true && (
-          <Grid size={12}>
+          <Grid sx={{ gridColumn: 'span 12' }}>
             <Alert severity="success">API key is valid!</Alert>
           </Grid>
         )}
 
         {isValid === false && (
-          <Grid size={12}>
+          <Grid sx={{ gridColumn: 'span 12' }}>
             <Alert severity="error">Invalid API key. Please check and try again.</Alert>
           </Grid>
         )}
 
-        <Grid size={12}>
+        <Grid sx={{ gridColumn: 'span 12' }}>
           <Box sx={{ display: 'flex', gap: 2, mt: 1 }}>
             <Button
               variant="outlined"
@@ -229,27 +250,52 @@ const GeminiApiSettings: React.FC = () => {
           </Box>
         </Grid>
 
-        <Grid size={12} sx={{ mt: 2 }}>
+        <Grid sx={{ gridColumn: 'span 12', mt: 2 }}>
           <Typography variant="subtitle2" gutterBottom>
             How to get a Gemini API key:
           </Typography>
           <ol>
-            <li>Go to <Link href="https://ai.google.dev/" target="_blank" rel="noopener noreferrer">Google AI Studio</Link></li>
+            <li>
+              Go to{' '}
+              <Link href="https://ai.google.dev/" target="_blank" rel="noopener noreferrer">
+                Google AI Studio
+              </Link>
+            </li>
             <li>Sign in with your Google account</li>
             <li>Navigate to the API keys section</li>
             <li>Create a new API key</li>
             <li>Copy and paste it here</li>
           </ol>
 
-          <Box sx={{ mt: 3, mb: 2, p: 2, bgcolor: 'rgba(66, 133, 244, 0.1)', borderRadius: 1, border: '1px solid rgba(66, 133, 244, 0.2)' }}>
-            <Typography variant="subtitle2" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Box
+            sx={{
+              mt: 3,
+              mb: 2,
+              p: 2,
+              bgcolor: 'rgba(66, 133, 244, 0.1)',
+              borderRadius: 1,
+              border: '1px solid rgba(66, 133, 244, 0.2)',
+            }}
+          >
+            <Typography
+              variant="subtitle2"
+              gutterBottom
+              sx={{ display: 'flex', alignItems: 'center', gap: 1 }}
+            >
               <InfoIcon fontSize="small" color="primary" />
               Gemini API Pricing Information
             </Typography>
             <Typography variant="body2" paragraph>
               Google offers a generous free tier for Gemini API usage. Current pricing (as of 2025):
             </Typography>
-            <Box component="table" sx={{ width: '100%', borderCollapse: 'collapse', '& th, & td': { p: 1, borderBottom: '1px solid rgba(255, 255, 255, 0.1)' } }}>
+            <Box
+              component="table"
+              sx={{
+                width: '100%',
+                borderCollapse: 'collapse',
+                '& th, & td': { p: 1, borderBottom: '1px solid rgba(255, 255, 255, 0.1)' },
+              }}
+            >
               <Box component="thead" sx={{ '& th': { textAlign: 'left', fontWeight: 'bold' } }}>
                 <Box component="tr">
                   <Box component="th">Model</Box>
@@ -280,13 +326,18 @@ const GeminiApiSettings: React.FC = () => {
               </Box>
             </Box>
             <Typography variant="body2" sx={{ mt: 2 }}>
-              Check the <Link href="https://ai.google.dev/pricing" target="_blank" rel="noopener noreferrer">Google AI pricing page</Link> for the most current rates.
+              Check the{' '}
+              <Link href="https://ai.google.dev/pricing" target="_blank" rel="noopener noreferrer">
+                Google AI pricing page
+              </Link>{' '}
+              for the most current rates.
             </Typography>
           </Box>
 
           <Typography variant="body2" color="text.secondary">
             <Chip label="Free Tier" size="small" color="primary" sx={{ mr: 1 }} />
-            Google's free tier is one of the most generous in the industry, making it an excellent choice for getting started with API integration.
+            Google's free tier is one of the most generous in the industry, making it an excellent
+            choice for getting started with API integration.
           </Typography>
         </Grid>
       </Grid>
