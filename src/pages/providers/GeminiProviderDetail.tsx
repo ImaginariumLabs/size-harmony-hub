@@ -1,19 +1,25 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  Box,
-  Grid,
-  CircularProgress,
   Alert,
   AlertTitle,
-  LinearProgress,
+  Box,
   Button,
-  Typography,
-  Paper,
   Card,
   CardContent,
+  Chip,
+  CircularProgress,
   Divider,
-  Chip
+  Grid,
+  LinearProgress,
+  Paper,
+  Typography,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
 } from '@mui/material';
 import {
   Refresh as RefreshIcon,
@@ -40,11 +46,7 @@ const GeminiProviderDetail: React.FC = () => {
         <Alert severity="error">
           Provider not found. The Gemini provider does not exist or is not configured.
         </Alert>
-        <Button
-          variant="contained"
-          onClick={() => navigate('/settings/api-keys')}
-          sx={{ mt: 2 }}
-        >
+        <Button variant="contained" onClick={() => navigate('/settings/api-keys')} sx={{ mt: 2 }}>
           Manage API Keys
         </Button>
       </Box>
@@ -56,7 +58,7 @@ const GeminiProviderDetail: React.FC = () => {
     return `$${cost.toFixed(2)}`;
   };
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const formatDate = (dateString?: string) => {
     if (!dateString) return 'N/A';
     return new Date(dateString).toLocaleString();
@@ -69,7 +71,7 @@ const GeminiProviderDetail: React.FC = () => {
     return usage.models_used.map(model => ({
       label: model.model.replace('gemini-', ''),
       value: model.input_tokens + model.output_tokens,
-      color: model.model.includes('pro') ? '#4285F4' : '#34A853'
+      color: model.model.includes('pro') ? '#4285F4' : '#34A853',
     }));
   };
 
@@ -78,7 +80,7 @@ const GeminiProviderDetail: React.FC = () => {
 
     return usage.daily_costs.map(day => ({
       label: new Date(day.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }),
-      value: day.cost
+      value: day.cost,
     }));
   };
 
@@ -87,7 +89,7 @@ const GeminiProviderDetail: React.FC = () => {
 
     return usage.daily_costs.map(day => ({
       label: new Date(day.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }),
-      value: day.requests
+      value: day.requests,
     }));
   };
 
@@ -95,9 +97,7 @@ const GeminiProviderDetail: React.FC = () => {
     <Box>
       <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
-          <Typography variant="h4">
-            Gemini
-          </Typography>
+          <Typography variant="h4">Gemini</Typography>
           <Chip
             label="Google AI"
             size="small"
@@ -170,12 +170,14 @@ const GeminiProviderDetail: React.FC = () => {
                   {usage.budget_used_percentage > 80 ? (
                     <>
                       <WarningIcon sx={{ mr: 0.5 }} fontSize="small" />
-                      {usage.budget_used_percentage.toFixed(0)}% of monthly budget (${usage.monthly_budget})
+                      {usage.budget_used_percentage.toFixed(0)}% of monthly budget ($
+                      {usage.monthly_budget})
                     </>
                   ) : (
                     <>
                       <TrendingUpIcon sx={{ mr: 0.5 }} fontSize="small" />
-                      {usage.budget_used_percentage.toFixed(0)}% of monthly budget (${usage.monthly_budget})
+                      {usage.budget_used_percentage.toFixed(0)}% of monthly budget ($
+                      {usage.monthly_budget})
                     </>
                   )}
                 </Typography>
@@ -205,17 +207,10 @@ const GeminiProviderDetail: React.FC = () => {
                     />
                   </Box>
                 </Box>
-                <Typography
-                  component="p"
-                  variant="h5"
-                  sx={{ mt: 1 }}
-                >
+                <Typography component="p" variant="h5" sx={{ mt: 1 }}>
                   {usage.free_tier_used_percentage}% Used
                 </Typography>
-                <Typography
-                  variant="body2"
-                  sx={{ display: 'flex', alignItems: 'center' }}
-                >
+                <Typography variant="body2" sx={{ display: 'flex', alignItems: 'center' }}>
                   <InfoIcon sx={{ mr: 0.5 }} fontSize="small" />
                   {usage.total_tokens.toLocaleString()} of 1M free tokens used
                 </Typography>
@@ -269,7 +264,7 @@ const GeminiProviderDetail: React.FC = () => {
                   <UsageLineChart
                     data={prepareDailyCostData()}
                     height={250}
-                    formatValue={(value) => `$${value.toFixed(4)}`}
+                    formatValue={value => `$${value.toFixed(4)}`}
                     color="#4285F4"
                   />
                 </CardContent>
@@ -288,7 +283,7 @@ const GeminiProviderDetail: React.FC = () => {
                   <UsageLineChart
                     data={prepareDailyRequestsData()}
                     height={250}
-                    formatValue={(value) => value.toString()}
+                    formatValue={value => value.toString()}
                     color="#34A853"
                   />
                 </CardContent>
@@ -331,7 +326,8 @@ const GeminiProviderDetail: React.FC = () => {
                             {usage.output_tokens.toLocaleString()}
                           </Typography>
                           <Typography variant="caption" color="text.secondary">
-                            {((usage.output_tokens / usage.total_tokens) * 100).toFixed(1)}% of total
+                            {((usage.output_tokens / usage.total_tokens) * 100).toFixed(1)}% of
+                            total
                           </Typography>
                         </Paper>
                       </Grid>
@@ -344,7 +340,7 @@ const GeminiProviderDetail: React.FC = () => {
                   <UsageBarChart
                     data={prepareModelUsageData()}
                     height={200}
-                    formatValue={(value) => value.toLocaleString()}
+                    formatValue={value => value.toLocaleString()}
                   />
                 </CardContent>
               </Card>
@@ -362,8 +358,8 @@ const GeminiProviderDetail: React.FC = () => {
                   <Box sx={{ mb: 3 }}>
                     <Alert severity="info" sx={{ mb: 2 }}>
                       <AlertTitle>Free Tier Benefits</AlertTitle>
-                      You're currently using {usage.free_tier_used_percentage}% of your free tier allocation.
-                      Google provides 1M tokens per month for free.
+                      You're currently using {usage.free_tier_used_percentage}% of your free tier
+                      allocation. Google provides 1M tokens per month for free.
                     </Alert>
 
                     <Typography variant="body1" sx={{ mb: 2 }}>
@@ -376,8 +372,9 @@ const GeminiProviderDetail: React.FC = () => {
                           Model Selection
                         </Typography>
                         <Typography variant="body2">
-                          For most tasks, Gemini-2.0-flash provides excellent results at a lower cost.
-                          Only use Gemini-1.5-pro for tasks requiring complex reasoning or long context.
+                          For most tasks, Gemini-2.0-flash provides excellent results at a lower
+                          cost. Only use Gemini-1.5-pro for tasks requiring complex reasoning or
+                          long context.
                         </Typography>
                       </Paper>
 
@@ -386,11 +383,11 @@ const GeminiProviderDetail: React.FC = () => {
                           Input Optimization
                         </Typography>
                         <Typography variant="body2">
-                          Your input-to-output token ratio is {(usage.input_tokens / usage.output_tokens).toFixed(1)}:1.
-                          {usage.input_tokens > usage.output_tokens * 2 ?
-                            ' Consider using more concise prompts to reduce input token usage.' :
-                            ' You have a good balance of input to output tokens.'
-                          }
+                          Your input-to-output token ratio is{' '}
+                          {(usage.input_tokens / usage.output_tokens).toFixed(1)}:1.
+                          {usage.input_tokens > usage.output_tokens * 2
+                            ? ' Consider using more concise prompts to reduce input token usage.'
+                            : ' You have a good balance of input to output tokens.'}
                         </Typography>
                       </Paper>
                     </Box>

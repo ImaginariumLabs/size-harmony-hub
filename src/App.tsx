@@ -1,3 +1,4 @@
+import React, { ErrorInfo } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import { ApiProviderProvider } from './contexts/ApiProviderContext';
@@ -20,10 +21,15 @@ import FloatingWidgetsPage from './pages/FloatingWidgetsPage';
 import UsagePage from './pages/UsagePage';
 import HistoryPage from './pages/HistoryPage';
 import HelpPage from './pages/HelpPage';
-import { isElectron } from './services/electronService';
+import { isPlatform } from './utils/platformUtils';
+import { logEnvInfo } from './utils/environmentUtils';
 import ModernElectronApp from './components/app/ModernElectronApp';
 import ProtectedRoute from './components/routing/ProtectedRoute';
 import AdminRoute from './components/auth/AdminRoute';
+// Import the test report component
+import TestReport from './components/diagnostics/TestReport';
+// Import error boundary component
+import ErrorBoundary from './components/common/ErrorBoundary';
 
 // Admin pages
 import AdminDashboard from './pages/admin/AdminDashboard';
@@ -37,107 +43,326 @@ import './App.css';
 
 function App() {
   // Check if running in Electron
-  const isElectronApp = isElectron();
+  const isElectronApp = isPlatform.electron;
+
+  // Log environment information
+  logEnvInfo();
 
   // Log detection information
-  console.log('App.tsx - Electron detection:', {
-    isElectronApp,
-    userAgent: navigator.userAgent,
-    windowElectronAPI: window.electronAPI ? 'Available' : 'Not Available'
-  });
+  if (process.env.NODE_ENV === 'development') {
+    console.log('App.tsx - Environment detection:', {
+      isElectronApp,
+      isWeb: isPlatform.web,
+      isDevelopment: isPlatform.development(),
+      userAgent: navigator.userAgent,
+      windowElectronAPI: window.electronAPI ? 'Available' : 'Not Available',
+    });
+  }
+
+  // Handle global errors
+  const handleGlobalError = (error: Error, errorInfo: ErrorInfo) => {
+    if (process.env.NODE_ENV !== 'production' || process.env.DEBUG === 'true') {
+      console.error('Global error caught by App.tsx error boundary:', error, errorInfo);
+    }
+
+    // In a production app, you would send this to your error reporting service
+    // For example: errorReportingService.reportError({ error, errorInfo });
+  };
 
   // If running in Electron, use the Electron-specific app
   if (isElectronApp) {
-    console.log('Loading ModernElectronApp component');
-    return <ModernElectronApp />;
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Loading ModernElectronApp component');
+    }
+    return (
+      <ErrorBoundary onError={handleGlobalError} componentName="ModernElectronApp">
+        <ModernElectronApp />
+      </ErrorBoundary>
+    );
   }
 
   // Otherwise, use the web app with authentication
   return (
-    <AuthProvider>
-      <ApiProviderProvider>
-        <DashboardWidgetProvider>
-          <Router>
-            <Routes>
-              <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
-              <Route path="/reset-password" element={<ResetPassword />} />
-              <Route path="/test-auth" element={<TestAuth />} />
+    <ErrorBoundary onError={handleGlobalError} componentName="WebApp">
+      <AuthProvider>
+        <ApiProviderProvider>
+          <DashboardWidgetProvider>
+            <Router>
+              <Routes>
+                <Route
+                  path="/login"
+                  element={
+                    <ErrorBoundary componentName="Login">
+                      <Login />
+                    </ErrorBoundary>
+                  }
+                />
+                <Route
+                  path="/register"
+                  element={
+                    <ErrorBoundary componentName="Register">
+                      <Register />
+                    </ErrorBoundary>
+                  }
+                />
+                <Route
+                  path="/reset-password"
+                  element={
+                    <ErrorBoundary componentName="ResetPassword">
+                      <ResetPassword />
+                    </ErrorBoundary>
+                  }
+                />
+                <Route
+                  path="/test-auth"
+                  element={
+                    <ErrorBoundary componentName="TestAuth">
+                      <TestAuth />
+                    </ErrorBoundary>
+                  }
+                />
 
-              <Route
-                path="/"
-                element={
-                  <ProtectedRoute>
-                    <AppLayout />
-                  </ProtectedRoute>
-                }
-              >
-                <Route index element={<ModernDashboard />} />
-                <Route path="settings/api-keys" element={<ApiKeySettings />} />
-                <Route path="settings/api-keys/:providerId" element={<ApiKeySettings />} />
-                <Route path="settings/api-keys/new" element={<ApiKeySettings />} />
-                <Route path="provider/:providerId" element={<ProviderDetail />} />
-                <Route path="provider/openai" element={<OpenAIProviderDetail />} />
-                <Route path="provider/claude" element={<ClaudeProviderDetail />} />
-                <Route path="provider/google" element={<GeminiProviderDetail />} />
-                <Route path="widgets" element={<WidgetGalleryPage />} />
-                <Route path="floating-widgets" element={<FloatingWidgetsPage />} />
-                <Route path="usage" element={<UsagePage />} />
-                <Route path="history" element={<HistoryPage />} />
-                <Route path="help" element={<HelpPage />} />
-                <Route path="test" element={<TestPage />} />
+                <Route
+                  path="/"
+                  element={
+                    <ErrorBoundary componentName="ProtectedRoute">
+                      <ProtectedRoute>
+                        <ErrorBoundary componentName="AppLayout">
+                          <AppLayout />
+                        </ErrorBoundary>
+                      </ProtectedRoute>
+                    </ErrorBoundary>
+                  }
+                >
+                  <Route
+                    index
+                    element={
+                      <ErrorBoundary componentName="ModernDashboard">
+                        <ModernDashboard />
+                      </ErrorBoundary>
+                    }
+                  />
+                  <Route
+                    path="settings/api-keys"
+                    element={
+                      <ErrorBoundary componentName="ApiKeySettings">
+                        <ApiKeySettings />
+                      </ErrorBoundary>
+                    }
+                  />
+                  <Route
+                    path="settings/api-keys/:providerId"
+                    element={
+                      <ErrorBoundary componentName="ApiKeySettings">
+                        <ApiKeySettings />
+                      </ErrorBoundary>
+                    }
+                  />
+                  <Route
+                    path="settings/api-keys/new"
+                    element={
+                      <ErrorBoundary componentName="ApiKeySettings">
+                        <ApiKeySettings />
+                      </ErrorBoundary>
+                    }
+                  />
+                  <Route
+                    path="provider/openai"
+                    element={
+                      <ErrorBoundary componentName="OpenAIProviderDetail">
+                        <OpenAIProviderDetail />
+                      </ErrorBoundary>
+                    }
+                  />
+                  <Route
+                    path="provider/claude"
+                    element={
+                      <ErrorBoundary componentName="ClaudeProviderDetail">
+                        <ClaudeProviderDetail />
+                      </ErrorBoundary>
+                    }
+                  />
+                  <Route
+                    path="provider/google"
+                    element={
+                      <ErrorBoundary componentName="GeminiProviderDetail">
+                        <GeminiProviderDetail />
+                      </ErrorBoundary>
+                    }
+                  />
+                  <Route
+                    path="provider/:providerId"
+                    element={
+                      <ErrorBoundary componentName="ProviderDetail">
+                        <ProviderDetail />
+                      </ErrorBoundary>
+                    }
+                  />
+                  <Route
+                    path="widgets"
+                    element={
+                      <ErrorBoundary componentName="WidgetGalleryPage">
+                        <WidgetGalleryPage />
+                      </ErrorBoundary>
+                    }
+                  />
+                  <Route
+                    path="floating-widgets"
+                    element={
+                      <ErrorBoundary componentName="FloatingWidgetsPage">
+                        <FloatingWidgetsPage />
+                      </ErrorBoundary>
+                    }
+                  />
+                  <Route
+                    path="usage"
+                    element={
+                      <ErrorBoundary componentName="UsagePage">
+                        <UsagePage />
+                      </ErrorBoundary>
+                    }
+                  />
+                  <Route
+                    path="history"
+                    element={
+                      <ErrorBoundary componentName="HistoryPage">
+                        <HistoryPage />
+                      </ErrorBoundary>
+                    }
+                  />
+                  <Route
+                    path="help"
+                    element={
+                      <ErrorBoundary componentName="HelpPage">
+                        <HelpPage />
+                      </ErrorBoundary>
+                    }
+                  />
+                  <Route
+                    path="test"
+                    element={
+                      <ErrorBoundary componentName="TestPage">
+                        <TestPage />
+                      </ErrorBoundary>
+                    }
+                  />
+                  <Route
+                    path="diagnostics"
+                    element={
+                      <ErrorBoundary componentName="TestReport">
+                        <TestReport />
+                      </ErrorBoundary>
+                    }
+                  />
 
-                {/* Admin Routes */}
-                <Route path="admin" element={
-                  <AdminRoute>
-                    <AdminDashboard />
-                  </AdminRoute>
-                } />
-                <Route path="admin/users" element={
-                  <AdminRoute>
-                    <UserManagement />
-                  </AdminRoute>
-                } />
-                <Route path="admin/settings" element={
-                  <AdminRoute>
-                    <SystemSettings />
-                  </AdminRoute>
-                } />
-                <Route path="admin/api-providers" element={
-                  <AdminRoute>
-                    <ApiProviderManagement />
-                  </AdminRoute>
-                } />
-                <Route path="admin/analytics" element={
-                  <AdminRoute>
-                    <UsageAnalytics />
-                  </AdminRoute>
-                } />
-                <Route path="admin/provider-analytics" element={
-                  <AdminRoute>
-                    <ProviderUsageAnalytics />
-                  </AdminRoute>
-                } />
-                <Route path="admin/provider-analytics/:providerId" element={
-                  <AdminRoute>
-                    <ProviderUsageAnalytics />
-                  </AdminRoute>
-                } />
-                <Route path="admin/alerts" element={
-                  <AdminRoute>
-                    <AdminAlerts />
-                  </AdminRoute>
-                } />
+                  {/* Admin Routes */}
+                  <Route
+                    path="admin"
+                    element={
+                      <ErrorBoundary componentName="AdminRoute">
+                        <AdminRoute>
+                          <ErrorBoundary componentName="AdminDashboard">
+                            <AdminDashboard />
+                          </ErrorBoundary>
+                        </AdminRoute>
+                      </ErrorBoundary>
+                    }
+                  />
+                  <Route
+                    path="admin/users"
+                    element={
+                      <ErrorBoundary componentName="AdminRoute">
+                        <AdminRoute>
+                          <ErrorBoundary componentName="UserManagement">
+                            <UserManagement />
+                          </ErrorBoundary>
+                        </AdminRoute>
+                      </ErrorBoundary>
+                    }
+                  />
+                  <Route
+                    path="admin/settings"
+                    element={
+                      <ErrorBoundary componentName="AdminRoute">
+                        <AdminRoute>
+                          <ErrorBoundary componentName="SystemSettings">
+                            <SystemSettings />
+                          </ErrorBoundary>
+                        </AdminRoute>
+                      </ErrorBoundary>
+                    }
+                  />
+                  <Route
+                    path="admin/api-providers"
+                    element={
+                      <ErrorBoundary componentName="AdminRoute">
+                        <AdminRoute>
+                          <ErrorBoundary componentName="ApiProviderManagement">
+                            <ApiProviderManagement />
+                          </ErrorBoundary>
+                        </AdminRoute>
+                      </ErrorBoundary>
+                    }
+                  />
+                  <Route
+                    path="admin/analytics"
+                    element={
+                      <ErrorBoundary componentName="AdminRoute">
+                        <AdminRoute>
+                          <ErrorBoundary componentName="UsageAnalytics">
+                            <UsageAnalytics />
+                          </ErrorBoundary>
+                        </AdminRoute>
+                      </ErrorBoundary>
+                    }
+                  />
+                  <Route
+                    path="admin/provider-analytics"
+                    element={
+                      <ErrorBoundary componentName="AdminRoute">
+                        <AdminRoute>
+                          <ErrorBoundary componentName="ProviderUsageAnalytics">
+                            <ProviderUsageAnalytics />
+                          </ErrorBoundary>
+                        </AdminRoute>
+                      </ErrorBoundary>
+                    }
+                  />
+                  <Route
+                    path="admin/provider-analytics/:providerId"
+                    element={
+                      <ErrorBoundary componentName="AdminRoute">
+                        <AdminRoute>
+                          <ErrorBoundary componentName="ProviderUsageAnalytics">
+                            <ProviderUsageAnalytics />
+                          </ErrorBoundary>
+                        </AdminRoute>
+                      </ErrorBoundary>
+                    }
+                  />
+                  <Route
+                    path="admin/alerts"
+                    element={
+                      <ErrorBoundary componentName="AdminRoute">
+                        <AdminRoute>
+                          <ErrorBoundary componentName="AdminAlerts">
+                            <AdminAlerts />
+                          </ErrorBoundary>
+                        </AdminRoute>
+                      </ErrorBoundary>
+                    }
+                  />
 
-                {/* Add more routes as needed */}
-                <Route path="*" element={<Navigate to="/" replace />} />
-              </Route>
-            </Routes>
-          </Router>
-        </DashboardWidgetProvider>
-      </ApiProviderProvider>
-    </AuthProvider>
+                  {/* Add more routes as needed */}
+                  <Route path="*" element={<Navigate to="/" replace />} />
+                </Route>
+              </Routes>
+            </Router>
+          </DashboardWidgetProvider>
+        </ApiProviderProvider>
+      </AuthProvider>
+    </ErrorBoundary>
   );
 }
 
-export default App
+export default App;

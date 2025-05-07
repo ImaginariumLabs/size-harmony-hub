@@ -1,6 +1,24 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Box, Grid, CircularProgress, Alert, Button, Typography, Paper, Card, CardContent, Divider, Chip, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@mui/material';
+import {
+  Alert,
+  Box,
+  Button,
+  Card,
+  CardContent,
+  Chip,
+  CircularProgress,
+  Divider,
+  Grid,
+  Paper,
+  Typography,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+} from '@mui/material';
 import {
   Refresh as RefreshIcon,
   Settings as SettingsIcon,
@@ -26,11 +44,7 @@ const ClaudeProviderDetail: React.FC = () => {
         <Alert severity="error">
           Provider not found. The Claude provider does not exist or is not configured.
         </Alert>
-        <Button
-          variant="contained"
-          onClick={() => navigate('/settings/api-keys')}
-          sx={{ mt: 2 }}
-        >
+        <Button variant="contained" onClick={() => navigate('/settings/api-keys')} sx={{ mt: 2 }}>
           Manage API Keys
         </Button>
       </Box>
@@ -52,9 +66,9 @@ const ClaudeProviderDetail: React.FC = () => {
   const prepareDailyCostData = () => {
     if (!usage || !usage.daily_costs) return [];
 
-    return usage.daily_costs.map(day => ({
+    return usage.daily_costs.map((day: { date: string; cost: number }) => ({
       label: new Date(day.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }),
-      value: day.cost
+      value: day.cost,
     }));
   };
 
@@ -65,13 +79,13 @@ const ClaudeProviderDetail: React.FC = () => {
       {
         label: 'Input',
         value: usage.input_tokens,
-        color: '#8B5CF6'
+        color: '#8B5CF6',
       },
       {
         label: 'Output',
         value: usage.output_tokens,
-        color: '#7C3AED'
-      }
+        color: '#7C3AED',
+      },
     ];
   };
 
@@ -126,7 +140,7 @@ const ClaudeProviderDetail: React.FC = () => {
         <>
           {/* Summary Cards */}
           <Grid container spacing={3} sx={{ mb: 4 }}>
-            <Grid item xs={12} md={4}>
+            <Grid size={{ xs: 12, md: 4 }}>
               <Paper
                 sx={{
                   p: 2,
@@ -154,19 +168,21 @@ const ClaudeProviderDetail: React.FC = () => {
                   {usage.budget_used_percentage > 80 ? (
                     <>
                       <WarningIcon sx={{ mr: 0.5 }} fontSize="small" />
-                      {usage.budget_used_percentage.toFixed(0)}% of monthly budget (${usage.monthly_budget})
+                      {usage.budget_used_percentage.toFixed(0)}% of monthly budget ($
+                      {usage.monthly_budget})
                     </>
                   ) : (
                     <>
                       <TrendingUpIcon sx={{ mr: 0.5 }} fontSize="small" />
-                      {usage.budget_used_percentage.toFixed(0)}% of monthly budget (${usage.monthly_budget})
+                      {usage.budget_used_percentage.toFixed(0)}% of monthly budget ($
+                      {usage.monthly_budget})
                     </>
                   )}
                 </Typography>
               </Paper>
             </Grid>
 
-            <Grid item xs={12} md={4}>
+            <Grid size={{ xs: 12, md: 4 }}>
               <Paper
                 sx={{
                   p: 2,
@@ -186,17 +202,15 @@ const ClaudeProviderDetail: React.FC = () => {
                 >
                   {usage.total_tokens.toLocaleString()}
                 </Typography>
-                <Typography
-                  variant="body2"
-                  sx={{ display: 'flex', alignItems: 'center' }}
-                >
+                <Typography variant="body2" sx={{ display: 'flex', alignItems: 'center' }}>
                   <InfoIcon sx={{ mr: 0.5 }} fontSize="small" />
-                  {usage.input_tokens.toLocaleString()} input + {usage.output_tokens.toLocaleString()} output
+                  {usage.input_tokens.toLocaleString()} input +{' '}
+                  {usage.output_tokens.toLocaleString()} output
                 </Typography>
               </Paper>
             </Grid>
 
-            <Grid item xs={12} md={4}>
+            <Grid size={{ xs: 12, md: 4 }}>
               <Paper
                 sx={{
                   p: 2,
@@ -232,7 +246,7 @@ const ClaudeProviderDetail: React.FC = () => {
           {/* Charts and Detailed Data */}
           <Grid container spacing={3}>
             {/* Daily Cost Chart */}
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <Card>
                 <CardContent>
                   <Typography variant="h6" gutterBottom>
@@ -243,7 +257,7 @@ const ClaudeProviderDetail: React.FC = () => {
                   <UsageLineChart
                     data={prepareDailyCostData()}
                     height={250}
-                    formatValue={(value) => `$${value.toFixed(2)}`}
+                    formatValue={value => `$${value.toFixed(2)}`}
                     color="#7C3AED"
                   />
                 </CardContent>
@@ -251,7 +265,7 @@ const ClaudeProviderDetail: React.FC = () => {
             </Grid>
 
             {/* Token Distribution */}
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <Card>
                 <CardContent>
                   <Typography variant="h6" gutterBottom>
@@ -261,7 +275,7 @@ const ClaudeProviderDetail: React.FC = () => {
 
                   <Box sx={{ mb: 3 }}>
                     <Grid container spacing={2}>
-                      <Grid item xs={6}>
+                      <Grid size={{ xs: 6 }}>
                         <Paper sx={{ p: 2, bgcolor: 'rgba(124, 58, 237, 0.1)' }}>
                           <Typography variant="subtitle2" gutterBottom>
                             Input Tokens
@@ -274,7 +288,7 @@ const ClaudeProviderDetail: React.FC = () => {
                           </Typography>
                         </Paper>
                       </Grid>
-                      <Grid item xs={6}>
+                      <Grid size={{ xs: 6 }}>
                         <Paper sx={{ p: 2, bgcolor: 'rgba(139, 92, 246, 0.1)' }}>
                           <Typography variant="subtitle2" gutterBottom>
                             Output Tokens
@@ -283,7 +297,8 @@ const ClaudeProviderDetail: React.FC = () => {
                             {usage.output_tokens.toLocaleString()}
                           </Typography>
                           <Typography variant="caption" color="text.secondary">
-                            {((usage.output_tokens / usage.total_tokens) * 100).toFixed(1)}% of total
+                            {((usage.output_tokens / usage.total_tokens) * 100).toFixed(1)}% of
+                            total
                           </Typography>
                         </Paper>
                       </Grid>
@@ -296,14 +311,14 @@ const ClaudeProviderDetail: React.FC = () => {
                   <UsageBarChart
                     data={prepareTokenTypeData()}
                     height={200}
-                    formatValue={(value) => value.toLocaleString()}
+                    formatValue={value => value.toLocaleString()}
                   />
                 </CardContent>
               </Card>
             </Grid>
 
             {/* Model Usage */}
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12 }}>
               <Card>
                 <CardContent>
                   <Typography variant="h6" gutterBottom>
@@ -323,21 +338,32 @@ const ClaudeProviderDetail: React.FC = () => {
                         </TableRow>
                       </TableHead>
                       <TableBody>
-                        {usage.models_used.map((model) => {
-                          const totalTokens = model.input_tokens + model.output_tokens;
+                        {usage.models_used.map(
+                          (model: {
+                            model: string;
+                            input_tokens: number;
+                            output_tokens: number;
+                            cost: number;
+                          }) => {
+                            const totalTokens = model.input_tokens + model.output_tokens;
 
-                          return (
-                            <TableRow key={model.model}>
-                              <TableCell component="th" scope="row">
-                                {model.model}
-                              </TableCell>
-                              <TableCell align="right">{model.input_tokens.toLocaleString()}</TableCell>
-                              <TableCell align="right">{model.output_tokens.toLocaleString()}</TableCell>
-                              <TableCell align="right">{totalTokens.toLocaleString()}</TableCell>
-                              <TableCell align="right">${model.cost.toFixed(2)}</TableCell>
-                            </TableRow>
-                          );
-                        })}
+                            return (
+                              <TableRow key={model.model}>
+                                <TableCell component="th" scope="row">
+                                  {model.model}
+                                </TableCell>
+                                <TableCell align="right">
+                                  {model.input_tokens.toLocaleString()}
+                                </TableCell>
+                                <TableCell align="right">
+                                  {model.output_tokens.toLocaleString()}
+                                </TableCell>
+                                <TableCell align="right">{totalTokens.toLocaleString()}</TableCell>
+                                <TableCell align="right">${model.cost.toFixed(2)}</TableCell>
+                              </TableRow>
+                            );
+                          }
+                        )}
                       </TableBody>
                     </Table>
                   </TableContainer>
@@ -346,7 +372,7 @@ const ClaudeProviderDetail: React.FC = () => {
             </Grid>
 
             {/* Recommendations */}
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12 }}>
               <Card>
                 <CardContent>
                   <Typography variant="h6" gutterBottom>
@@ -361,10 +387,11 @@ const ClaudeProviderDetail: React.FC = () => {
                           Model Selection
                         </Typography>
                         <Typography variant="body2">
-                          {usage.models_used.some(m => m.model.includes('opus')) ?
-                            'Claude Opus is the most expensive model. For most tasks, Claude Sonnet provides excellent results at a lower cost.' :
-                            'You\'re efficiently using Claude Sonnet or Haiku. For complex tasks requiring more reasoning, consider Claude Opus.'
-                          }
+                          {usage.models_used.some((m: { model: string }) =>
+                            m.model.includes('opus')
+                          )
+                            ? 'Claude Opus is the most expensive model. For most tasks, Claude Sonnet provides excellent results at a lower cost.'
+                            : "You're efficiently using Claude Sonnet or Haiku. For complex tasks requiring more reasoning, consider Claude Opus."}
                         </Typography>
                       </Paper>
                     </Box>
@@ -375,11 +402,11 @@ const ClaudeProviderDetail: React.FC = () => {
                           Input Optimization
                         </Typography>
                         <Typography variant="body2">
-                          Your input-to-output token ratio is {(usage.input_tokens / usage.output_tokens).toFixed(1)}:1.
-                          {usage.input_tokens > usage.output_tokens * 2 ?
-                            ' Consider using more concise prompts to reduce input token usage.' :
-                            ' You have a good balance of input to output tokens.'
-                          }
+                          Your input-to-output token ratio is{' '}
+                          {(usage.input_tokens / usage.output_tokens).toFixed(1)}:1.
+                          {usage.input_tokens > usage.output_tokens * 2
+                            ? ' Consider using more concise prompts to reduce input token usage.'
+                            : ' You have a good balance of input to output tokens.'}
                         </Typography>
                       </Paper>
                     </Box>
@@ -392,10 +419,9 @@ const ClaudeProviderDetail: React.FC = () => {
                         <Typography variant="body2">
                           Based on your current usage, your projected monthly cost is approximately
                           ${((usage.total_cost / usage.budget_used_percentage) * 100).toFixed(2)}.
-                          {usage.budget_used_percentage > 50 ?
-                            ' Consider setting up usage alerts to avoid unexpected costs.' :
-                            ' Your usage is well within your monthly budget.'
-                          }
+                          {usage.budget_used_percentage > 50
+                            ? ' Consider setting up usage alerts to avoid unexpected costs.'
+                            : ' Your usage is well within your monthly budget.'}
                         </Typography>
                       </Paper>
                     </Box>
@@ -408,6 +434,6 @@ const ClaudeProviderDetail: React.FC = () => {
       )}
     </Box>
   );
-}
+};
 
 export default ClaudeProviderDetail;

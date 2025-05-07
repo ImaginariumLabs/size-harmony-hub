@@ -56,40 +56,42 @@ export function useGeminiUsage() {
 
       // Get stored usage data from localStorage or initialize new tracking
       const storedData = localStorage.getItem('gemini_usage_data');
-      const usageData = storedData ? JSON.parse(storedData) : {
-        total_cost: 0,
-        input_tokens: 0,
-        output_tokens: 0,
-        total_tokens: 0,
-        requests: 0,
-        models_used: [
-          {
-            model: 'gemini-2.0-flash',
+      const usageData = storedData
+        ? JSON.parse(storedData)
+        : {
+            total_cost: 0,
             input_tokens: 0,
             output_tokens: 0,
-            cost: 0
-          },
-          {
-            model: 'gemini-1.5-pro',
-            input_tokens: 0,
-            output_tokens: 0,
-            cost: 0
-          }
-        ],
-        daily_costs: Array.from({ length: 30 }, (_, i) => {
-          const date = new Date();
-          date.setDate(date.getDate() - 29 + i);
-          return {
-            date: date.toISOString().split('T')[0],
-            cost: 0,
-            requests: 0
+            total_tokens: 0,
+            requests: 0,
+            models_used: [
+              {
+                model: 'gemini-2.0-flash',
+                input_tokens: 0,
+                output_tokens: 0,
+                cost: 0,
+              },
+              {
+                model: 'gemini-1.5-pro',
+                input_tokens: 0,
+                output_tokens: 0,
+                cost: 0,
+              },
+            ],
+            daily_costs: Array.from({ length: 30 }, (_, i) => {
+              const date = new Date();
+              date.setDate(date.getDate() - 29 + i);
+              return {
+                date: date.toISOString().split('T')[0],
+                cost: 0,
+                requests: 0,
+              };
+            }),
+            monthly_budget: 10, // Default $10 monthly budget
+            budget_used_percentage: 0,
+            free_tier_used_percentage: 0,
+            last_updated: new Date().toISOString(),
           };
-        }),
-        monthly_budget: 10, // Default $10 monthly budget
-        budget_used_percentage: 0,
-        free_tier_used_percentage: 0,
-        last_updated: new Date().toISOString()
-      };
 
       // Update with new data
       const newRequests = Math.floor(Math.random() * 5) + 1;
@@ -97,12 +99,14 @@ export function useGeminiUsage() {
       const newOutputTokens = Math.floor(Math.random() * 500) + 50;
 
       // Calculate costs based on Gemini pricing
-      const flashInputCost = newInputTokens * 0.0001 / 1000000; // $0.10 per 1M tokens
-      const flashOutputCost = newOutputTokens * 0.0004 / 1000000; // $0.40 per 1M tokens
+      const flashInputCost = (newInputTokens * 0.0001) / 1000000; // $0.10 per 1M tokens
+      const flashOutputCost = (newOutputTokens * 0.0004) / 1000000; // $0.40 per 1M tokens
       const newCost = flashInputCost + flashOutputCost;
 
       // Update the model usage
-      const flashModel = usageData.models_used.find((m: { model: string }) => m.model === 'gemini-2.0-flash');
+      const flashModel = usageData.models_used.find(
+        (m: { model: string }) => m.model === 'gemini-2.0-flash'
+      );
       if (flashModel) {
         flashModel.input_tokens += newInputTokens;
         flashModel.output_tokens += newOutputTokens;
@@ -119,13 +123,15 @@ export function useGeminiUsage() {
         usageData.daily_costs.push({
           date: today,
           cost: newCost,
-          requests: newRequests
+          requests: newRequests,
         });
       }
 
       // Sort daily costs by date
-      usageData.daily_costs.sort((a: { date: string }, b: { date: string }) =>
-        new Date(a.date).getTime() - new Date(b.date).getTime());
+      usageData.daily_costs.sort(
+        (a: { date: string }, b: { date: string }) =>
+          new Date(a.date).getTime() - new Date(b.date).getTime()
+      );
 
       // Keep only the last 30 days
       if (usageData.daily_costs.length > 30) {
@@ -163,7 +169,9 @@ export function useGeminiUsage() {
       // Update last used timestamp for the API key
       await updateKeyLastUsed('google');
     } catch (err) {
-      console.error('Error fetching Gemini usage:', err);
+      if (process.env.NODE_ENV !== 'production' || process.env.DEBUG === 'true') {
+        console.error('Error fetching Gemini usage:', err);
+      }
       setError(err instanceof Error ? err.message : 'Failed to fetch Gemini usage data');
 
       // Try to use cached data if available
@@ -172,7 +180,9 @@ export function useGeminiUsage() {
         try {
           setUsage(JSON.parse(storedData));
         } catch (parseError) {
-          console.error('Error parsing stored Gemini data:', parseError);
+          if (process.env.NODE_ENV !== 'production' || process.env.DEBUG === 'true') {
+            console.error('Error parsing stored Gemini data:', parseError);
+          }
         }
       }
     } finally {

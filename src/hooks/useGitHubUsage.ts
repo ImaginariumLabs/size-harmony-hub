@@ -1,4 +1,4 @@
-;
+import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { getApiKey, updateKeyLastUsed } from '../services/mockKeyManager';
 
@@ -75,37 +75,28 @@ export function useGitHubUsage() {
       }
 
       // Fetch rate limit data
-      const rateLimitResponse = await axios.get(
-        'https://api.github.com/rate_limit',
-        {
-          headers: {
-            'Authorization': `token ${apiKey}`,
-            'Accept': 'application/vnd.github.v3+json'
-          }
-        }
-      );
+      const rateLimitResponse = await axios.get('https://api.github.com/rate_limit', {
+        headers: {
+          Authorization: `token ${apiKey}`,
+          Accept: 'application/vnd.github.v3+json',
+        },
+      });
 
       // Fetch user data
-      const userResponse = await axios.get(
-        'https://api.github.com/user',
-        {
-          headers: {
-            'Authorization': `token ${apiKey}`,
-            'Accept': 'application/vnd.github.v3+json'
-          }
-        }
-      );
+      const userResponse = await axios.get('https://api.github.com/user', {
+        headers: {
+          Authorization: `token ${apiKey}`,
+          Accept: 'application/vnd.github.v3+json',
+        },
+      });
 
       // Get repository count
-      const reposResponse = await axios.get(
-        'https://api.github.com/user/repos?per_page=1',
-        {
-          headers: {
-            'Authorization': `token ${apiKey}`,
-            'Accept': 'application/vnd.github.v3+json'
-          }
-        }
-      );
+      const reposResponse = await axios.get('https://api.github.com/user/repos?per_page=1', {
+        headers: {
+          Authorization: `token ${apiKey}`,
+          Accept: 'application/vnd.github.v3+json',
+        },
+      });
 
       // Extract total count from Link header
       const linkHeader = reposResponse.headers.link || '';
@@ -117,9 +108,9 @@ export function useGitHubUsage() {
         'https://api.github.com/user/repos?per_page=100&visibility=private',
         {
           headers: {
-            'Authorization': `token ${apiKey}`,
-            'Accept': 'application/vnd.github.v3+json'
-          }
+            Authorization: `token ${apiKey}`,
+            Accept: 'application/vnd.github.v3+json',
+          },
         }
       );
 
@@ -136,9 +127,9 @@ export function useGitHubUsage() {
           public_repos: publicRepos,
           private_repos: privateRepos,
           followers: userResponse.data.followers,
-          following: userResponse.data.following
+          following: userResponse.data.following,
         },
-        last_updated: new Date().toISOString()
+        last_updated: new Date().toISOString(),
       };
 
       setUsage(usageData);
@@ -146,7 +137,9 @@ export function useGitHubUsage() {
       // Update last used timestamp for the API key
       await updateKeyLastUsed('github');
     } catch (err) {
-      console.error('Error fetching GitHub usage:', err);
+      if (process.env.NODE_ENV !== 'production' || process.env.DEBUG === 'true') {
+        console.error('Error fetching GitHub usage:', err);
+      }
       setError(err instanceof Error ? err.message : 'Failed to fetch GitHub usage data');
     } finally {
       setLoading(false);

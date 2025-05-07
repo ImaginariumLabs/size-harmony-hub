@@ -1,4 +1,4 @@
-;
+import { useState, useEffect } from 'react';
 import { validateApiKey, fetchUsageData } from '../services/claudeService';
 import { getApiKey, updateKeyLastUsed } from '../services/mockKeyManager';
 
@@ -58,37 +58,39 @@ export function useClaudeUsage() {
 
       // Get stored usage data from localStorage or initialize new tracking
       const storedData = localStorage.getItem('claude_usage_data');
-      const usageData: ClaudeUsageData = storedData ? JSON.parse(storedData) : {
-        total_cost: 0,
-        input_tokens: 0,
-        output_tokens: 0,
-        total_tokens: 0,
-        models_used: [
-          {
-            model: 'claude-3-5-sonnet',
+      const usageData: ClaudeUsageData = storedData
+        ? JSON.parse(storedData)
+        : {
+            total_cost: 0,
             input_tokens: 0,
             output_tokens: 0,
-            cost: 0
-          },
-          {
-            model: 'claude-3-haiku',
-            input_tokens: 0,
-            output_tokens: 0,
-            cost: 0
-          }
-        ],
-        daily_costs: Array.from({ length: 30 }, (_, i) => {
-          const date = new Date();
-          date.setDate(date.getDate() - 29 + i);
-          return {
-            date: date.toISOString().split('T')[0],
-            cost: 0
+            total_tokens: 0,
+            models_used: [
+              {
+                model: 'claude-3-5-sonnet',
+                input_tokens: 0,
+                output_tokens: 0,
+                cost: 0,
+              },
+              {
+                model: 'claude-3-haiku',
+                input_tokens: 0,
+                output_tokens: 0,
+                cost: 0,
+              },
+            ],
+            daily_costs: Array.from({ length: 30 }, (_, i) => {
+              const date = new Date();
+              date.setDate(date.getDate() - 29 + i);
+              return {
+                date: date.toISOString().split('T')[0],
+                cost: 0,
+              };
+            }),
+            monthly_budget: 100, // Default $100 monthly budget
+            budget_used_percentage: 0,
+            last_updated: new Date().toISOString(),
           };
-        }),
-        monthly_budget: 100, // Default $100 monthly budget
-        budget_used_percentage: 0,
-        last_updated: new Date().toISOString()
-      };
 
       // Update with new data
       const newInputTokens = Math.floor(Math.random() * 5000) + 1000;
@@ -117,13 +119,12 @@ export function useClaudeUsage() {
       } else {
         usageData.daily_costs.push({
           date: today,
-          cost: newCost
+          cost: newCost,
         });
       }
 
       // Sort daily costs by date
-      usageData.daily_costs.sort((a, b) =>
-        new Date(a.date).getTime() - new Date(b.date).getTime());
+      usageData.daily_costs.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
       // Keep only the last 30 days
       if (usageData.daily_costs.length > 30) {
@@ -153,7 +154,9 @@ export function useClaudeUsage() {
       // Update last used timestamp for the API key
       await updateKeyLastUsed('claude');
     } catch (err) {
-      console.error('Error fetching Claude usage:', err);
+      if (process.env.NODE_ENV !== 'production' || process.env.DEBUG === 'true') {
+        console.error('Error fetching Claude usage:', err);
+      }
       setError(err instanceof Error ? err.message : 'Failed to fetch Claude usage data');
 
       // Try to use cached data if available
@@ -162,7 +165,9 @@ export function useClaudeUsage() {
         try {
           setUsage(JSON.parse(storedData));
         } catch (parseError) {
-          console.error('Error parsing stored Claude data:', parseError);
+          if (process.env.NODE_ENV !== 'production' || process.env.DEBUG === 'true') {
+            console.error('Error parsing stored Claude data:', parseError);
+          }
         }
       }
     } finally {
@@ -170,7 +175,6 @@ export function useClaudeUsage() {
     }
   };
 
-   
   useEffect(() => {
     fetchUsage();
 

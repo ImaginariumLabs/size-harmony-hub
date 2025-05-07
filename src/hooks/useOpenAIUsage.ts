@@ -1,4 +1,4 @@
-;
+import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { getApiKey, updateKeyLastUsed } from '../services/mockKeyManager';
 
@@ -48,9 +48,9 @@ export function useOpenAIUsage() {
         `https://api.openai.com/v1/usage?start_date=${startDate}&end_date=${endDate}`,
         {
           headers: {
-            'Authorization': `Bearer ${apiKey}`,
-            'Content-Type': 'application/json'
-          }
+            Authorization: `Bearer ${apiKey}`,
+            'Content-Type': 'application/json',
+          },
         }
       );
 
@@ -71,7 +71,7 @@ export function useOpenAIUsage() {
       let promptTokens = 0;
       let completionTokens = 0;
 
-      const modelsUsed: Record<string, { tokens: number, cost: number }> = {};
+      const modelsUsed: Record<string, { tokens: number; cost: number }> = {};
       const dailyCosts: Record<string, number> = {};
 
       // Process daily usage data
@@ -93,7 +93,7 @@ export function useOpenAIUsage() {
 
           // Estimate tokens based on cost and model
           const costPerToken = modelCosts[model] || 0.002; // Default to gpt-3.5-turbo pricing
-          const estimatedTokens = Math.round(item.cost / costPerToken * 1000);
+          const estimatedTokens = Math.round((item.cost / costPerToken) * 1000);
 
           modelsUsed[model].tokens += estimatedTokens;
           totalTokens += estimatedTokens;
@@ -119,8 +119,8 @@ export function useOpenAIUsage() {
         models_used: Object.entries(modelsUsed).map(([model, data]) => ({
           model,
           tokens: data.tokens,
-          cost: data.cost
-        }))
+          cost: data.cost,
+        })),
       };
 
       setUsage(formattedUsage);
@@ -128,7 +128,9 @@ export function useOpenAIUsage() {
       // Update last used timestamp for the API key
       await updateKeyLastUsed('openai');
     } catch (err) {
-      console.error('Error fetching OpenAI usage:', err);
+      if (process.env.NODE_ENV !== 'production' || process.env.DEBUG === 'true') {
+        console.error('Error fetching OpenAI usage:', err);
+      }
       setError(err instanceof Error ? err.message : 'Failed to fetch OpenAI usage data');
     } finally {
       setLoading(false);

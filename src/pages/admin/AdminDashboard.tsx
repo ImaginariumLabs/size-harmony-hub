@@ -1,19 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import {
   Box,
-  Typography,
-  Grid,
-  Paper,
+  Button,
   Card,
   CardContent,
   CardHeader,
-  Button,
+  CircularProgress,
   Divider,
+  Grid,
   List,
   ListItem,
-  ListItemText,
   ListItemIcon,
-  CircularProgress,
+  ListItemText,
+  Paper,
+  Typography,
   useTheme,
 } from '@mui/material';
 import {
@@ -26,7 +26,7 @@ import {
   CheckCircle as CheckCircleIcon,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../../contexts/AuthContext';
+import { useAuth } from '../../hooks/useAuth';
 import { useApiProviders } from '../../contexts/ApiProviderContext';
 import { getAllProviderHealth } from '../../services/customProviderService';
 import { ApiProviderHealth } from '../../types/api';
@@ -38,23 +38,59 @@ const AdminDashboard: React.FC = () => {
   const { providers } = useApiProviders();
   const [loading, setLoading] = useState(true);
   const [providerHealth, setProviderHealth] = useState<Record<string, ApiProviderHealth>>({});
-  const [recentActivity, setRecentActivity] = useState<{ action: string; timestamp: string; user: string }[]>([]);
+  const [recentActivity, setRecentActivity] = useState<
+    { action: string; timestamp: string; user: string }[]
+  >([]);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Fetch provider health data
-        const healthData = await getAllProviderHealth();
-        setProviderHealth(healthData);
+        // Use mock provider health data instead of fetching from Supabase
+        const mockHealthData: Record<string, ApiProviderHealth> = {
+          openai: {
+            providerId: 'openai',
+            status: 'operational',
+            lastChecked: new Date().toISOString(),
+            responseTime: 120,
+            successRate: 99.8,
+          },
+          claude: {
+            providerId: 'claude',
+            status: 'operational',
+            lastChecked: new Date().toISOString(),
+            responseTime: 150,
+            successRate: 99.5,
+          },
+          google: {
+            providerId: 'google',
+            status: 'degraded',
+            lastChecked: new Date().toISOString(),
+            responseTime: 250,
+            errorMessage: 'Intermittent timeouts',
+            successRate: 95.0,
+          },
+        };
+
+        setProviderHealth(mockHealthData);
 
         // Mock recent activity data
         setRecentActivity([
           { action: 'User added', timestamp: new Date().toISOString(), user: 'admin@example.com' },
-          { action: 'API provider updated', timestamp: new Date(Date.now() - 3600000).toISOString(), user: 'admin@example.com' },
-          { action: 'System settings changed', timestamp: new Date(Date.now() - 7200000).toISOString(), user: 'admin@example.com' },
+          {
+            action: 'API provider updated',
+            timestamp: new Date(Date.now() - 3600000).toISOString(),
+            user: 'admin@example.com',
+          },
+          {
+            action: 'System settings changed',
+            timestamp: new Date(Date.now() - 7200000).toISOString(),
+            user: 'admin@example.com',
+          },
         ]);
       } catch (error) {
-        console.error('Error fetching admin dashboard data:', error);
+        if (process.env.NODE_ENV !== 'production' || process.env.DEBUG === 'true') {
+          console.error('Error fetching admin dashboard data:', error);
+        }
       } finally {
         setLoading(false);
       }
@@ -82,7 +118,13 @@ const AdminDashboard: React.FC = () => {
         return <CheckCircleIcon sx={{ color: theme.palette.success.main }} />;
       case 'degraded':
       case 'outage':
-        return <WarningIcon sx={{ color: status === 'degraded' ? theme.palette.warning.main : theme.palette.error.main }} />;
+        return (
+          <WarningIcon
+            sx={{
+              color: status === 'degraded' ? theme.palette.warning.main : theme.palette.error.main,
+            }}
+          />
+        );
       default:
         return null;
     }
@@ -90,7 +132,9 @@ const AdminDashboard: React.FC = () => {
 
   if (loading) {
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+      <Box
+        sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}
+      >
         <CircularProgress />
       </Box>
     );
@@ -230,16 +274,14 @@ const AdminDashboard: React.FC = () => {
             <Divider />
             <CardContent>
               <List>
-                {providers.map((provider) => {
+                {providers.map(provider => {
                   const health = providerHealth[provider.id] || {
                     status: 'unknown',
                     lastChecked: new Date().toISOString(),
                   };
                   return (
                     <ListItem key={provider.id}>
-                      <ListItemIcon>
-                        {getStatusIcon(health.status)}
-                      </ListItemIcon>
+                      <ListItemIcon>{getStatusIcon(health.status)}</ListItemIcon>
                       <ListItemText
                         primary={provider.name}
                         secondary={`Last checked: ${new Date(health.lastChecked).toLocaleString()}`}
@@ -273,7 +315,9 @@ const AdminDashboard: React.FC = () => {
                   <ListItem key={index}>
                     <ListItemText
                       primary={activity.action}
-                      secondary={`${new Date(activity.timestamp).toLocaleString()} by ${activity.user}`}
+                      secondary={`${new Date(activity.timestamp).toLocaleString()} by ${
+                        activity.user
+                      }`}
                     />
                   </ListItem>
                 ))}

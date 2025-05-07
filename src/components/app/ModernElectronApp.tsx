@@ -243,18 +243,6 @@ const ModernElectronApp: React.FC = () => {
                         }
                       />
                       <Route
-                        path="/provider/:providerId"
-                        element={
-                          <ErrorBoundary componentName="ProtectedRoute">
-                            <ProtectedRoute>
-                              <ErrorBoundary componentName="ProviderDetail">
-                                <ProviderDetail />
-                              </ErrorBoundary>
-                            </ProtectedRoute>
-                          </ErrorBoundary>
-                        }
-                      />
-                      <Route
                         path="/provider/openai"
                         element={
                           <ErrorBoundary componentName="ProtectedRoute">
@@ -285,6 +273,18 @@ const ModernElectronApp: React.FC = () => {
                             <ProtectedRoute>
                               <ErrorBoundary componentName="GeminiProviderDetail">
                                 <GeminiProviderDetail />
+                              </ErrorBoundary>
+                            </ProtectedRoute>
+                          </ErrorBoundary>
+                        }
+                      />
+                      <Route
+                        path="/provider/:providerId"
+                        element={
+                          <ErrorBoundary componentName="ProtectedRoute">
+                            <ProtectedRoute>
+                              <ErrorBoundary componentName="ProviderDetail">
+                                <ProviderDetail />
                               </ErrorBoundary>
                             </ProtectedRoute>
                           </ErrorBoundary>
